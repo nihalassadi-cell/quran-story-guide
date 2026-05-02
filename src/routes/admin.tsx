@@ -155,6 +155,16 @@ function AdminPage() {
                   </option>
                 ))}
               </select>
+              <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={regenerate}
+                  onChange={(e) => setRegenerate(e.target.checked)}
+                  disabled={generating}
+                  className="accent-primary"
+                />
+                Regenerate existing scenes (use new improved pipeline)
+              </label>
               <div className="flex gap-2">
                 <button
                   onClick={generate}
