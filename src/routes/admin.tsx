@@ -1,8 +1,8 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/AppShell";
-import { Shield, Loader2, Play, CheckCircle2 } from "lucide-react";
+import { Shield, Loader2, Play, CheckCircle2, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { fetchRoleWithStoredSession, fetchWithStoredSession, readStoredAuth } from "@/lib/browser-auth";
 
@@ -154,14 +154,23 @@ function AdminPage() {
                   </option>
                 ))}
               </select>
-              <button
-                onClick={generate}
-                disabled={generating}
-                className="w-full rounded-md bg-gradient-to-r from-primary to-primary-glow text-primary-foreground font-medium py-2.5 flex items-center justify-center gap-2 disabled:opacity-50"
-              >
-                {generating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
-                {generating ? "Generating…" : "Generate scenes"}
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={generate}
+                  disabled={generating}
+                  className="flex-1 rounded-md bg-gradient-to-r from-primary to-primary-glow text-primary-foreground font-medium py-2.5 flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  {generating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
+                  {generating ? "Generating…" : "Generate scenes"}
+                </button>
+                <Link
+                  to="/surah/$number"
+                  params={{ number: String(selected) }}
+                  className="rounded-md border border-border bg-card px-4 py-2.5 text-sm flex items-center gap-2 hover:border-primary/50"
+                >
+                  <ExternalLink className="h-4 w-4" /> Preview
+                </Link>
+              </div>
               {progress && (
                 <div className="space-y-1">
                   <div className="flex justify-between text-xs text-muted-foreground">

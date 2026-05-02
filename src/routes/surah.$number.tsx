@@ -36,24 +36,35 @@ function SurahPlayer() {
   const [userId, setUserId] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Load user settings + auth
+  // Load user settings + auth (non-blocking — never await before fetching Surah)
   useEffect(() => {
-    supabase.auth.getUser().then(async ({ data: { user } }) => {
-      setUserId(user?.id ?? null);
-      if (user) {
-        const { data: s } = await supabase.from("user_settings").select("*").eq("user_id", user.id).maybeSingle();
-        if (s) {
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (cancelled) return;
+        const user = session?.user ?? null;
+        setUserId(user?.id ?? null);
+        if (user) {
+          const { data: s } = await supabase.from("user_settings").select("*").eq("user_id", user.id).maybeSingle();
+          if (cancelled || !s) return;
           setReciter(s.reciter);
           setLanguage(s.translation_language as LanguageCode);
         }
+      } catch (e) {
+        console.warn("auth/settings load failed", e);
       }
-    });
+    })();
+    return () => { cancelled = true; };
   }, []);
 
   // Load Surah text + translation
   useEffect(() => {
     setData(null);
-    fetchSurahWithTranslation(surahNum, language).then(setData).catch(() => toast.error("Failed to load Surah"));
+    console.log("[surah] fetching", surahNum, language);
+    fetchSurahWithTranslation(surahNum, language)
+      .then((d) => { console.log("[surah] loaded", d.ayahs.length, "ayahs"); setData(d); })
+      .catch((e) => { console.error("[surah] fetch failed", e); toast.error("Failed to load Surah"); });
   }, [surahNum, language]);
 
   // Load scene images for this Surah from DB
