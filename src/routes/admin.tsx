@@ -25,6 +25,7 @@ function AdminPage() {
   const [surahs, setSurahs] = useState<SurahRow[]>([]);
   const [selected, setSelected] = useState<number>(1);
   const [generating, setGenerating] = useState(false);
+  const [regenerate, setRegenerate] = useState(false);
   const [progress, setProgress] = useState<{ ready: number; total: number } | null>(null);
   const [log, setLog] = useState<string[]>([]);
 
@@ -96,7 +97,7 @@ function AdminPage() {
         const startedAt = Date.now();
         append(`Batch ${safety}: requesting (this can take 20-40s)…`);
         const { data, error } = await supabase.functions.invoke("generate-surah", {
-          body: { surahNumber: selected, batchSize: 1 },
+          body: { surahNumber: selected, batchSize: 1, regenerate },
         });
         const elapsed = Math.round((Date.now() - startedAt) / 1000);
         if (error) {
@@ -154,6 +155,16 @@ function AdminPage() {
                   </option>
                 ))}
               </select>
+              <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={regenerate}
+                  onChange={(e) => setRegenerate(e.target.checked)}
+                  disabled={generating}
+                  className="accent-primary"
+                />
+                Regenerate existing scenes (use new improved pipeline)
+              </label>
               <div className="flex gap-2">
                 <button
                   onClick={generate}

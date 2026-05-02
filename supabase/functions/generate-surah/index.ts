@@ -23,16 +23,42 @@ function mentionsProphet(arabic: string): boolean {
   return PROPHET_TOKENS.some((t) => arabic.includes(t));
 }
 
-function buildPrompt(arabic: string, translation: string, isProphetVerse: boolean): string {
-  const base =
-    "Reverent, painterly Islamic illuminated-manuscript style scene. Warm gold, deep teal, parchment cream. Soft cinematic light, calligraphic ornament motifs in corners. No text, no writing, no characters with detailed faces. Modest, dignified, contemplative mood. Wide cinematic 16:9 composition.";
-  const safety =
-    " Strictly avoid: any depiction of Allah, any depiction of the Prophet Muhammad ﷺ, any depiction of the inside of the Kaaba, any human faces in detail, any modern objects.";
+const STYLE =
+  "Reverent, painterly Islamic illuminated-manuscript style. Warm gold, deep teal, parchment cream. Soft cinematic light, calligraphic ornament motifs in corners. No text, no writing, no human faces in detail. Modest, dignified, contemplative. Wide cinematic 16:9 composition.";
+const SAFETY =
+  "Strictly avoid: any depiction of Allah, any depiction of the Prophet Muhammad ﷺ, any depiction of the inside of the Kaaba, any human faces in detail, any modern objects, any text or writing.";
 
-  if (isProphetVerse) {
-    return `Symbolic scene representing this Quranic verse without depicting the Prophet Muhammad ﷺ. Use light rays, the silhouette of the city of Madinah at dawn, calligraphy-inspired forms, or a single glowing lantern. Verse meaning: "${translation}". ${base}${safety}`;
+// Step 1: ask an LLM to translate verse meaning into a concrete, paintable visual scene.
+async function describeScene(arabic: string, translation: string, isProphetVerse: boolean): Promise<string> {
+  const guidance = isProphetVerse
+    ? "This verse mentions the Prophet Muhammad ﷺ. Do NOT describe him directly. Use symbolic imagery: light rays, the silhouette of Madinah at dawn, a glowing lantern, calligraphy-inspired forms, an open path."
+    : "Describe a concrete, symbolic scene that captures the verse's meaning. Use natural elements (sky, water, mountains, gardens, stars, birds, lamps, doorways, paths) — not people in detail.";
+
+  const sys = `You are an art director for a reverent Quranic visual experience. Given a verse, produce ONE vivid 2-3 sentence visual scene description suitable for an image model. Focus on what the viewer SEES: setting, lighting, key symbolic objects, mood. ${guidance} Never include text, faces, Allah, or the Prophet ﷺ. Output ONLY the scene description, no preface.`;
+
+  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: "google/gemini-2.5-flash",
+      messages: [
+        { role: "system", content: sys },
+        { role: "user", content: `Arabic: ${arabic}\n\nTranslation: "${translation}"` },
+      ],
+    }),
+  });
+  if (!res.ok) {
+    if (res.status === 429) throw new Error("rate_limited");
+    if (res.status === 402) throw new Error("payment_required");
+    return translation; // fallback
   }
-  return `Symbolic scene illustrating the meaning of this Quranic verse: "${translation}". ${base}${safety}`;
+  const json = await res.json();
+  const desc: string = json.choices?.[0]?.message?.content?.trim() ?? translation;
+  return desc;
+}
+
+function buildImagePrompt(sceneDescription: string): string {
+  return `${sceneDescription}\n\nStyle: ${STYLE}\n\n${SAFETY}`;
 }
 
 async function generateImage(prompt: string): Promise<Uint8Array | null> {
@@ -40,7 +66,7 @@ async function generateImage(prompt: string): Promise<Uint8Array | null> {
     method: "POST",
     headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: "google/gemini-2.5-flash-image",
+      model: "google/gemini-3.1-flash-image-preview",
       messages: [{ role: "user", content: prompt }],
       modalities: ["image", "text"],
     }),
@@ -130,11 +156,13 @@ Deno.serve(async (req) => {
     // 1. Ensure verses + translations exist
     const verses = await ensureVerses(admin, surahNumber);
 
-    // 2. Find verses without a ready scene
+    const regenerate: boolean = !!body.regenerate;
+
+    // 2. Find verses to process
     const verseIds = verses.map((v) => v.id);
     const { data: existingScenes } = await admin.from("scenes").select("verse_id, status").in("verse_id", verseIds);
     const sceneMap = new Map<string, string>((existingScenes ?? []).map((s: any) => [s.verse_id, s.status]));
-    const pending = verses.filter((v) => sceneMap.get(v.id) !== "ready").slice(0, batchSize);
+    const pending = (regenerate ? verses : verses.filter((v) => sceneMap.get(v.id) !== "ready")).slice(0, batchSize);
 
     // 3. Load translations for those verses
     const { data: translations } = await admin.from("translations").select("verse_id, text").eq("language", "en").in("verse_id", pending.map((v) => v.id));
@@ -146,7 +174,8 @@ Deno.serve(async (req) => {
       try {
         // mark pending
         await admin.from("scenes").upsert({ verse_id: v.id, status: "pending" }, { onConflict: "verse_id" });
-        const prompt = buildPrompt(v.text_ar, trMap.get(v.id) ?? "", v.mentions_prophet_muhammad);
+        const sceneDesc = await describeScene(v.text_ar, trMap.get(v.id) ?? "", v.mentions_prophet_muhammad);
+        const prompt = buildImagePrompt(sceneDesc);
         const bytes = await generateImage(prompt);
         if (!bytes) {
           await admin.from("scenes").upsert({ verse_id: v.id, status: "failed", error: "no_image", image_prompt: prompt }, { onConflict: "verse_id" });
