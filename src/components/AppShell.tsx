@@ -1,38 +1,13 @@
 import { Link, useLocation } from "@tanstack/react-router";
-import { Home, Search, Bookmark, Settings, Shield } from "lucide-react";
-import { useEffect, useState } from "react";
-import { fetchRoleWithStoredSession, readStoredAuth } from "@/lib/browser-auth";
+import { Home, Search, Bookmark, Settings, Sparkles } from "lucide-react";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const loc = useLocation();
-  const [isAdmin, setIsAdmin] = useState(false);
-
-  useEffect(() => {
-    let active = true;
-    const check = async () => {
-      try {
-        const auth = readStoredAuth();
-        if (!auth?.user) {
-          if (active) setIsAdmin(false);
-          return;
-        }
-
-        const result = await fetchRoleWithStoredSession("admin");
-        if (active) setIsAdmin(result.ok && result.hasRole);
-      } catch {
-        if (active) setIsAdmin(false);
-      }
-    };
-
-    check();
-    return () => {
-      active = false;
-    };
-  }, []);
 
   const tabs = [
     { to: "/", icon: Home, label: "Surahs" },
     { to: "/search", icon: Search, label: "Search" },
+    { to: "/animate", icon: Sparkles, label: "Animate" },
     { to: "/bookmarks", icon: Bookmark, label: "Saved" },
     { to: "/settings", icon: Settings, label: "Settings" },
   ];
@@ -59,19 +34,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               </li>
             );
           })}
-          {isAdmin && (
-            <li className="flex-1">
-              <Link
-                to="/admin"
-                className={`flex flex-col items-center gap-1 py-3 text-xs transition-colors ${
-                  loc.pathname.startsWith("/admin") ? "text-primary" : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                <Shield className="h-5 w-5" />
-                <span>Admin</span>
-              </Link>
-            </li>
-          )}
         </ul>
       </nav>
     </div>
