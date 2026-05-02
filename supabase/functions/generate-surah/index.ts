@@ -172,7 +172,8 @@ Deno.serve(async (req) => {
       try {
         // mark pending
         await admin.from("scenes").upsert({ verse_id: v.id, status: "pending" }, { onConflict: "verse_id" });
-        const prompt = buildPrompt(v.text_ar, trMap.get(v.id) ?? "", v.mentions_prophet_muhammad);
+        const sceneDesc = await describeScene(v.text_ar, trMap.get(v.id) ?? "", v.mentions_prophet_muhammad);
+        const prompt = buildImagePrompt(sceneDesc);
         const bytes = await generateImage(prompt);
         if (!bytes) {
           await admin.from("scenes").upsert({ verse_id: v.id, status: "failed", error: "no_image", image_prompt: prompt }, { onConflict: "verse_id" });
