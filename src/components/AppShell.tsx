@@ -2,6 +2,7 @@ import { Link, useLocation } from "@tanstack/react-router";
 import { Home, Search, Bookmark, Settings, Shield } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { getCurrentUser } from "@/lib/auth-session";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const loc = useLocation();
@@ -11,11 +12,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     let active = true;
     const check = async () => {
       try {
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
-
-        const user = session?.user;
+        const user = await getCurrentUser();
         if (!user) {
           if (active) setIsAdmin(false);
           return;
