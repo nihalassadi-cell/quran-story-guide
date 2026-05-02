@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/AppShell";
 import { Shield, Loader2, Play, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
-import { getCurrentUser } from "@/lib/auth-session";
+import { useAuthUser } from "@/hooks/use-auth-user";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({ meta: [{ title: "Admin — Noor" }] }),
@@ -21,6 +21,7 @@ interface SurahRow {
 
 function AdminPage() {
   const navigate = useNavigate();
+  const { user, isAuthLoading } = useAuthUser();
   const [status, setStatus] = useState<"loading" | "denied" | "ok">("loading");
   const [surahs, setSurahs] = useState<SurahRow[]>([]);
   const [selected, setSelected] = useState<number>(1);
@@ -33,7 +34,6 @@ function AdminPage() {
 
     const load = async () => {
       try {
-        const user = await getCurrentUser();
         if (!user) {
           navigate({ to: "/auth" });
           return;
@@ -81,11 +81,18 @@ function AdminPage() {
       }
     };
 
+    if (isAuthLoading) {
+      setStatus("loading");
+      return () => {
+        active = false;
+      };
+    }
+
     load();
     return () => {
       active = false;
     };
-  }, [navigate]);
+  }, [isAuthLoading, navigate, user]);
 
   const append = (line: string) => setLog((l) => [...l.slice(-20), line]);
 
