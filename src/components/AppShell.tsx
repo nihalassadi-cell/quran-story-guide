@@ -10,11 +10,30 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let active = true;
     const check = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { if (active) setIsAdmin(false); return; }
-      const { data, error } = await supabase.from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin").maybeSingle();
-      if (active) setIsAdmin(!error && !!data);
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+
+        const user = session?.user;
+        if (!user) {
+          if (active) setIsAdmin(false);
+          return;
+        }
+
+        const { data, error } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", user.id)
+          .eq("role", "admin")
+          .maybeSingle();
+
+        if (active) setIsAdmin(!error && !!data);
+      } catch {
+        if (active) setIsAdmin(false);
+      }
     };
+
     check();
     const { data: sub } = supabase.auth.onAuthStateChange(() => check());
     return () => { active = false; sub.subscription.unsubscribe(); };
