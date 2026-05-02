@@ -28,7 +28,7 @@ function SurahPlayer() {
 
   const [data, setData] = useState<Awaited<ReturnType<typeof fetchSurahWithTranslation>> | null>(null);
   const [scenes, setScenes] = useState<Record<number, string>>({});
-  const [currentVerse, setCurrentVerse] = useState(verse);
+  const [currentVerse, setCurrentVerse] = useState<number>(verse);
   const [playing, setPlaying] = useState(false);
   const [reciter, setReciter] = useState<string>("ar.alafasy");
   const [language, setLanguage] = useState<LanguageCode>("en");
