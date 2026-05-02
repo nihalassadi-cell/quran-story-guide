@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/AppShell";
 import { Shield, Loader2, Play, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
-import { getCurrentUser } from "@/lib/auth-session";
+import { fetchRoleWithStoredSession, fetchWithStoredSession, readStoredAuth } from "@/lib/browser-auth";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({ meta: [{ title: "Admin — Noor" }] }),
@@ -33,44 +33,41 @@ function AdminPage() {
 
     const load = async () => {
       try {
-        const user = await getCurrentUser();
-        if (!user) {
+        const auth = readStoredAuth();
+        if (!auth?.user) {
           navigate({ to: "/auth" });
           return;
         }
 
-        const { data: roleRow, error: roleError } = await supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", user.id)
-          .eq("role", "admin")
-          .maybeSingle();
+        const roleResult = await fetchRoleWithStoredSession("admin");
 
         if (!active) return;
 
-        if (roleError) {
+        if (!roleResult.ok) {
           toast.error("Could not verify admin access");
           setStatus("denied");
           return;
         }
 
-        if (!roleRow) {
+        if (!roleResult.hasRole) {
           setStatus("denied");
           return;
         }
 
-        const { data: list, error: listError } = await supabase
-          .from("surahs")
-          .select("number, name_ar, name_en, verse_count, is_animated")
-          .order("number");
+        const listResponse = await fetchWithStoredSession(
+          "/rest/v1/surahs?select=number,name_ar,name_en,verse_count,is_animated&order=number.asc",
+          { method: "GET" },
+        );
 
         if (!active) return;
 
-        if (listError) {
+        if (!listResponse.ok) {
           toast.error("Could not load Surahs");
           setStatus("denied");
           return;
         }
+
+        const list = (await listResponse.json()) as SurahRow[];
 
         setSurahs(list ?? []);
         setStatus("ok");
