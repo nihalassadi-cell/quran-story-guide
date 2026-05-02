@@ -178,18 +178,12 @@ function SurahPlayer() {
         <div className="relative z-10 px-4 pb-2">
           <div
             key={currentVerse}
-            className="fade-in mx-auto max-w-2xl text-center space-y-1.5 rounded-xl bg-black/45 backdrop-blur-md px-4 py-2.5 border border-white/10"
+            className="fade-in mx-auto max-w-2xl text-center space-y-1.5 rounded-xl bg-card/85 backdrop-blur-md px-4 py-2.5 border border-border shadow-lg"
           >
-            <p
-              className="arabic text-2xl md:text-3xl leading-snug text-white"
-              style={{ textShadow: "0 1px 6px rgba(0,0,0,0.9)" }}
-            >
+            <p className="arabic text-2xl md:text-3xl leading-snug text-foreground">
               {ayah.text}
             </p>
-            <p
-              className="text-sm md:text-base font-medium leading-snug text-white/95"
-              style={{ textShadow: "0 1px 3px rgba(0,0,0,0.9)" }}
-            >
+            <p className="text-sm md:text-base font-medium leading-snug text-foreground/90">
               {translation?.text}
             </p>
           </div>
