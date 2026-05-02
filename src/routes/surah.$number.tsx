@@ -99,7 +99,7 @@ function SurahPlayer() {
     audioRef.current.src = ayahAudioUrl(ayah.number, reciter);
     audioRef.current.onended = () => {
       if (data && currentVerse < data.ayahs.length) {
-        setCurrentVerse((v) => v + 1);
+        setCurrentVerse((v: number) => v + 1);
       } else {
         setPlaying(false);
       }
@@ -186,7 +186,7 @@ function SurahPlayer() {
         <div className="flex items-center justify-center gap-6">
           <button
             disabled={currentVerse <= 1}
-            onClick={() => setCurrentVerse((v) => Math.max(1, v - 1))}
+            onClick={() => setCurrentVerse((v: number) => Math.max(1, v - 1))}
             className="rounded-full bg-card/70 backdrop-blur p-3 border border-border disabled:opacity-30"
           >
             <SkipBack className="h-5 w-5" />
@@ -199,7 +199,7 @@ function SurahPlayer() {
           </button>
           <button
             disabled={currentVerse >= total}
-            onClick={() => setCurrentVerse((v) => Math.min(total, v + 1))}
+            onClick={() => setCurrentVerse((v: number) => Math.min(total, v + 1))}
             className="rounded-full bg-card/70 backdrop-blur p-3 border border-border disabled:opacity-30"
           >
             <SkipForward className="h-5 w-5" />
