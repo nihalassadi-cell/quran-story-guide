@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/AppShell";
 import { Shield, Loader2, Play, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
+import { getAdminAccess } from "@/server/admin.functions";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({ meta: [{ title: "Admin — Noor" }] }),
@@ -29,10 +30,13 @@ function AdminPage() {
 
   useEffect(() => {
     (async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { navigate({ to: "/auth" }); return; }
-      const { data: roleRow } = await supabase.from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin").maybeSingle();
-      if (!roleRow) { setStatus("denied"); return; }
+      try {
+        const { isAdmin } = await getAdminAccess();
+        if (!isAdmin) { setStatus("denied"); return; }
+      } catch {
+        navigate({ to: "/auth" });
+        return;
+      }
       const { data: list } = await supabase.from("surahs").select("number, name_ar, name_en, verse_count, is_animated").order("number");
       setSurahs(list ?? []);
       setStatus("ok");
@@ -139,7 +143,7 @@ function AdminPage() {
             )}
 
             <p className="text-xs text-muted-foreground">
-              Each batch processes 3 verses. The job loops automatically until the Surah is fully animated or you hit a rate limit.
+              Each batch processes 1 verse. The job loops automatically until the Surah is fully animated or you hit a rate limit.
               Start with a short Surah like Al-Fatihah (#1, 7 verses) or An-Nas (#114, 6 verses) to test.
             </p>
           </div>
