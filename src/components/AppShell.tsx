@@ -2,17 +2,17 @@ import { Link, useLocation } from "@tanstack/react-router";
 import { Home, Search, Bookmark, Settings, Shield } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { getCurrentUser } from "@/lib/auth-session";
+import { useAuthUser } from "@/hooks/use-auth-user";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const loc = useLocation();
+  const { user } = useAuthUser();
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     let active = true;
     const check = async () => {
       try {
-        const user = await getCurrentUser();
         if (!user) {
           if (active) setIsAdmin(false);
           return;
@@ -32,9 +32,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     };
 
     check();
-    const { data: sub } = supabase.auth.onAuthStateChange(() => check());
-    return () => { active = false; sub.subscription.unsubscribe(); };
-  }, []);
+    return () => {
+      active = false;
+    };
+  }, [user]);
 
   const tabs = [
     { to: "/", icon: Home, label: "Surahs" },
