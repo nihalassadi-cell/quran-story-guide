@@ -4,15 +4,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { fetchSurahWithTranslation, ayahAudioUrl, RECITERS, TRANSLATION_LANGUAGES, type LanguageCode } from "@/lib/quran-api";
 import { ChevronLeft, Play, Pause, SkipBack, SkipForward, Bookmark, BookmarkCheck, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { z } from "zod";
-import { zodValidator, fallback } from "@tanstack/zod-adapter";
-
-const searchSchema = z.object({
-  verse: fallback(z.number().int().min(1), 1).default(1),
-});
+type SurahSearch = { verse: number };
 
 export const Route = createFileRoute("/surah/$number")({
-  validateSearch: zodValidator(searchSchema),
+  validateSearch: (search: Record<string, unknown>): SurahSearch => {
+    const v = Number(search.verse);
+    return { verse: Number.isFinite(v) && v >= 1 ? Math.floor(v) : 1 };
+  },
   head: ({ params }) => ({
     meta: [
       { title: `Surah ${params.number} — Noor` },
@@ -101,7 +99,7 @@ function SurahPlayer() {
     audioRef.current.src = ayahAudioUrl(ayah.number, reciter);
     audioRef.current.onended = () => {
       if (data && currentVerse < data.ayahs.length) {
-        setCurrentVerse((v) => v + 1);
+        setCurrentVerse((v: number) => v + 1);
       } else {
         setPlaying(false);
       }
@@ -188,7 +186,7 @@ function SurahPlayer() {
         <div className="flex items-center justify-center gap-6">
           <button
             disabled={currentVerse <= 1}
-            onClick={() => setCurrentVerse((v) => Math.max(1, v - 1))}
+            onClick={() => setCurrentVerse((v: number) => Math.max(1, v - 1))}
             className="rounded-full bg-card/70 backdrop-blur p-3 border border-border disabled:opacity-30"
           >
             <SkipBack className="h-5 w-5" />
@@ -201,7 +199,7 @@ function SurahPlayer() {
           </button>
           <button
             disabled={currentVerse >= total}
-            onClick={() => setCurrentVerse((v) => Math.min(total, v + 1))}
+            onClick={() => setCurrentVerse((v: number) => Math.min(total, v + 1))}
             className="rounded-full bg-card/70 backdrop-blur p-3 border border-border disabled:opacity-30"
           >
             <SkipForward className="h-5 w-5" />
