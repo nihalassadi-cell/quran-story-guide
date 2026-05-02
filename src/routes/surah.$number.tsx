@@ -150,9 +150,8 @@ function SurahPlayer() {
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-card via-background to-accent/20" />
         )}
-        {/* Stronger darkening for subtitle legibility */}
-        <div className="absolute inset-0 bg-background/40" />
-        <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-background/30 to-background/95" />
+        {/* Light vignette only — keep imagery visible */}
+        <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-transparent to-background/85" />
       </div>
 
       {/* Header */}
@@ -169,31 +168,33 @@ function SurahPlayer() {
         </button>
       </header>
 
-      {/* Verse content */}
-      <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-6 text-center">
+      {/* Spacer — let the artwork breathe */}
+      <div className="relative z-10 flex-1 flex items-center justify-center">
         {!data && <Loader2 className="h-8 w-8 animate-spin text-primary" />}
-        {ayah && (
-          <div key={currentVerse} className="fade-in space-y-5 max-w-xl w-full">
-            {/* Arabic — large, bright, with deep shadow */}
+      </div>
+
+      {/* Subtitle bar — anchored near the bottom, compact, film-style */}
+      {ayah && (
+        <div className="relative z-10 px-4 pb-2">
+          <div
+            key={currentVerse}
+            className="fade-in mx-auto max-w-2xl text-center space-y-1.5 rounded-xl bg-black/45 backdrop-blur-md px-4 py-2.5 border border-white/10"
+          >
             <p
-              className="arabic text-4xl md:text-5xl leading-loose text-white"
-              style={{ textShadow: "0 2px 16px rgba(0,0,0,0.85), 0 1px 3px rgba(0,0,0,0.95)" }}
+              className="arabic text-2xl md:text-3xl leading-snug text-white"
+              style={{ textShadow: "0 1px 6px rgba(0,0,0,0.9)" }}
             >
               {ayah.text}
             </p>
-            <div className="h-px w-24 mx-auto bg-primary/60" />
-            {/* Translation — high-contrast subtitle pill */}
-            <div className="mx-auto inline-block max-w-lg rounded-2xl bg-black/55 backdrop-blur-md px-5 py-3 border border-white/10">
-              <p
-                className="text-lg md:text-xl font-medium leading-relaxed text-white"
-                style={{ textShadow: "0 1px 4px rgba(0,0,0,0.9)" }}
-              >
-                {translation?.text}
-              </p>
-            </div>
+            <p
+              className="text-sm md:text-base font-medium leading-snug text-white/95"
+              style={{ textShadow: "0 1px 3px rgba(0,0,0,0.9)" }}
+            >
+              {translation?.text}
+            </p>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Controls */}
       <div className="relative z-10 p-5 pb-8 space-y-3">
