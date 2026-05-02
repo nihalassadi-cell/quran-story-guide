@@ -4,7 +4,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/AppShell";
 import { Shield, Loader2, Play, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
-import { getAdminAccess } from "@/server/admin.functions";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({ meta: [{ title: "Admin — Noor" }] }),
@@ -30,13 +29,20 @@ function AdminPage() {
 
   useEffect(() => {
     (async () => {
-      try {
-        const { isAdmin } = await getAdminAccess();
-        if (!isAdmin) { setStatus("denied"); return; }
-      } catch {
-        navigate({ to: "/auth" });
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { navigate({ to: "/auth" }); return; }
+      const { data: roleRow, error: roleError } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id)
+        .eq("role", "admin")
+        .maybeSingle();
+      if (roleError) {
+        toast.error("Could not verify admin access");
+        setStatus("denied");
         return;
       }
+      if (!roleRow) { setStatus("denied"); return; }
       const { data: list } = await supabase.from("surahs").select("number, name_ar, name_en, verse_count, is_animated").order("number");
       setSurahs(list ?? []);
       setStatus("ok");
