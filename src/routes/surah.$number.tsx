@@ -150,7 +150,9 @@ function SurahPlayer() {
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-card via-background to-accent/20" />
         )}
-        <div className="absolute inset-0 bg-gradient-to-b from-background/70 via-background/30 to-background/95" />
+        {/* Stronger darkening for subtitle legibility */}
+        <div className="absolute inset-0 bg-background/40" />
+        <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-background/30 to-background/95" />
       </div>
 
       {/* Header */}
