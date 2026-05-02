@@ -2,6 +2,7 @@ import { Link, useLocation } from "@tanstack/react-router";
 import { Home, Search, Bookmark, Settings, Shield } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { getCurrentUser } from "@/lib/auth-session";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const loc = useLocation();
@@ -10,11 +11,26 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let active = true;
     const check = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { if (active) setIsAdmin(false); return; }
-      const { data, error } = await supabase.from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin").maybeSingle();
-      if (active) setIsAdmin(!error && !!data);
+      try {
+        const user = await getCurrentUser();
+        if (!user) {
+          if (active) setIsAdmin(false);
+          return;
+        }
+
+        const { data, error } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", user.id)
+          .eq("role", "admin")
+          .maybeSingle();
+
+        if (active) setIsAdmin(!error && !!data);
+      } catch {
+        if (active) setIsAdmin(false);
+      }
     };
+
     check();
     const { data: sub } = supabase.auth.onAuthStateChange(() => check());
     return () => { active = false; sub.subscription.unsubscribe(); };
