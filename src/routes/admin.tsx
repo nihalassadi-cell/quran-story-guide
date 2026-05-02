@@ -28,25 +28,66 @@ function AdminPage() {
   const [log, setLog] = useState<string[]>([]);
 
   useEffect(() => {
-    (async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { navigate({ to: "/auth" }); return; }
-      const { data: roleRow, error: roleError } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", user.id)
-        .eq("role", "admin")
-        .maybeSingle();
-      if (roleError) {
+    let active = true;
+
+    const load = async () => {
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+
+        const user = session?.user;
+        if (!user) {
+          navigate({ to: "/auth" });
+          return;
+        }
+
+        const { data: roleRow, error: roleError } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", user.id)
+          .eq("role", "admin")
+          .maybeSingle();
+
+        if (!active) return;
+
+        if (roleError) {
+          toast.error("Could not verify admin access");
+          setStatus("denied");
+          return;
+        }
+
+        if (!roleRow) {
+          setStatus("denied");
+          return;
+        }
+
+        const { data: list, error: listError } = await supabase
+          .from("surahs")
+          .select("number, name_ar, name_en, verse_count, is_animated")
+          .order("number");
+
+        if (!active) return;
+
+        if (listError) {
+          toast.error("Could not load Surahs");
+          setStatus("denied");
+          return;
+        }
+
+        setSurahs(list ?? []);
+        setStatus("ok");
+      } catch {
+        if (!active) return;
         toast.error("Could not verify admin access");
         setStatus("denied");
-        return;
       }
-      if (!roleRow) { setStatus("denied"); return; }
-      const { data: list } = await supabase.from("surahs").select("number, name_ar, name_en, verse_count, is_animated").order("number");
-      setSurahs(list ?? []);
-      setStatus("ok");
-    })();
+    };
+
+    load();
+    return () => {
+      active = false;
+    };
   }, [navigate]);
 
   const append = (line: string) => setLog((l) => [...l.slice(-20), line]);
