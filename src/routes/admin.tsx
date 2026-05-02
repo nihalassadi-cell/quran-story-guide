@@ -47,13 +47,16 @@ function AdminPage() {
     setLog([]);
     try {
       let safety = 0;
-      while (safety++ < 60) {
-        append(`Batch ${safety}: requesting…`);
+      while (safety++ < 200) {
+        const startedAt = Date.now();
+        append(`Batch ${safety}: requesting (this can take 20-40s)…`);
         const { data, error } = await supabase.functions.invoke("generate-surah", {
-          body: { surahNumber: selected, batchSize: 3 },
+          body: { surahNumber: selected, batchSize: 1 },
         });
+        const elapsed = Math.round((Date.now() - startedAt) / 1000);
         if (error) {
           const msg = (error as any)?.message ?? "request failed";
+          append(`  ! error after ${elapsed}s: ${msg}`);
           if (msg.includes("429")) { toast.error("Rate limit hit — pausing 20s"); await new Promise((r) => setTimeout(r, 20000)); continue; }
           if (msg.includes("402")) { toast.error("Lovable AI credits exhausted. Add credits in Settings → Workspace → Usage."); break; }
           throw error;
@@ -63,6 +66,7 @@ function AdminPage() {
           processed: { verse: number; ok: boolean; error?: string }[];
         };
         setProgress({ ready: readyCount, total: totalVerses });
+        append(`  finished in ${elapsed}s — ${readyCount}/${totalVerses} ready`);
         for (const p of processed) append(p.ok ? `  ✓ verse ${p.verse}` : `  ✗ verse ${p.verse} — ${p.error}`);
         if (done) { toast.success("Surah fully animated!"); break; }
         if (processed.length === 0) { toast.message("Nothing left to process"); break; }
