@@ -4,15 +4,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { fetchSurahWithTranslation, ayahAudioUrl, RECITERS, TRANSLATION_LANGUAGES, type LanguageCode } from "@/lib/quran-api";
 import { ChevronLeft, Play, Pause, SkipBack, SkipForward, Bookmark, BookmarkCheck, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { z } from "zod";
-import { zodValidator, fallback } from "@tanstack/zod-adapter";
-
-const searchSchema = z.object({
-  verse: fallback(z.number().int().min(1), 1).default(1),
-});
+type SurahSearch = { verse: number };
 
 export const Route = createFileRoute("/surah/$number")({
-  validateSearch: zodValidator(searchSchema),
+  validateSearch: (search: Record<string, unknown>): SurahSearch => {
+    const v = Number(search.verse);
+    return { verse: Number.isFinite(v) && v >= 1 ? Math.floor(v) : 1 };
+  },
   head: ({ params }) => ({
     meta: [
       { title: `Surah ${params.number} — Noor` },
