@@ -34,28 +34,28 @@
 }
 
 :root {
-  /* Dark, warm, reverent palette inspired by Islamic manuscript illumination */
+  /* Light, warm, reverent palette inspired by Islamic manuscript parchment */
   --radius: 0.875rem;
-  --background: oklch(0.18 0.02 70);            /* deep warm charcoal */
-  --foreground: oklch(0.96 0.02 80);            /* parchment cream */
-  --card: oklch(0.22 0.025 70);
-  --card-foreground: oklch(0.96 0.02 80);
-  --popover: oklch(0.22 0.025 70);
-  --popover-foreground: oklch(0.96 0.02 80);
-  --primary: oklch(0.78 0.14 75);               /* warm gold */
-  --primary-foreground: oklch(0.15 0.02 70);
-  --primary-glow: oklch(0.85 0.15 80);
-  --secondary: oklch(0.30 0.03 70);
-  --secondary-foreground: oklch(0.96 0.02 80);
-  --muted: oklch(0.26 0.02 70);
-  --muted-foreground: oklch(0.72 0.03 80);
-  --accent: oklch(0.45 0.10 180);               /* deep teal accent */
-  --accent-foreground: oklch(0.96 0.02 80);
-  --destructive: oklch(0.62 0.20 25);
-  --destructive-foreground: oklch(0.98 0 0);
-  --border: oklch(0.30 0.025 70);
-  --input: oklch(0.28 0.025 70);
-  --ring: oklch(0.78 0.14 75);
+  --background: oklch(0.98 0.012 85);           /* warm parchment */
+  --foreground: oklch(0.22 0.02 70);            /* deep ink */
+  --card: oklch(0.995 0.008 85);
+  --card-foreground: oklch(0.22 0.02 70);
+  --popover: oklch(0.995 0.008 85);
+  --popover-foreground: oklch(0.22 0.02 70);
+  --primary: oklch(0.62 0.14 75);               /* warm gold */
+  --primary-foreground: oklch(0.99 0.01 85);
+  --primary-glow: oklch(0.72 0.15 80);
+  --secondary: oklch(0.93 0.02 80);
+  --secondary-foreground: oklch(0.22 0.02 70);
+  --muted: oklch(0.94 0.015 80);
+  --muted-foreground: oklch(0.48 0.03 75);
+  --accent: oklch(0.55 0.10 180);               /* deep teal accent */
+  --accent-foreground: oklch(0.99 0.01 85);
+  --destructive: oklch(0.58 0.20 25);
+  --destructive-foreground: oklch(0.99 0 0);
+  --border: oklch(0.88 0.015 80);
+  --input: oklch(0.92 0.015 80);
+  --ring: oklch(0.62 0.14 75);
 
   --font-display: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-arabic: "Amiri", "Scheherazade New", "Noto Naskh Arabic", serif;
