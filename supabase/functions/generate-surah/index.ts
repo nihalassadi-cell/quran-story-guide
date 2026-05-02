@@ -156,11 +156,13 @@ Deno.serve(async (req) => {
     // 1. Ensure verses + translations exist
     const verses = await ensureVerses(admin, surahNumber);
 
-    // 2. Find verses without a ready scene
+    const regenerate: boolean = !!body.regenerate;
+
+    // 2. Find verses to process
     const verseIds = verses.map((v) => v.id);
     const { data: existingScenes } = await admin.from("scenes").select("verse_id, status").in("verse_id", verseIds);
     const sceneMap = new Map<string, string>((existingScenes ?? []).map((s: any) => [s.verse_id, s.status]));
-    const pending = verses.filter((v) => sceneMap.get(v.id) !== "ready").slice(0, batchSize);
+    const pending = (regenerate ? verses : verses.filter((v) => sceneMap.get(v.id) !== "ready")).slice(0, batchSize);
 
     // 3. Load translations for those verses
     const { data: translations } = await admin.from("translations").select("verse_id, text").eq("language", "en").in("verse_id", pending.map((v) => v.id));
