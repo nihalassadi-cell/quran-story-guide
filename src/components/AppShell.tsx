@@ -12,8 +12,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     const check = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { if (active) setIsAdmin(false); return; }
-      const { data } = await supabase.from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin").maybeSingle();
-      if (active) setIsAdmin(!!data);
+      const { data, error } = await supabase.from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin").maybeSingle();
+      if (active) setIsAdmin(!error && !!data);
     };
     check();
     const { data: sub } = supabase.auth.onAuthStateChange(() => check());
