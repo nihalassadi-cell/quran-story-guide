@@ -14,16 +14,286 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      bookmarks: {
+        Row: {
+          created_at: string
+          id: string
+          note: string | null
+          surah_number: number
+          user_id: string
+          verse_number: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          note?: string | null
+          surah_number: number
+          user_id: string
+          verse_number: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          note?: string | null
+          surah_number?: number
+          user_id?: string
+          verse_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bookmarks_surah_number_fkey"
+            columns: ["surah_number"]
+            isOneToOne: false
+            referencedRelation: "surahs"
+            referencedColumns: ["number"]
+          },
+        ]
+      }
+      narrations: {
+        Row: {
+          audio_url: string
+          created_at: string
+          id: string
+          language: string
+          verse_id: string
+          voice_id: string | null
+        }
+        Insert: {
+          audio_url: string
+          created_at?: string
+          id?: string
+          language: string
+          verse_id: string
+          voice_id?: string | null
+        }
+        Update: {
+          audio_url?: string
+          created_at?: string
+          id?: string
+          language?: string
+          verse_id?: string
+          voice_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "narrations_verse_id_fkey"
+            columns: ["verse_id"]
+            isOneToOne: false
+            referencedRelation: "verses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      scenes: {
+        Row: {
+          created_at: string
+          error: string | null
+          id: string
+          image_prompt: string | null
+          image_url: string | null
+          status: string
+          updated_at: string
+          verse_id: string
+        }
+        Insert: {
+          created_at?: string
+          error?: string | null
+          id?: string
+          image_prompt?: string | null
+          image_url?: string | null
+          status?: string
+          updated_at?: string
+          verse_id: string
+        }
+        Update: {
+          created_at?: string
+          error?: string | null
+          id?: string
+          image_prompt?: string | null
+          image_url?: string | null
+          status?: string
+          updated_at?: string
+          verse_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scenes_verse_id_fkey"
+            columns: ["verse_id"]
+            isOneToOne: true
+            referencedRelation: "verses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      surahs: {
+        Row: {
+          created_at: string
+          is_animated: boolean
+          name_ar: string
+          name_en: string
+          name_translit: string
+          number: number
+          revelation_place: string
+          verse_count: number
+        }
+        Insert: {
+          created_at?: string
+          is_animated?: boolean
+          name_ar: string
+          name_en: string
+          name_translit: string
+          number: number
+          revelation_place: string
+          verse_count: number
+        }
+        Update: {
+          created_at?: string
+          is_animated?: boolean
+          name_ar?: string
+          name_en?: string
+          name_translit?: string
+          number?: number
+          revelation_place?: string
+          verse_count?: number
+        }
+        Relationships: []
+      }
+      translations: {
+        Row: {
+          created_at: string
+          id: string
+          language: string
+          source: string | null
+          text: string
+          verse_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          language: string
+          source?: string | null
+          text: string
+          verse_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          language?: string
+          source?: string | null
+          text?: string
+          verse_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "translations_verse_id_fkey"
+            columns: ["verse_id"]
+            isOneToOne: false
+            referencedRelation: "verses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_settings: {
+        Row: {
+          autoplay: boolean
+          reciter: string
+          translation_language: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          autoplay?: boolean
+          reciter?: string
+          translation_language?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          autoplay?: boolean
+          reciter?: string
+          translation_language?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      verses: {
+        Row: {
+          created_at: string
+          id: string
+          juz: number | null
+          mentions_prophet_muhammad: boolean
+          page: number | null
+          surah_number: number
+          text_ar: string
+          verse_number: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          juz?: number | null
+          mentions_prophet_muhammad?: boolean
+          page?: number | null
+          surah_number: number
+          text_ar: string
+          verse_number: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          juz?: number | null
+          mentions_prophet_muhammad?: boolean
+          page?: number | null
+          surah_number?: number
+          text_ar?: string
+          verse_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "verses_surah_number_fkey"
+            columns: ["surah_number"]
+            isOneToOne: false
+            referencedRelation: "surahs"
+            referencedColumns: ["number"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +420,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "user"],
+    },
   },
 } as const
