@@ -25,6 +25,7 @@ function AdminPage() {
   const [surahs, setSurahs] = useState<SurahRow[]>([]);
   const [selected, setSelected] = useState<number>(1);
   const [generating, setGenerating] = useState(false);
+  const [regenerate, setRegenerate] = useState(false);
   const [progress, setProgress] = useState<{ ready: number; total: number } | null>(null);
   const [log, setLog] = useState<string[]>([]);
 
