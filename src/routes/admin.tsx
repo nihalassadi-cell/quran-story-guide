@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/AppShell";
 import { Shield, Loader2, Play, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
+import { getCurrentUser } from "@/lib/auth-session";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({ meta: [{ title: "Admin — Noor" }] }),
@@ -32,11 +33,7 @@ function AdminPage() {
 
     const load = async () => {
       try {
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
-
-        const user = session?.user;
+        const user = await getCurrentUser();
         if (!user) {
           navigate({ to: "/auth" });
           return;
