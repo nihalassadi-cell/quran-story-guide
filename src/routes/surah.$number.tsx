@@ -61,7 +61,10 @@ function SurahPlayer() {
   // Load Surah text + translation
   useEffect(() => {
     setData(null);
-    fetchSurahWithTranslation(surahNum, language).then(setData).catch(() => toast.error("Failed to load Surah"));
+    console.log("[surah] fetching", surahNum, language);
+    fetchSurahWithTranslation(surahNum, language)
+      .then((d) => { console.log("[surah] loaded", d.ayahs.length, "ayahs"); setData(d); })
+      .catch((e) => { console.error("[surah] fetch failed", e); toast.error("Failed to load Surah"); });
   }, [surahNum, language]);
 
   // Load scene images for this Surah from DB
