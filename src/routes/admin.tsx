@@ -1,8 +1,8 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/AppShell";
-import { Shield, Loader2, Play, CheckCircle2 } from "lucide-react";
+import { Shield, Loader2, Play, CheckCircle2, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { fetchRoleWithStoredSession, fetchWithStoredSession, readStoredAuth } from "@/lib/browser-auth";
 
