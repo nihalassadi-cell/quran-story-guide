@@ -4,12 +4,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { fetchSurahWithTranslation, ayahAudioUrl, RECITERS, TRANSLATION_LANGUAGES, type LanguageCode } from "@/lib/quran-api";
 import { ChevronLeft, Play, Pause, SkipBack, SkipForward, Bookmark, BookmarkCheck, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-type SurahSearch = { verse: number };
+type SurahSearch = { verse?: number };
 
 export const Route = createFileRoute("/surah/$number")({
   validateSearch: (search: Record<string, unknown>): SurahSearch => {
     const v = Number(search.verse);
-    return { verse: Number.isFinite(v) && v >= 1 ? Math.floor(v) : 1 };
+    return { verse: Number.isFinite(v) && v >= 1 ? Math.floor(v) : undefined };
   },
   head: ({ params }) => ({
     meta: [
@@ -28,7 +28,7 @@ function SurahPlayer() {
 
   const [data, setData] = useState<Awaited<ReturnType<typeof fetchSurahWithTranslation>> | null>(null);
   const [scenes, setScenes] = useState<Record<number, string>>({});
-  const [currentVerse, setCurrentVerse] = useState<number>(verse);
+  const [currentVerse, setCurrentVerse] = useState<number>(verse ?? 1);
   const [playing, setPlaying] = useState(false);
   const [reciter, setReciter] = useState<string>("ar.alafasy");
   const [language, setLanguage] = useState<LanguageCode>("en");

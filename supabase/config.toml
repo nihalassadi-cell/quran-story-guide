@@ -1,1 +1,4 @@
 project_id = "uponnojfyseqvvbjbxcf"
+
+[functions.generate-surah]
+verify_jwt = true
