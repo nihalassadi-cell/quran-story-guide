@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
+import { createClient } from "@supabase/supabase-js";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import type { Database } from "@/integrations/supabase/types";
 
 const BUCKET = "narrations";
 const VOICE_ID = "EXAVITQu4vr4xnSDxMaL"; // Sarah — multilingual
@@ -8,6 +9,35 @@ const DAILY_LIMIT = 50;
 const MAX_TEXT_LEN = 600;
 
 type Result = { url: string | null; error?: string };
+
+async function getUserIdFromAccessToken(accessToken: string | undefined): Promise<string | null> {
+  if (!accessToken) return null;
+
+  const url = process.env.SUPABASE_URL;
+  const key = process.env.SUPABASE_PUBLISHABLE_KEY;
+  if (!url || !key) return null;
+
+  const supabase = createClient<Database>(url, key, {
+    global: {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    },
+    auth: {
+      storage: undefined,
+      persistSession: false,
+      autoRefreshToken: false,
+    },
+  });
+
+  const { data, error } = await supabase.auth.getClaims(accessToken);
+  if (error || !data?.claims?.sub) {
+    console.error("[tts] invalid access token", error);
+    return null;
+  }
+
+  return data.claims.sub;
+}
 
 async function cachedUrl(surahNumber: number, verseNumber: number, language: string): Promise<string | null> {
   const path = `surah-${surahNumber}/v${verseNumber}-${language}.mp3`;
@@ -37,15 +67,18 @@ export const getCachedNarrationUrl = createServerFn({ method: "POST" })
 
 // Authenticated — generates if not cached. Rate-limited per user.
 export const generateNarration = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((data: { surahNumber: number; verseNumber: number; language: string; text: string }) => data)
-  .handler(async ({ data, context }): Promise<Result> => {
+  .inputValidator((data: { surahNumber: number; verseNumber: number; language: string; text: string; accessToken?: string }) => data)
+  .handler(async ({ data }): Promise<Result> => {
     try {
-      const { surahNumber, verseNumber, language, text } = data;
-      const userId = (context as { userId: string }).userId;
+      const { surahNumber, verseNumber, language, text, accessToken } = data;
 
       const cached = await cachedUrl(surahNumber, verseNumber, language);
       if (cached) return { url: cached };
+
+      const userId = await getUserIdFromAccessToken(accessToken);
+      if (!userId) {
+        return { url: null, error: "auth_required" };
+      }
 
       if (text.length > MAX_TEXT_LEN) {
         return { url: null, error: "text_too_long" };
