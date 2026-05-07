@@ -124,31 +124,12 @@ function AnimatePage() {
                 <ExternalLink className="h-4 w-4" /> Preview
               </Link>
             </div>
-            {progress && (
-              <div className="space-y-1">
-                <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>Progress</span><span>{progress.ready}/{progress.total}</span>
-                </div>
-                <div className="h-2 bg-input rounded-full overflow-hidden">
-                  <div className="h-full bg-gradient-to-r from-primary to-primary-glow transition-all" style={{ width: `${(progress.ready / progress.total) * 100}%` }} />
-                </div>
-                {progress.ready === progress.total && (
-                  <p className="text-xs text-primary flex items-center gap-1"><CheckCircle2 className="h-3 w-3" /> Complete</p>
-                )}
+            {generating && (
+              <div className="flex items-center gap-2 text-xs text-muted-foreground pt-1">
+                <Loader2 className="h-3 w-3 animate-spin text-primary" />
+                <span>Play in progress — generating scenes…</span>
               </div>
             )}
-          </div>
-
-          {log.length > 0 && (
-            <div className="rounded-xl border border-border bg-card/40 p-4 font-mono text-xs space-y-0.5 max-h-64 overflow-auto">
-              {log.map((line, i) => <div key={i} className="text-muted-foreground">{line}</div>)}
-            </div>
-          )}
-
-          <p className="text-xs text-muted-foreground">
-            Each batch processes 1 verse. The job loops automatically until the Surah is fully animated or hits a rate limit.
-            Start with a short Surah like Al-Fatihah (#1, 7 verses) or An-Nas (#114, 6 verses) to test.
-          </p>
         </div>
       </div>
     </AppShell>
