@@ -436,5 +436,3 @@ function SurahPlayer() {
     </div>
   );
 }
-  );
-}
