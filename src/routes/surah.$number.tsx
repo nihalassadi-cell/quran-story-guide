@@ -6,12 +6,15 @@ import { ChevronLeft, Play, Pause, SkipBack, SkipForward, Bookmark, BookmarkChec
 import { toast } from "sonner";
 type SurahSearch = { verse?: number };
 
-// Free, human-recorded translation audio from EveryAyah.com — no API key, no cost, no limits.
+// Free, human-recorded translation audio. Each entry is a path under
+// https://everyayah.com/data/{path}/{SSS}{VVV}.mp3 — no API key, no cost, no limits.
 const EVERYAYAH_TRANSLATIONS: Record<string, string> = {
-  en: "Sahih_Intl_Ibrahim_Walk_192kbps",
-  ur: "Urdu_Shamshad_Ali_Khan_46kbps",
-  id: "Indonesian_Edition_192kbps",
-  tr: "Turkish_Saban_Kurt_192kbps",
+  en: "English/Sahih_Intnl_Ibrahim_Walk_192kbps",
+  ur: "translations/urdu_shamshad_ali_khan_46kbps",
+  // Multilingual recitation w/ verse-by-verse English by Basfar — used as a
+  // universal fallback for languages without dedicated free voiceovers.
+  id: "MultiLanguage/Basfar_Walk_192kbps",
+  tr: "MultiLanguage/Basfar_Walk_192kbps",
 };
 
 function translationAudioUrl(language: string, surah: number, verse: number): string | null {
@@ -19,7 +22,7 @@ function translationAudioUrl(language: string, surah: number, verse: number): st
   if (!folder) return null;
   const s = String(surah).padStart(3, "0");
   const v = String(verse).padStart(3, "0");
-  return `https://everyayah.com/data/translations/${folder}/${s}${v}.mp3`;
+  return `https://everyayah.com/data/${folder}/${s}${v}.mp3`;
 }
 
 export const Route = createFileRoute("/surah/$number")({
