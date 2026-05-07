@@ -396,17 +396,38 @@ function SurahPlayer() {
           >
             {voiceoverOn ? <Volume2 className="h-4 w-4 text-primary" /> : <VolumeX className="h-4 w-4 text-muted-foreground" />}
           </button>
-          <a
-            href={`https://www.youtube.com/results?search_query=${encodeURIComponent(`Surah ${data?.name_en ?? surahNum} full recitation ${TRANSLATION_LANGUAGES.find(l=>l.code===language)?.name ?? "English"} translation`)}`}
-            target="_blank"
-            rel="noopener noreferrer"
+          <button
+            onClick={() => setYtOpen(true)}
             title="Watch full surah on YouTube"
             className="rounded bg-card/70 backdrop-blur border border-border p-1.5 flex items-center"
           >
             <Youtube className="h-4 w-4 text-red-500" />
-          </a>
+          </button>
         </div>
       </div>
+
+      {ytOpen && (
+        <div className="fixed inset-0 z-50 bg-background/95 backdrop-blur-md flex flex-col">
+          <div className="flex items-center justify-between p-3 border-b border-border">
+            <p className="text-sm font-medium">
+              Surah {data?.name_en ?? surahNum} — YouTube
+            </p>
+            <button
+              onClick={() => setYtOpen(false)}
+              className="rounded-full bg-card border border-border px-3 py-1 text-xs"
+            >
+              Close
+            </button>
+          </div>
+          <iframe
+            className="flex-1 w-full"
+            src={`https://www.youtube.com/embed?listType=search&list=${encodeURIComponent(`Surah ${data?.name_en ?? surahNum} full recitation ${TRANSLATION_LANGUAGES.find(l=>l.code===language)?.name ?? "English"} translation`)}`}
+            title="YouTube full surah recitation"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+          />
+        </div>
+      )}
     </div>
   );
 }
