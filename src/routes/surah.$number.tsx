@@ -343,7 +343,20 @@ function SurahPlayer() {
             <SkipBack className="h-5 w-5" />
           </button>
           <button
-            onClick={() => setPlaying((p) => !p)}
+            onClick={() => {
+              // iOS Safari requires speechSynthesis to be invoked inside a user
+              // gesture at least once per session. Speak an empty utterance now
+              // to "unlock" it so later voiceovers (fired from audio.onended)
+              // are allowed to play.
+              if (typeof window !== "undefined" && "speechSynthesis" in window) {
+                try {
+                  const unlock = new SpeechSynthesisUtterance("");
+                  unlock.volume = 0;
+                  window.speechSynthesis.speak(unlock);
+                } catch {}
+              }
+              setPlaying((p) => !p);
+            }}
             className="rounded-full bg-gradient-to-br from-primary to-primary-glow text-primary-foreground p-5 glow-shadow"
           >
             {playing ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6 ml-0.5" />}
