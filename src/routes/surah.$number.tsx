@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { fetchSurahWithTranslation, ayahAudioUrl, RECITERS, TRANSLATION_LANGUAGES, type LanguageCode } from "@/lib/quran-api";
 import { ChevronLeft, Play, Pause, SkipBack, SkipForward, Bookmark, BookmarkCheck, Loader2, Volume2, VolumeX } from "lucide-react";
 import { toast } from "sonner";
-import { getNarrationUrl } from "@/server/tts.functions";
+import { getCachedNarrationUrl, generateNarration } from "@/server/tts.functions";
 type SurahSearch = { verse?: number };
 
 export const Route = createFileRoute("/surah/$number")({
