@@ -34,6 +34,8 @@ function SurahPlayer() {
   const [language, setLanguage] = useState<LanguageCode>("en");
   const [bookmarked, setBookmarked] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+  const [voiceoverOn, setVoiceoverOn] = useState(true);
+  const [voiceoverLang, setVoiceoverLang] = useState<string>("en-US");
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   // Load user settings + auth (non-blocking — never await before fetching Surah)
