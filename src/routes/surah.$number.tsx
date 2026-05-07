@@ -36,12 +36,22 @@ function SurahPlayer() {
   const [userId, setUserId] = useState<string | null>(null);
   const [voiceoverOn, setVoiceoverOn] = useState(true);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [ttsVoicesReady, setTtsVoicesReady] = useState(false);
 
   // Map translation LanguageCode to BCP47 for SpeechSynthesis
   const ttsLang = useMemo(() => {
-    const map: Record<string, string> = { en: "en-US", ur: "ur-PK", id: "id-ID", tr: "tr-TR" };
+    const map: Record<string, string> = { en: "en-US", ur: "ur", id: "id-ID", tr: "tr-TR" };
     return map[language] ?? "en-US";
   }, [language]);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+    const synth = window.speechSynthesis;
+    const markReady = () => setTtsVoicesReady(synth.getVoices().length > 0);
+    markReady();
+    synth.addEventListener("voiceschanged", markReady);
+    return () => synth.removeEventListener("voiceschanged", markReady);
+  }, []);
 
   // Load user settings + auth (non-blocking — never await before fetching Surah)
   useEffect(() => {
@@ -179,20 +189,28 @@ function SurahPlayer() {
         advance();
         return;
       }
-      // Workaround: cancel + small delay before speak (Chrome bug)
+      const utter = new SpeechSynthesisUtterance(translation.text);
+      utter.lang = ttsLang;
+      utter.rate = 0.95;
+      utter.pitch = 1;
+
+      const voices = window.speechSynthesis.getVoices();
+      const langPrefix = ttsLang.split("-")[0].toLowerCase();
+      const match = voices.find((v) => v.lang.toLowerCase() === ttsLang.toLowerCase())
+        || voices.find((v) => v.lang.toLowerCase().startsWith(`${langPrefix}-`))
+        || voices.find((v) => v.lang.toLowerCase() === langPrefix)
+        || voices.find((v) => v.name.toLowerCase().includes("urdu"));
+
+      if (match) utter.voice = match;
+      utter.onend = advance;
+      utter.onerror = advance;
+
       window.speechSynthesis.cancel();
-      setTimeout(() => {
-        const utter = new SpeechSynthesisUtterance(translation.text);
-        utter.lang = ttsLang;
-        utter.rate = 0.95;
-        utter.pitch = 1;
-        const voices = window.speechSynthesis.getVoices();
-        const match = voices.find((v) => v.lang === ttsLang) || voices.find((v) => v.lang.startsWith(ttsLang.split("-")[0]));
-        if (match) utter.voice = match;
-        utter.onend = advance;
-        utter.onerror = advance;
-        window.speechSynthesis.speak(utter);
-      }, 250);
+      window.speechSynthesis.speak(utter);
+
+      if (window.speechSynthesis.paused) {
+        window.speechSynthesis.resume();
+      }
     };
 
     audio.src = ayahAudioUrl(ayah.number, reciter);
@@ -207,7 +225,7 @@ function SurahPlayer() {
         window.speechSynthesis.cancel();
       }
     };
-  }, [ayah, reciter, playing, data, currentVerse, translation?.text, voiceoverOn, ttsLang]);
+  }, [ayah, reciter, playing, data, currentVerse, translation?.text, voiceoverOn, ttsLang, ttsVoicesReady]);
 
   // Sync URL with current verse
   useEffect(() => {
