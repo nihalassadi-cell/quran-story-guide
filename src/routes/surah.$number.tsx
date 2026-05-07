@@ -175,20 +175,26 @@ function SurahPlayer() {
           setPlaying(false);
         }
       };
+      console.log("[tts] arabic ended, voiceoverOn=", voiceoverOn, "text=", translation?.text?.slice(0, 30));
       if (!voiceoverOn || !translation?.text || typeof window === "undefined" || !("speechSynthesis" in window)) {
         advance();
         return;
       }
-      const utter = new SpeechSynthesisUtterance(translation.text);
-      utter.lang = ttsLang;
-      utter.rate = 0.95;
-      utter.pitch = 1;
-      const voices = window.speechSynthesis.getVoices();
-      const match = voices.find((v) => v.lang === ttsLang) || voices.find((v) => v.lang.startsWith(ttsLang.split("-")[0]));
-      if (match) utter.voice = match;
-      utter.onend = advance;
-      utter.onerror = advance;
-      window.speechSynthesis.speak(utter);
+      // Workaround: cancel + small delay before speak (Chrome bug)
+      window.speechSynthesis.cancel();
+      setTimeout(() => {
+        const utter = new SpeechSynthesisUtterance(translation.text);
+        utter.lang = ttsLang;
+        utter.rate = 0.95;
+        utter.pitch = 1;
+        const voices = window.speechSynthesis.getVoices();
+        const match = voices.find((v) => v.lang === ttsLang) || voices.find((v) => v.lang.startsWith(ttsLang.split("-")[0]));
+        if (match) utter.voice = match;
+        utter.onend = () => { console.log("[tts] ended"); advance(); };
+        utter.onerror = (e) => { console.warn("[tts] error", e); advance(); };
+        console.log("[tts] speaking", ttsLang, "voice=", match?.name ?? "default");
+        window.speechSynthesis.speak(utter);
+      }, 250);
     };
 
     audio.src = ayahAudioUrl(ayah.number, reciter);
