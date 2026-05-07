@@ -1,17 +1,21 @@
 import { createServerFn } from "@tanstack/react-start";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 const BUCKET = "narrations";
-// Sarah — multilingual voice that handles Urdu, Indonesian, Turkish, etc.
-const VOICE_ID = "EXAVITQu4vr4xnSDxMaL";
+const VOICE_ID = "EXAVITQu4vr4xnSDxMaL"; // Sarah — multilingual
+const DAILY_LIMIT = 50;
+const MAX_TEXT_LEN = 600;
 
 export const getNarrationUrl = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((data: { surahNumber: number; verseNumber: number; language: string; text: string }) => data)
-  .handler(async ({ data }): Promise<{ url: string }> => {
+  .handler(async ({ data, context }): Promise<{ url: string }> => {
     const { surahNumber, verseNumber, language, text } = data;
+    const userId = (context as { userId: string }).userId;
     const path = `surah-${surahNumber}/v${verseNumber}-${language}.mp3`;
 
-    // 1. If already cached, return the public URL immediately (no API cost).
+    // 1. Cache hit — free, no limit, no auth tracking.
     const { data: existing } = await supabaseAdmin.storage.from(BUCKET).list(`surah-${surahNumber}`, {
       search: `v${verseNumber}-${language}.mp3`,
       limit: 1,
@@ -21,7 +25,21 @@ export const getNarrationUrl = createServerFn({ method: "POST" })
       return { url: pub.publicUrl };
     }
 
-    // 2. Otherwise, generate via ElevenLabs.
+    // 2. Cache miss — enforce per-user daily rate limit before spending credits.
+    if (text.length > MAX_TEXT_LEN) {
+      throw new Error("Translation text too long for voiceover");
+    }
+    const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const { count } = await supabaseAdmin
+      .from("tts_usage")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", userId)
+      .gte("created_at", since);
+    if ((count ?? 0) >= DAILY_LIMIT) {
+      throw new Error(`Daily voiceover limit (${DAILY_LIMIT}) reached. Try again tomorrow.`);
+    }
+
+    // 3. Generate via ElevenLabs.
     const apiKey = process.env.ELEVENLABS_API_KEY;
     if (!apiKey) throw new Error("ELEVENLABS_API_KEY is not configured");
 
@@ -43,11 +61,13 @@ export const getNarrationUrl = createServerFn({ method: "POST" })
     }
     const audio = new Uint8Array(await res.arrayBuffer());
 
-    // 3. Cache to storage and return public URL.
+    // 4. Cache + record usage.
     const { error: upErr } = await supabaseAdmin.storage
       .from(BUCKET)
       .upload(path, audio, { contentType: "audio/mpeg", upsert: true });
     if (upErr) throw new Error(`Storage upload failed: ${upErr.message}`);
+
+    await supabaseAdmin.from("tts_usage").insert({ user_id: userId });
 
     const { data: pub } = supabaseAdmin.storage.from(BUCKET).getPublicUrl(path);
     return { url: pub.publicUrl };
