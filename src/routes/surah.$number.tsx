@@ -195,28 +195,40 @@ function SurahPlayer() {
         return;
       }
 
-      // Try server-generated MP3 first (cached after first request — works on every device/language).
+      // 1. Try cache (works for everyone, no auth, no cost).
+      let url: string | null = null;
       try {
-        const { url } = await getNarrationUrl({
-          data: {
-            surahNumber: surahNum,
-            verseNumber: currentVerse,
-            language,
-            text: translation.text,
-          },
+        const cached = await getCachedNarrationUrl({
+          data: { surahNumber: surahNum, verseNumber: currentVerse, language },
         });
-        if (cancelledTts) return;
-        const ttsAudio = new Audio(url);
-        ttsAudioRef.current = ttsAudio;
-        ttsAudio.onended = advance;
-        ttsAudio.onerror = advance;
-        await ttsAudio.play();
-        return;
+        url = cached.url;
       } catch (e) {
-        console.error("[tts] ElevenLabs narration failed", e);
-        toast.error("Voiceover unavailable for this verse");
-        advance();
+        console.warn("[tts] cache lookup failed", e);
       }
+
+      // 2. Cache miss — only logged-in users can trigger generation.
+      if (!url && userId) {
+        try {
+          const gen = await generateNarration({
+            data: { surahNumber: surahNum, verseNumber: currentVerse, language, text: translation.text },
+          });
+          url = gen.url;
+          if (!url && gen.error === "daily_limit") {
+            toast.error("Daily voiceover limit reached");
+          }
+        } catch (e) {
+          console.error("[tts] generation failed", e);
+        }
+      }
+
+      if (cancelledTts) return;
+      if (!url) { advance(); return; }
+
+      const ttsAudio = new Audio(url);
+      ttsAudioRef.current = ttsAudio;
+      ttsAudio.onended = advance;
+      ttsAudio.onerror = advance;
+      try { await ttsAudio.play(); } catch { advance(); }
     };
 
     audio.src = ayahAudioUrl(ayah.number, reciter);
