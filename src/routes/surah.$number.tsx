@@ -35,8 +35,13 @@ function SurahPlayer() {
   const [bookmarked, setBookmarked] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [voiceoverOn, setVoiceoverOn] = useState(true);
-  const [voiceoverLang, setVoiceoverLang] = useState<string>("en-US");
   const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Map translation LanguageCode to BCP47 for SpeechSynthesis
+  const ttsLang = useMemo(() => {
+    const map: Record<string, string> = { en: "en-US", ur: "ur-PK", id: "id-ID", tr: "tr-TR" };
+    return map[language] ?? "en-US";
+  }, [language]);
 
   // Load user settings + auth (non-blocking — never await before fetching Surah)
   useEffect(() => {
