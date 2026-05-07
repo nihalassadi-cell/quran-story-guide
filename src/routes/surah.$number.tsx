@@ -180,11 +180,11 @@ function SurahPlayer() {
         return;
       }
       const utter = new SpeechSynthesisUtterance(translation.text);
-      utter.lang = voiceoverLang;
+      utter.lang = ttsLang;
       utter.rate = 0.95;
       utter.pitch = 1;
       const voices = window.speechSynthesis.getVoices();
-      const match = voices.find((v) => v.lang === voiceoverLang) || voices.find((v) => v.lang.startsWith(voiceoverLang.split("-")[0]));
+      const match = voices.find((v) => v.lang === ttsLang) || voices.find((v) => v.lang.startsWith(ttsLang.split("-")[0]));
       if (match) utter.voice = match;
       utter.onend = advance;
       utter.onerror = advance;
@@ -203,7 +203,7 @@ function SurahPlayer() {
         window.speechSynthesis.cancel();
       }
     };
-  }, [ayah, reciter, playing, data, currentVerse, translation?.text, voiceoverOn, voiceoverLang]);
+  }, [ayah, reciter, playing, data, currentVerse, translation?.text, voiceoverOn, ttsLang]);
 
   // Sync URL with current verse
   useEffect(() => {
@@ -350,7 +350,7 @@ function SurahPlayer() {
             {voiceoverOn ? <Volume2 className="h-4 w-4 text-primary" /> : <VolumeX className="h-4 w-4 text-muted-foreground" />}
           </button>
           <select
-            value={voiceoverLang}
+            value={ttsLang}
             onChange={(e) => setVoiceoverLang(e.target.value)}
             disabled={!voiceoverOn}
             title="Voiceover language"
