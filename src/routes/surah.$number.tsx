@@ -209,12 +209,23 @@ function SurahPlayer() {
       // 2. Cache miss — only logged-in users can trigger generation.
       if (!url && userId) {
         try {
+          const {
+            data: { session },
+          } = await supabase.auth.getSession();
           const gen = await generateNarration({
-            data: { surahNumber: surahNum, verseNumber: currentVerse, language, text: translation.text },
+            data: {
+              surahNumber: surahNum,
+              verseNumber: currentVerse,
+              language,
+              text: translation.text,
+              accessToken: session?.access_token,
+            },
           });
           url = gen.url;
           if (!url && gen.error === "daily_limit") {
             toast.error("Daily voiceover limit reached");
+          } else if (!url && gen.error === "auth_required") {
+            console.warn("[tts] narration generation skipped: auth required");
           }
         } catch (e) {
           console.error("[tts] generation failed", e);
