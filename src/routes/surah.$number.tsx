@@ -213,29 +213,10 @@ function SurahPlayer() {
         await ttsAudio.play();
         return;
       } catch (e) {
-        console.warn("[tts] server narration failed, falling back to browser TTS", e);
-      }
-
-      // Fallback: browser SpeechSynthesis (works for English/most Latin langs; limited for Urdu).
-      if (typeof window === "undefined" || !("speechSynthesis" in window)) {
+        console.error("[tts] ElevenLabs narration failed", e);
+        toast.error("Voiceover unavailable for this verse");
         advance();
-        return;
       }
-      const utter = new SpeechSynthesisUtterance(translation.text);
-      utter.lang = ttsLang;
-      utter.rate = 0.95;
-      utter.pitch = 1;
-      const voices = window.speechSynthesis.getVoices();
-      const langPrefix = ttsLang.split("-")[0].toLowerCase();
-      const match = voices.find((v) => v.lang.toLowerCase() === ttsLang.toLowerCase())
-        || voices.find((v) => v.lang.toLowerCase().startsWith(`${langPrefix}-`))
-        || voices.find((v) => v.lang.toLowerCase() === langPrefix);
-      if (match) utter.voice = match;
-      utter.onend = advance;
-      utter.onerror = advance;
-      window.speechSynthesis.cancel();
-      window.speechSynthesis.speak(utter);
-      if (window.speechSynthesis.paused) window.speechSynthesis.resume();
     };
 
     audio.src = ayahAudioUrl(ayah.number, reciter);
