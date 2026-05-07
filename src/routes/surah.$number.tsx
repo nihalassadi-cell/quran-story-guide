@@ -31,7 +31,7 @@ function SurahPlayer() {
   const [currentVerse, setCurrentVerse] = useState<number>(verse ?? 1);
   const [playing, setPlaying] = useState(false);
   const [reciter, setReciter] = useState<string>("ar.alafasy");
-  const [language, setLanguage] = useState<LanguageCode>("en");
+  const [language, setLanguage] = useState<LanguageCode>("ur");
   const [bookmarked, setBookmarked] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [voiceoverOn, setVoiceoverOn] = useState(true);
