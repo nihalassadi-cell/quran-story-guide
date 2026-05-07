@@ -175,7 +175,6 @@ function SurahPlayer() {
           setPlaying(false);
         }
       };
-      console.log("[tts] arabic ended, voiceoverOn=", voiceoverOn, "text=", translation?.text?.slice(0, 30));
       if (!voiceoverOn || !translation?.text || typeof window === "undefined" || !("speechSynthesis" in window)) {
         advance();
         return;
@@ -190,9 +189,8 @@ function SurahPlayer() {
         const voices = window.speechSynthesis.getVoices();
         const match = voices.find((v) => v.lang === ttsLang) || voices.find((v) => v.lang.startsWith(ttsLang.split("-")[0]));
         if (match) utter.voice = match;
-        utter.onend = () => { console.log("[tts] ended"); advance(); };
-        utter.onerror = (e) => { console.warn("[tts] error", e); advance(); };
-        console.log("[tts] speaking", ttsLang, "voice=", match?.name ?? "default");
+        utter.onend = advance;
+        utter.onerror = advance;
         window.speechSynthesis.speak(utter);
       }, 250);
     };
