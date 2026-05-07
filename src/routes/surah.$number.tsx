@@ -151,39 +151,54 @@ function SurahPlayer() {
     [data, currentVerse],
   );
 
-  // Audio control
+  // Sequenced playback: Arabic recitation → translation voiceover → next verse (Arabic again)
   useEffect(() => {
     if (!ayah) return;
     if (!audioRef.current) audioRef.current = new Audio();
-    audioRef.current.src = ayahAudioUrl(ayah.number, reciter);
-    audioRef.current.onended = () => {
-      if (data && currentVerse < data.ayahs.length) {
-        setCurrentVerse((v: number) => v + 1);
-      } else {
-        setPlaying(false);
+    const audio = audioRef.current;
+
+    // Cancel any in-flight TTS whenever verse/settings change
+    if (typeof window !== "undefined" && "speechSynthesis" in window) {
+      window.speechSynthesis.cancel();
+    }
+
+    const playTranslationThenAdvance = () => {
+      const advance = () => {
+        if (data && currentVerse < data.ayahs.length) {
+          setCurrentVerse((v: number) => v + 1);
+        } else {
+          setPlaying(false);
+        }
+      };
+      if (!voiceoverOn || !translation?.text || typeof window === "undefined" || !("speechSynthesis" in window)) {
+        advance();
+        return;
+      }
+      const utter = new SpeechSynthesisUtterance(translation.text);
+      utter.lang = voiceoverLang;
+      utter.rate = 0.95;
+      utter.pitch = 1;
+      const voices = window.speechSynthesis.getVoices();
+      const match = voices.find((v) => v.lang === voiceoverLang) || voices.find((v) => v.lang.startsWith(voiceoverLang.split("-")[0]));
+      if (match) utter.voice = match;
+      utter.onend = advance;
+      utter.onerror = advance;
+      window.speechSynthesis.speak(utter);
+    };
+
+    audio.src = ayahAudioUrl(ayah.number, reciter);
+    audio.onended = playTranslationThenAdvance;
+
+    if (playing) audio.play().catch(() => setPlaying(false));
+    else audio.pause();
+
+    return () => {
+      audio.pause();
+      if (typeof window !== "undefined" && "speechSynthesis" in window) {
+        window.speechSynthesis.cancel();
       }
     };
-    if (playing) audioRef.current.play().catch(() => setPlaying(false));
-    else audioRef.current.pause();
-    return () => { audioRef.current?.pause(); };
-  }, [ayah, reciter, playing, data, currentVerse]);
-
-  // AI voiceover for translation using Web Speech API
-  useEffect(() => {
-    if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
-    window.speechSynthesis.cancel();
-    if (!voiceoverOn || !translation?.text) return;
-    const utter = new SpeechSynthesisUtterance(translation.text);
-    utter.lang = voiceoverLang;
-    utter.rate = 0.95;
-    utter.pitch = 1;
-    // Pick a matching voice if available
-    const voices = window.speechSynthesis.getVoices();
-    const match = voices.find((v) => v.lang === voiceoverLang) || voices.find((v) => v.lang.startsWith(voiceoverLang.split("-")[0]));
-    if (match) utter.voice = match;
-    window.speechSynthesis.speak(utter);
-    return () => { window.speechSynthesis.cancel(); };
-  }, [translation?.text, voiceoverOn, voiceoverLang]);
+  }, [ayah, reciter, playing, data, currentVerse, translation?.text, voiceoverOn, voiceoverLang]);
 
   // Sync URL with current verse
   useEffect(() => {
