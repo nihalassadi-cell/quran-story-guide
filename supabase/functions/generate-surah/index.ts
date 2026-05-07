@@ -136,7 +136,8 @@ Deno.serve(async (req) => {
     // Open to all users — no auth required for scene generation.
     const body = await req.json();
     const surahNumber: number = body.surahNumber;
-    const batchSize: number = Math.min(body.batchSize ?? 3, 5);
+    const batchSize: number = Math.min(body.batchSize ?? 8, 20);
+    const concurrency: number = Math.min(body.concurrency ?? 6, 10);
     if (!surahNumber || surahNumber < 1 || surahNumber > 114) {
       return new Response(JSON.stringify({ error: "Invalid surahNumber" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
