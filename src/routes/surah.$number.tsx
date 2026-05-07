@@ -178,15 +178,46 @@ function SurahPlayer() {
       window.speechSynthesis.cancel();
     }
 
-    const playTranslationThenAdvance = () => {
+    let cancelledTts = false;
+    const ttsAudioRef: { current: HTMLAudioElement | null } = { current: null };
+
+    const playTranslationThenAdvance = async () => {
       const advance = () => {
+        if (cancelledTts) return;
         if (data && currentVerse < data.ayahs.length) {
           setCurrentVerse((v: number) => v + 1);
         } else {
           setPlaying(false);
         }
       };
-      if (!voiceoverOn || !translation?.text || typeof window === "undefined" || !("speechSynthesis" in window)) {
+      if (!voiceoverOn || !translation?.text) {
+        advance();
+        return;
+      }
+
+      // Try server-generated MP3 first (cached after first request — works on every device/language).
+      try {
+        const { url } = await getNarrationUrl({
+          data: {
+            surahNumber: surahNum,
+            verseNumber: currentVerse,
+            language,
+            text: translation.text,
+          },
+        });
+        if (cancelledTts) return;
+        const ttsAudio = new Audio(url);
+        ttsAudioRef.current = ttsAudio;
+        ttsAudio.onended = advance;
+        ttsAudio.onerror = advance;
+        await ttsAudio.play();
+        return;
+      } catch (e) {
+        console.warn("[tts] server narration failed, falling back to browser TTS", e);
+      }
+
+      // Fallback: browser SpeechSynthesis (works for English/most Latin langs; limited for Urdu).
+      if (typeof window === "undefined" || !("speechSynthesis" in window)) {
         advance();
         return;
       }
@@ -194,24 +225,17 @@ function SurahPlayer() {
       utter.lang = ttsLang;
       utter.rate = 0.95;
       utter.pitch = 1;
-
       const voices = window.speechSynthesis.getVoices();
       const langPrefix = ttsLang.split("-")[0].toLowerCase();
       const match = voices.find((v) => v.lang.toLowerCase() === ttsLang.toLowerCase())
         || voices.find((v) => v.lang.toLowerCase().startsWith(`${langPrefix}-`))
-        || voices.find((v) => v.lang.toLowerCase() === langPrefix)
-        || voices.find((v) => v.name.toLowerCase().includes("urdu"));
-
+        || voices.find((v) => v.lang.toLowerCase() === langPrefix);
       if (match) utter.voice = match;
       utter.onend = advance;
       utter.onerror = advance;
-
       window.speechSynthesis.cancel();
       window.speechSynthesis.speak(utter);
-
-      if (window.speechSynthesis.paused) {
-        window.speechSynthesis.resume();
-      }
+      if (window.speechSynthesis.paused) window.speechSynthesis.resume();
     };
 
     audio.src = ayahAudioUrl(ayah.number, reciter);
