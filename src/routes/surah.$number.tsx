@@ -189,13 +189,35 @@ function SurahPlayer() {
 
   return (
     <div className="fixed inset-0 bg-background overflow-hidden flex flex-col">
-      {/* Background scene */}
+      {/* Background scene with cinematic Ken Burns + crossfade */}
       <div className="absolute inset-0">
         {sceneUrl ? (
-          <img src={sceneUrl} alt="" className="w-full h-full object-cover ken-burns" />
+          <img
+            key={sceneUrl}
+            src={sceneUrl}
+            alt=""
+            className={`w-full h-full object-cover scene-fade kb-${(currentVerse % 4) + 1}`}
+          />
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-card via-background to-accent/20" />
         )}
+        {/* Drifting light motes for atmospheric depth */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          {[...Array(8)].map((_, i) => (
+            <div
+              key={i}
+              className="particle absolute rounded-full bg-primary/40 blur-sm"
+              style={{
+                width: `${4 + (i % 3) * 3}px`,
+                height: `${4 + (i % 3) * 3}px`,
+                left: `${(i * 13 + 7) % 100}%`,
+                top: `${(i * 19 + 11) % 100}%`,
+                animationDelay: `${i * 1.7}s`,
+                animationDuration: `${10 + (i % 4) * 3}s`,
+              }}
+            />
+          ))}
+        </div>
         {/* Light vignette only — keep imagery visible */}
         <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-transparent to-background/85" />
       </div>
