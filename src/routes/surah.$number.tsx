@@ -67,21 +67,67 @@ function SurahPlayer() {
       .catch((e) => { console.error("[surah] fetch failed", e); toast.error("Failed to load Surah"); });
   }, [surahNum, language]);
 
-  // Load scene images for this Surah from DB
+  // Load scene images for this Surah from DB + subscribe to realtime updates,
+  // and kick off background generation if anything is missing.
   useEffect(() => {
-    (async () => {
+    let verseIdToNumber = new Map<string, number>();
+    let cancelled = false;
+
+    const load = async () => {
       const { data: verses } = await supabase
         .from("verses")
-        .select("verse_number, scenes(image_url, status)")
+        .select("id, verse_number, scenes(image_url, status)")
         .eq("surah_number", surahNum);
-      if (!verses) return;
+      if (!verses || cancelled) return;
       const map: Record<number, string> = {};
+      let missing = 0;
       for (const v of verses as any[]) {
+        verseIdToNumber.set(v.id, v.verse_number);
         const scene = Array.isArray(v.scenes) ? v.scenes[0] : v.scenes;
         if (scene?.image_url && scene.status === "ready") map[v.verse_number] = scene.image_url;
+        else missing++;
       }
       setScenes(map);
-    })();
+
+      // Kick off background generation if anything's missing — fire and forget,
+      // realtime will stream new images in as they become available.
+      if (missing > 0) {
+        const loop = async () => {
+          for (let i = 0; i < 50 && !cancelled; i++) {
+            const { data, error } = await supabase.functions.invoke("generate-surah", {
+              body: { surahNumber: surahNum, batchSize: 12, concurrency: 6 },
+            });
+            if (error || !data) break;
+            if ((data as any).done) break;
+            if (((data as any).processed ?? []).length === 0) break;
+          }
+        };
+        loop();
+      }
+    };
+    load();
+
+    const channel = supabase
+      .channel(`scenes-surah-${surahNum}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "scenes" },
+        (payload: any) => {
+          const row = payload.new ?? payload.old;
+          if (!row) return;
+          const num = verseIdToNumber.get(row.verse_id);
+          if (!num) return;
+          if (row.status === "ready" && row.image_url) {
+            setScenes((prev) => ({ ...prev, [num]: row.image_url }));
+          }
+        },
+      )
+      .subscribe();
+
+    return () => {
+      cancelled = true;
+      supabase.removeChannel(channel);
+    };
   }, [surahNum]);
 
   // Check bookmark
