@@ -245,7 +245,9 @@ function SurahPlayer() {
     else audio.pause();
 
     return () => {
+      cancelledTts = true;
       audio.pause();
+      if (ttsAudioRef.current) { ttsAudioRef.current.pause(); ttsAudioRef.current = null; }
       if (typeof window !== "undefined" && "speechSynthesis" in window) {
         window.speechSynthesis.cancel();
       }
