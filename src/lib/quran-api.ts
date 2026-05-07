@@ -12,8 +12,6 @@ export const RECITERS = [
 export const TRANSLATION_LANGUAGES = [
   { code: "en", name: "English", edition: "en.sahih" },
   { code: "ur", name: "اردو (Urdu)", edition: "ur.jalandhry" },
-  { code: "id", name: "Bahasa Indonesia", edition: "id.indonesian" },
-  { code: "tr", name: "Türkçe", edition: "tr.diyanet" },
 ] as const;
 
 export type LanguageCode = (typeof TRANSLATION_LANGUAGES)[number]["code"];

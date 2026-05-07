@@ -11,10 +11,6 @@ type SurahSearch = { verse?: number };
 const EVERYAYAH_TRANSLATIONS: Record<string, string> = {
   en: "English/Sahih_Intnl_Ibrahim_Walk_192kbps",
   ur: "translations/urdu_shamshad_ali_khan_46kbps",
-  // Multilingual recitation w/ verse-by-verse English by Basfar — used as a
-  // universal fallback for languages without dedicated free voiceovers.
-  id: "MultiLanguage/Basfar_Walk_192kbps",
-  tr: "MultiLanguage/Basfar_Walk_192kbps",
 };
 
 function translationAudioUrl(language: string, surah: number, verse: number): string | null {
