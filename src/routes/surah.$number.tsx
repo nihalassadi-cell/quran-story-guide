@@ -349,26 +349,6 @@ function SurahPlayer() {
           >
             {voiceoverOn ? <Volume2 className="h-4 w-4 text-primary" /> : <VolumeX className="h-4 w-4 text-muted-foreground" />}
           </button>
-          <select
-            value={ttsLang}
-            onChange={(e) => setVoiceoverLang(e.target.value)}
-            disabled={!voiceoverOn}
-            title="Voiceover language"
-            className="flex-1 bg-card/70 backdrop-blur border border-border rounded px-2 py-1 text-xs text-center disabled:opacity-50"
-          >
-            <option value="en-US">🔊 English (US)</option>
-            <option value="en-GB">🔊 English (UK)</option>
-            <option value="ur-PK">🔊 اردو Urdu</option>
-            <option value="ar-SA">🔊 العربية Arabic</option>
-            <option value="id-ID">🔊 Indonesian</option>
-            <option value="tr-TR">🔊 Türkçe</option>
-            <option value="fr-FR">🔊 Français</option>
-            <option value="es-ES">🔊 Español</option>
-            <option value="de-DE">🔊 Deutsch</option>
-            <option value="hi-IN">🔊 हिन्दी Hindi</option>
-            <option value="bn-BD">🔊 বাংলা Bengali</option>
-            <option value="ms-MY">🔊 Malay</option>
-          </select>
         </div>
       </div>
     </div>
