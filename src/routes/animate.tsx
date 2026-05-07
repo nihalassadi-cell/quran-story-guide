@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/AppShell";
-import { Sparkles, Loader2, Play, CheckCircle2, ExternalLink } from "lucide-react";
+import { Sparkles, Loader2, Play, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/animate")({
@@ -28,8 +28,6 @@ function AnimatePage() {
   const [selected, setSelected] = useState<number>(1);
   const [generating, setGenerating] = useState(false);
   const [regenerate, setRegenerate] = useState(false);
-  const [progress, setProgress] = useState<{ ready: number; total: number } | null>(null);
-  const [log, setLog] = useState<string[]>([]);
 
   useEffect(() => {
     supabase
@@ -39,35 +37,24 @@ function AnimatePage() {
       .then(({ data }) => setSurahs((data as SurahRow[]) ?? []));
   }, []);
 
-  const append = (line: string) => setLog((l) => [...l.slice(-20), line]);
-
   const generate = async () => {
     setGenerating(true);
-    setProgress(null);
-    setLog([]);
     try {
       let safety = 0;
       while (safety++ < 200) {
-        const startedAt = Date.now();
-        append(`Batch ${safety}: requesting (this can take 20-40s)…`);
         const { data, error } = await supabase.functions.invoke("generate-surah", {
           body: { surahNumber: selected, batchSize: 12, concurrency: 6, regenerate },
         });
-        const elapsed = Math.round((Date.now() - startedAt) / 1000);
         if (error) {
           const msg = (error as any)?.message ?? "request failed";
-          append(`  ! error after ${elapsed}s: ${msg}`);
           if (msg.includes("429")) { toast.error("Rate limit hit — pausing 20s"); await new Promise((r) => setTimeout(r, 20000)); continue; }
           if (msg.includes("402")) { toast.error("AI credits exhausted. Add credits in Settings → Workspace → Usage."); break; }
           throw error;
         }
-        const { readyCount, totalVerses, processed, done } = data as {
+        const { processed, done } = data as {
           readyCount: number; totalVerses: number; done: boolean;
           processed: { verse: number; ok: boolean; error?: string }[];
         };
-        setProgress({ ready: readyCount, total: totalVerses });
-        append(`  finished in ${elapsed}s — ${readyCount}/${totalVerses} ready`);
-        for (const p of processed) append(p.ok ? `  ✓ verse ${p.verse}` : `  ✗ verse ${p.verse} — ${p.error}`);
         if (done) { toast.success("Surah fully animated!"); break; }
         if (processed.length === 0) { toast.message("Nothing left to process"); break; }
       }
@@ -137,31 +124,13 @@ function AnimatePage() {
                 <ExternalLink className="h-4 w-4" /> Preview
               </Link>
             </div>
-            {progress && (
-              <div className="space-y-1">
-                <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>Progress</span><span>{progress.ready}/{progress.total}</span>
-                </div>
-                <div className="h-2 bg-input rounded-full overflow-hidden">
-                  <div className="h-full bg-gradient-to-r from-primary to-primary-glow transition-all" style={{ width: `${(progress.ready / progress.total) * 100}%` }} />
-                </div>
-                {progress.ready === progress.total && (
-                  <p className="text-xs text-primary flex items-center gap-1"><CheckCircle2 className="h-3 w-3" /> Complete</p>
-                )}
+            {generating && (
+              <div className="flex items-center gap-2 text-xs text-muted-foreground pt-1">
+                <Loader2 className="h-3 w-3 animate-spin text-primary" />
+                <span>Play in progress — generating scenes…</span>
               </div>
             )}
           </div>
-
-          {log.length > 0 && (
-            <div className="rounded-xl border border-border bg-card/40 p-4 font-mono text-xs space-y-0.5 max-h-64 overflow-auto">
-              {log.map((line, i) => <div key={i} className="text-muted-foreground">{line}</div>)}
-            </div>
-          )}
-
-          <p className="text-xs text-muted-foreground">
-            Each batch processes 1 verse. The job loops automatically until the Surah is fully animated or hits a rate limit.
-            Start with a short Surah like Al-Fatihah (#1, 7 verses) or An-Nas (#114, 6 verses) to test.
-          </p>
         </div>
       </div>
     </AppShell>
