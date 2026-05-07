@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchSurahWithTranslation, ayahAudioUrl, RECITERS, TRANSLATION_LANGUAGES, type LanguageCode } from "@/lib/quran-api";
-import { ChevronLeft, Play, Pause, SkipBack, SkipForward, Bookmark, BookmarkCheck, Loader2 } from "lucide-react";
+import { ChevronLeft, Play, Pause, SkipBack, SkipForward, Bookmark, BookmarkCheck, Loader2, Volume2, VolumeX } from "lucide-react";
 import { toast } from "sonner";
 type SurahSearch = { verse?: number };
 
@@ -34,6 +34,8 @@ function SurahPlayer() {
   const [language, setLanguage] = useState<LanguageCode>("en");
   const [bookmarked, setBookmarked] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+  const [voiceoverOn, setVoiceoverOn] = useState(true);
+  const [voiceoverLang, setVoiceoverLang] = useState<string>("en-US");
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   // Load user settings + auth (non-blocking — never await before fetching Surah)
@@ -166,6 +168,23 @@ function SurahPlayer() {
     return () => { audioRef.current?.pause(); };
   }, [ayah, reciter, playing, data, currentVerse]);
 
+  // AI voiceover for translation using Web Speech API
+  useEffect(() => {
+    if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+    window.speechSynthesis.cancel();
+    if (!voiceoverOn || !translation?.text) return;
+    const utter = new SpeechSynthesisUtterance(translation.text);
+    utter.lang = voiceoverLang;
+    utter.rate = 0.95;
+    utter.pitch = 1;
+    // Pick a matching voice if available
+    const voices = window.speechSynthesis.getVoices();
+    const match = voices.find((v) => v.lang === voiceoverLang) || voices.find((v) => v.lang.startsWith(voiceoverLang.split("-")[0]));
+    if (match) utter.voice = match;
+    window.speechSynthesis.speak(utter);
+    return () => { window.speechSynthesis.cancel(); };
+  }, [translation?.text, voiceoverOn, voiceoverLang]);
+
   // Sync URL with current verse
   useEffect(() => {
     navigate({ search: { verse: currentVerse }, replace: true });
@@ -295,13 +314,42 @@ function SurahPlayer() {
             <SkipForward className="h-5 w-5" />
           </button>
         </div>
-        <select
-          value={language}
-          onChange={(e) => setLanguage(e.target.value as LanguageCode)}
-          className="w-full bg-card/70 backdrop-blur border border-border rounded px-2 py-1 text-xs text-center"
-        >
-          {TRANSLATION_LANGUAGES.map((l) => <option key={l.code} value={l.code}>{l.name}</option>)}
-        </select>
+        <div className="flex items-center gap-2">
+          <select
+            value={language}
+            onChange={(e) => setLanguage(e.target.value as LanguageCode)}
+            className="flex-1 bg-card/70 backdrop-blur border border-border rounded px-2 py-1 text-xs text-center"
+          >
+            {TRANSLATION_LANGUAGES.map((l) => <option key={l.code} value={l.code}>{l.name}</option>)}
+          </select>
+          <button
+            onClick={() => setVoiceoverOn((v) => !v)}
+            title={voiceoverOn ? "Mute AI voiceover" : "Enable AI voiceover"}
+            className="rounded bg-card/70 backdrop-blur border border-border p-1.5"
+          >
+            {voiceoverOn ? <Volume2 className="h-4 w-4 text-primary" /> : <VolumeX className="h-4 w-4 text-muted-foreground" />}
+          </button>
+          <select
+            value={voiceoverLang}
+            onChange={(e) => setVoiceoverLang(e.target.value)}
+            disabled={!voiceoverOn}
+            title="Voiceover language"
+            className="flex-1 bg-card/70 backdrop-blur border border-border rounded px-2 py-1 text-xs text-center disabled:opacity-50"
+          >
+            <option value="en-US">🔊 English (US)</option>
+            <option value="en-GB">🔊 English (UK)</option>
+            <option value="ur-PK">🔊 اردو Urdu</option>
+            <option value="ar-SA">🔊 العربية Arabic</option>
+            <option value="id-ID">🔊 Indonesian</option>
+            <option value="tr-TR">🔊 Türkçe</option>
+            <option value="fr-FR">🔊 Français</option>
+            <option value="es-ES">🔊 Español</option>
+            <option value="de-DE">🔊 Deutsch</option>
+            <option value="hi-IN">🔊 हिन्दी Hindi</option>
+            <option value="bn-BD">🔊 বাংলা Bengali</option>
+            <option value="ms-MY">🔊 Malay</option>
+          </select>
+        </div>
       </div>
     </div>
   );
