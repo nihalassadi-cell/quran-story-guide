@@ -28,8 +28,6 @@ function AnimatePage() {
   const [selected, setSelected] = useState<number>(1);
   const [generating, setGenerating] = useState(false);
   const [regenerate, setRegenerate] = useState(false);
-  const [progress, setProgress] = useState<{ ready: number; total: number } | null>(null);
-  const [log, setLog] = useState<string[]>([]);
 
   useEffect(() => {
     supabase
@@ -39,35 +37,24 @@ function AnimatePage() {
       .then(({ data }) => setSurahs((data as SurahRow[]) ?? []));
   }, []);
 
-  const append = (line: string) => setLog((l) => [...l.slice(-20), line]);
-
   const generate = async () => {
     setGenerating(true);
-    setProgress(null);
-    setLog([]);
     try {
       let safety = 0;
       while (safety++ < 200) {
-        const startedAt = Date.now();
-        append(`Batch ${safety}: requesting (this can take 20-40s)…`);
         const { data, error } = await supabase.functions.invoke("generate-surah", {
           body: { surahNumber: selected, batchSize: 12, concurrency: 6, regenerate },
         });
-        const elapsed = Math.round((Date.now() - startedAt) / 1000);
         if (error) {
           const msg = (error as any)?.message ?? "request failed";
-          append(`  ! error after ${elapsed}s: ${msg}`);
           if (msg.includes("429")) { toast.error("Rate limit hit — pausing 20s"); await new Promise((r) => setTimeout(r, 20000)); continue; }
           if (msg.includes("402")) { toast.error("AI credits exhausted. Add credits in Settings → Workspace → Usage."); break; }
           throw error;
         }
-        const { readyCount, totalVerses, processed, done } = data as {
+        const { processed, done } = data as {
           readyCount: number; totalVerses: number; done: boolean;
           processed: { verse: number; ok: boolean; error?: string }[];
         };
-        setProgress({ ready: readyCount, total: totalVerses });
-        append(`  finished in ${elapsed}s — ${readyCount}/${totalVerses} ready`);
-        for (const p of processed) append(p.ok ? `  ✓ verse ${p.verse}` : `  ✗ verse ${p.verse} — ${p.error}`);
         if (done) { toast.success("Surah fully animated!"); break; }
         if (processed.length === 0) { toast.message("Nothing left to process"); break; }
       }
