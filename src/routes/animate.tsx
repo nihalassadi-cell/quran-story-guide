@@ -107,23 +107,14 @@ function AnimatePage() {
               />
               Regenerate existing scenes (use the latest pipeline)
             </label>
-            <div className="flex gap-2">
-              <button
-                onClick={generate}
-                disabled={generating}
-                className="flex-1 rounded-md bg-gradient-to-r from-primary to-primary-glow text-primary-foreground font-medium py-2.5 flex items-center justify-center gap-2 disabled:opacity-50"
-              >
-                {generating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
-                {generating ? "Generating…" : "Generate scenes"}
-              </button>
-              <Link
-                to="/surah/$number"
-                params={{ number: String(selected) }}
-                className="rounded-md border border-border bg-card px-4 py-2.5 text-sm flex items-center gap-2 hover:border-primary/50"
-              >
-                <ExternalLink className="h-4 w-4" /> Preview
-              </Link>
-            </div>
+            <Link
+              to="/surah/$number"
+              params={{ number: String(selected) }}
+              className="w-full rounded-md bg-gradient-to-r from-primary to-primary-glow text-primary-foreground font-medium py-2.5 flex items-center justify-center gap-2"
+            >
+              <Play className="h-4 w-4" />
+              Play
+            </Link>
             {generating && (
               <div className="flex items-center gap-2 text-xs text-muted-foreground pt-1">
                 <Loader2 className="h-3 w-3 animate-spin text-primary" />
