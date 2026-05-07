@@ -98,16 +98,42 @@
   }
   .scrollbar-hide::-webkit-scrollbar { display: none; }
   .scrollbar-hide { scrollbar-width: none; }
-  .ken-burns {
-    animation: ken-burns 18s ease-in-out infinite alternate;
+  /* Cinematic Ken Burns — varied per scene for visual interest */
+  .kb-1 { animation: kb-1 22s ease-in-out both; }
+  .kb-2 { animation: kb-2 22s ease-in-out both; }
+  .kb-3 { animation: kb-3 22s ease-in-out both; }
+  .kb-4 { animation: kb-4 22s ease-in-out both; }
+  @keyframes kb-1 {
+    0%   { transform: scale(1.05) translate(0%, 0%); }
+    100% { transform: scale(1.22) translate(-3%, -2%); }
   }
-  @keyframes ken-burns {
-    from { transform: scale(1.05) translate(0, 0); }
-    to   { transform: scale(1.18) translate(-2%, -2%); }
+  @keyframes kb-2 {
+    0%   { transform: scale(1.20) translate(-2%, -2%); }
+    100% { transform: scale(1.05) translate(2%, 1%); }
+  }
+  @keyframes kb-3 {
+    0%   { transform: scale(1.08) translate(2%, -1%); }
+    100% { transform: scale(1.24) translate(-2%, 2%); }
+  }
+  @keyframes kb-4 {
+    0%   { transform: scale(1.18) translate(-2%, 2%); }
+    100% { transform: scale(1.06) translate(1%, -2%); }
+  }
+  /* Crossfade in for each new scene */
+  .scene-fade { animation: scene-fade 1.4s ease-out both; }
+  @keyframes scene-fade {
+    from { opacity: 0; }
+    to   { opacity: 1; }
   }
   .fade-in { animation: fade-in 0.5s ease-out both; }
   @keyframes fade-in {
     from { opacity: 0; transform: translateY(8px); }
     to { opacity: 1; transform: translateY(0); }
+  }
+  /* Drifting motes for atmospheric depth */
+  .particle { animation: drift 14s ease-in-out infinite alternate; }
+  @keyframes drift {
+    from { transform: translate(0, 0); opacity: 0.2; }
+    to   { transform: translate(30px, -40px); opacity: 0.55; }
   }
 }
