@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchSurahWithTranslation, ayahAudioUrl, RECITERS, TRANSLATION_LANGUAGES, type LanguageCode } from "@/lib/quran-api";
-import { ChevronLeft, Play, Pause, SkipBack, SkipForward, Bookmark, BookmarkCheck, Loader2, Volume2, VolumeX } from "lucide-react";
+import { ChevronLeft, Play, Pause, SkipBack, SkipForward, Bookmark, BookmarkCheck, Loader2, Volume2, VolumeX, Youtube } from "lucide-react";
 import { toast } from "sonner";
 type SurahSearch = { verse?: number };
 
@@ -395,6 +395,15 @@ function SurahPlayer() {
           >
             {voiceoverOn ? <Volume2 className="h-4 w-4 text-primary" /> : <VolumeX className="h-4 w-4 text-muted-foreground" />}
           </button>
+          <a
+            href={`https://www.youtube.com/results?search_query=${encodeURIComponent(`Surah ${data?.name_en ?? surahNum} full recitation ${TRANSLATION_LANGUAGES.find(l=>l.code===language)?.name ?? "English"} translation`)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            title="Watch full surah on YouTube"
+            className="rounded bg-card/70 backdrop-blur border border-border p-1.5 flex items-center"
+          >
+            <Youtube className="h-4 w-4 text-red-500" />
+          </a>
         </div>
       </div>
     </div>
