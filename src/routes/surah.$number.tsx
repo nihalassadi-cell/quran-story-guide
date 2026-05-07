@@ -210,42 +210,8 @@ function SurahPlayer() {
         return;
       }
 
-      // 1. Try cache (works for everyone, no auth, no cost).
-      let url: string | null = null;
-      try {
-        const cached = await getCachedNarrationUrl({
-          data: { surahNumber: surahNum, verseNumber: currentVerse, language },
-        });
-        url = cached.url;
-      } catch (e) {
-        console.warn("[tts] cache lookup failed", e);
-      }
-
-      // 2. Cache miss — only logged-in users can trigger generation.
-      if (!url && userId) {
-        try {
-          const {
-            data: { session },
-          } = await supabase.auth.getSession();
-          const gen = await generateNarration({
-            data: {
-              surahNumber: surahNum,
-              verseNumber: currentVerse,
-              language,
-              text: translation.text,
-              accessToken: session?.access_token,
-            },
-          });
-          url = gen.url;
-          if (!url && gen.error === "daily_limit") {
-            toast.error("Daily voiceover limit reached");
-          } else if (!url && gen.error === "auth_required") {
-            console.warn("[tts] narration generation skipped: auth required");
-          }
-        } catch (e) {
-          console.error("[tts] generation failed", e);
-        }
-      }
+      // Free human-recorded translation audio from EveryAyah — no key, no cost, no limits.
+      const url = translationAudioUrl(language, surahNum, currentVerse);
 
       if (cancelledTts) return;
       if (!url) { advance(); return; }
