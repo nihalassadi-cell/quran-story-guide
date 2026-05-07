@@ -130,6 +130,7 @@ function AnimatePage() {
                 <span>Play in progress — generating scenes…</span>
               </div>
             )}
+          </div>
         </div>
       </div>
     </AppShell>
