@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchSurahWithTranslation, ayahAudioUrl, RECITERS, TRANSLATION_LANGUAGES, type LanguageCode } from "@/lib/quran-api";
-import { ChevronLeft, Play, Pause, SkipBack, SkipForward, Bookmark, BookmarkCheck, Loader2 } from "lucide-react";
+import { ChevronLeft, Play, Pause, SkipBack, SkipForward, Bookmark, BookmarkCheck, Loader2, Volume2, VolumeX } from "lucide-react";
 import { toast } from "sonner";
 type SurahSearch = { verse?: number };
 
