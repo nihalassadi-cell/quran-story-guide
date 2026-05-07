@@ -50,6 +50,7 @@ function SurahPlayer() {
   const [bookmarked, setBookmarked] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [voiceoverOn, setVoiceoverOn] = useState(true);
+  const [ytOpen, setYtOpen] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [ttsVoicesReady, setTtsVoicesReady] = useState(false);
 
