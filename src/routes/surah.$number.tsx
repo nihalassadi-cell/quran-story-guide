@@ -35,8 +35,13 @@ function SurahPlayer() {
   const [bookmarked, setBookmarked] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [voiceoverOn, setVoiceoverOn] = useState(true);
-  const [voiceoverLang, setVoiceoverLang] = useState<string>("en-US");
   const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Map translation LanguageCode to BCP47 for SpeechSynthesis
+  const ttsLang = useMemo(() => {
+    const map: Record<string, string> = { en: "en-US", ur: "ur-PK", id: "id-ID", tr: "tr-TR" };
+    return map[language] ?? "en-US";
+  }, [language]);
 
   // Load user settings + auth (non-blocking — never await before fetching Surah)
   useEffect(() => {
@@ -175,11 +180,11 @@ function SurahPlayer() {
         return;
       }
       const utter = new SpeechSynthesisUtterance(translation.text);
-      utter.lang = voiceoverLang;
+      utter.lang = ttsLang;
       utter.rate = 0.95;
       utter.pitch = 1;
       const voices = window.speechSynthesis.getVoices();
-      const match = voices.find((v) => v.lang === voiceoverLang) || voices.find((v) => v.lang.startsWith(voiceoverLang.split("-")[0]));
+      const match = voices.find((v) => v.lang === ttsLang) || voices.find((v) => v.lang.startsWith(ttsLang.split("-")[0]));
       if (match) utter.voice = match;
       utter.onend = advance;
       utter.onerror = advance;
@@ -198,7 +203,7 @@ function SurahPlayer() {
         window.speechSynthesis.cancel();
       }
     };
-  }, [ayah, reciter, playing, data, currentVerse, translation?.text, voiceoverOn, voiceoverLang]);
+  }, [ayah, reciter, playing, data, currentVerse, translation?.text, voiceoverOn, ttsLang]);
 
   // Sync URL with current verse
   useEffect(() => {
@@ -344,26 +349,6 @@ function SurahPlayer() {
           >
             {voiceoverOn ? <Volume2 className="h-4 w-4 text-primary" /> : <VolumeX className="h-4 w-4 text-muted-foreground" />}
           </button>
-          <select
-            value={voiceoverLang}
-            onChange={(e) => setVoiceoverLang(e.target.value)}
-            disabled={!voiceoverOn}
-            title="Voiceover language"
-            className="flex-1 bg-card/70 backdrop-blur border border-border rounded px-2 py-1 text-xs text-center disabled:opacity-50"
-          >
-            <option value="en-US">🔊 English (US)</option>
-            <option value="en-GB">🔊 English (UK)</option>
-            <option value="ur-PK">🔊 اردو Urdu</option>
-            <option value="ar-SA">🔊 العربية Arabic</option>
-            <option value="id-ID">🔊 Indonesian</option>
-            <option value="tr-TR">🔊 Türkçe</option>
-            <option value="fr-FR">🔊 Français</option>
-            <option value="es-ES">🔊 Español</option>
-            <option value="de-DE">🔊 Deutsch</option>
-            <option value="hi-IN">🔊 हिन्दी Hindi</option>
-            <option value="bn-BD">🔊 বাংলা Bengali</option>
-            <option value="ms-MY">🔊 Malay</option>
-          </select>
         </div>
       </div>
     </div>
