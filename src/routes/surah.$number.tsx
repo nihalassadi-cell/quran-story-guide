@@ -168,6 +168,23 @@ function SurahPlayer() {
     return () => { audioRef.current?.pause(); };
   }, [ayah, reciter, playing, data, currentVerse]);
 
+  // AI voiceover for translation using Web Speech API
+  useEffect(() => {
+    if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+    window.speechSynthesis.cancel();
+    if (!voiceoverOn || !translation?.text) return;
+    const utter = new SpeechSynthesisUtterance(translation.text);
+    utter.lang = voiceoverLang;
+    utter.rate = 0.95;
+    utter.pitch = 1;
+    // Pick a matching voice if available
+    const voices = window.speechSynthesis.getVoices();
+    const match = voices.find((v) => v.lang === voiceoverLang) || voices.find((v) => v.lang.startsWith(voiceoverLang.split("-")[0]));
+    if (match) utter.voice = match;
+    window.speechSynthesis.speak(utter);
+    return () => { window.speechSynthesis.cancel(); };
+  }, [translation?.text, voiceoverOn, voiceoverLang]);
+
   // Sync URL with current verse
   useEffect(() => {
     navigate({ search: { verse: currentVerse }, replace: true });
