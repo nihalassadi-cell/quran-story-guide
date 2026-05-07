@@ -51,7 +51,7 @@ function AnimatePage() {
         const startedAt = Date.now();
         append(`Batch ${safety}: requesting (this can take 20-40s)…`);
         const { data, error } = await supabase.functions.invoke("generate-surah", {
-          body: { surahNumber: selected, batchSize: 1, regenerate },
+          body: { surahNumber: selected, batchSize: 12, concurrency: 6, regenerate },
         });
         const elapsed = Math.round((Date.now() - startedAt) / 1000);
         if (error) {

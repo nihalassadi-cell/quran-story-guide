@@ -136,7 +136,8 @@ Deno.serve(async (req) => {
     // Open to all users — no auth required for scene generation.
     const body = await req.json();
     const surahNumber: number = body.surahNumber;
-    const batchSize: number = Math.min(body.batchSize ?? 3, 5);
+    const batchSize: number = Math.min(body.batchSize ?? 8, 20);
+    const concurrency: number = Math.min(body.concurrency ?? 6, 10);
     if (!surahNumber || surahNumber < 1 || surahNumber > 114) {
       return new Response(JSON.stringify({ error: "Invalid surahNumber" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
@@ -159,32 +160,56 @@ Deno.serve(async (req) => {
     const trMap = new Map<string, string>((translations ?? []).map((t: any) => [t.verse_id, t.text]));
 
     const results: { verse: number; ok: boolean; error?: string }[] = [];
+    let stopReason: string | null = null;
 
-    for (const v of pending) {
+    // Mark all as pending up-front so the UI can show progress.
+    if (pending.length > 0) {
+      await admin.from("scenes").upsert(
+        pending.map((v) => ({ verse_id: v.id, status: "pending" })),
+        { onConflict: "verse_id" },
+      );
+    }
+
+    async function processOne(v: typeof pending[number]) {
       try {
-        // mark pending
-        await admin.from("scenes").upsert({ verse_id: v.id, status: "pending" }, { onConflict: "verse_id" });
         const sceneDesc = await describeScene(v.text_ar, trMap.get(v.id) ?? "", v.mentions_prophet_muhammad);
         const prompt = buildImagePrompt(sceneDesc);
         const bytes = await generateImage(prompt);
         if (!bytes) {
           await admin.from("scenes").upsert({ verse_id: v.id, status: "failed", error: "no_image", image_prompt: prompt }, { onConflict: "verse_id" });
-          results.push({ verse: v.verse_number, ok: false, error: "no_image" });
-          continue;
+          return { verse: v.verse_number, ok: false, error: "no_image" };
         }
         const path = `${surahNumber}/${v.verse_number}.png`;
         const { error: upErr } = await admin.storage.from("scene-images").upload(path, bytes, { contentType: "image/png", upsert: true });
         if (upErr) throw upErr;
         const { data: pub } = admin.storage.from("scene-images").getPublicUrl(path);
         await admin.from("scenes").upsert({ verse_id: v.id, status: "ready", image_url: pub.publicUrl, image_prompt: prompt, error: null }, { onConflict: "verse_id" });
-        results.push({ verse: v.verse_number, ok: true });
+        return { verse: v.verse_number, ok: true };
       } catch (e: any) {
         const msg = e?.message ?? String(e);
         await admin.from("scenes").upsert({ verse_id: v.id, status: "failed", error: msg }, { onConflict: "verse_id" });
-        results.push({ verse: v.verse_number, ok: false, error: msg });
-        if (msg === "rate_limited" || msg === "payment_required") break;
+        if (msg === "rate_limited" || msg === "payment_required") stopReason = msg;
+        return { verse: v.verse_number, ok: false, error: msg };
       }
     }
+
+    // Auto-tuning concurrency pool: start at requested concurrency, halve on rate_limited.
+    let activeConcurrency = concurrency;
+    let cursor = 0;
+    async function worker() {
+      while (cursor < pending.length && !stopReason) {
+        const idx = cursor++;
+        const r = await processOne(pending[idx]);
+        results.push(r);
+        if (r.error === "rate_limited" && activeConcurrency > 1) {
+          activeConcurrency = Math.max(1, Math.floor(activeConcurrency / 2));
+          await new Promise((res) => setTimeout(res, 1500));
+          stopReason = null; // recover, keep going at slower pace
+        }
+      }
+    }
+    const workers = Array.from({ length: activeConcurrency }, () => worker());
+    await Promise.all(workers);
 
     // 4. Recompute is_animated
     const { data: allScenes } = await admin.from("scenes").select("verse_id, status").in("verse_id", verseIds);
