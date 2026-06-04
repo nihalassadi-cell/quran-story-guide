@@ -98,32 +98,32 @@
   }
   .scrollbar-hide::-webkit-scrollbar { display: none; }
   .scrollbar-hide { scrollbar-width: none; }
-  /* Cinematic Ken Burns — varied per scene for visual interest */
-  .kb-1 { animation: kb-1 22s ease-in-out both; }
-  .kb-2 { animation: kb-2 22s ease-in-out both; }
-  .kb-3 { animation: kb-3 22s ease-in-out both; }
-  .kb-4 { animation: kb-4 22s ease-in-out both; }
+  /* Cinematic Ken Burns — slower, deeper push for a film-like feel */
+  .kb-1 { animation: kb-1 28s ease-in-out both; }
+  .kb-2 { animation: kb-2 28s ease-in-out both; }
+  .kb-3 { animation: kb-3 28s ease-in-out both; }
+  .kb-4 { animation: kb-4 28s ease-in-out both; }
   @keyframes kb-1 {
-    0%   { transform: scale(1.05) translate(0%, 0%); }
-    100% { transform: scale(1.22) translate(-3%, -2%); }
+    0%   { transform: scale(1.08) translate(0%, 0%); }
+    100% { transform: scale(1.32) translate(-4%, -3%); }
   }
   @keyframes kb-2 {
-    0%   { transform: scale(1.20) translate(-2%, -2%); }
-    100% { transform: scale(1.05) translate(2%, 1%); }
+    0%   { transform: scale(1.28) translate(-3%, -2%); }
+    100% { transform: scale(1.08) translate(3%, 2%); }
   }
   @keyframes kb-3 {
-    0%   { transform: scale(1.08) translate(2%, -1%); }
-    100% { transform: scale(1.24) translate(-2%, 2%); }
+    0%   { transform: scale(1.10) translate(3%, -2%); }
+    100% { transform: scale(1.30) translate(-3%, 3%); }
   }
   @keyframes kb-4 {
-    0%   { transform: scale(1.18) translate(-2%, 2%); }
-    100% { transform: scale(1.06) translate(1%, -2%); }
+    0%   { transform: scale(1.26) translate(-3%, 3%); }
+    100% { transform: scale(1.08) translate(2%, -3%); }
   }
-  /* Crossfade in for each new scene */
-  .scene-fade { animation: scene-fade 1.4s ease-out both; }
+  /* Dissolve-style crossfade with a soft de-blur */
+  .scene-fade { animation: scene-fade 1.8s ease-out both; }
   @keyframes scene-fade {
-    from { opacity: 0; }
-    to   { opacity: 1; }
+    from { opacity: 0; filter: blur(8px); }
+    to   { opacity: 1; filter: blur(0); }
   }
   .fade-in { animation: fade-in 0.5s ease-out both; }
   @keyframes fade-in {
@@ -135,5 +135,61 @@
   @keyframes drift {
     from { transform: translate(0, 0); opacity: 0.2; }
     to   { transform: translate(30px, -40px); opacity: 0.55; }
+  }
+  /* Anamorphic light leak that sweeps slowly across the frame */
+  .light-leak {
+    position: absolute; inset: -20%;
+    background:
+      radial-gradient(ellipse 40% 60% at 20% 30%, color-mix(in oklab, var(--primary) 35%, transparent), transparent 60%),
+      radial-gradient(ellipse 50% 40% at 80% 70%, color-mix(in oklab, var(--primary) 25%, transparent), transparent 65%);
+    mix-blend-mode: screen;
+    filter: blur(40px);
+    animation: leak-sweep 18s ease-in-out infinite alternate;
+    pointer-events: none;
+  }
+  @keyframes leak-sweep {
+    0%   { transform: translate(-4%, -2%) rotate(-2deg); opacity: 0.55; }
+    100% { transform: translate(4%, 2%) rotate(2deg);   opacity: 0.85; }
+  }
+  /* Pulsing vignette that "breathes" with the recitation */
+  .vignette-pulse {
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.55) 100%);
+    animation: vignette-breathe 9s ease-in-out infinite;
+    pointer-events: none;
+  }
+  @keyframes vignette-breathe {
+    0%, 100% { opacity: 0.7; }
+    50%      { opacity: 1; }
+  }
+  /* Subtle film grain via layered SVG noise */
+  .film-grain {
+    position: absolute; inset: 0;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.5 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.6'/></svg>");
+    opacity: 0.08;
+    mix-blend-mode: overlay;
+    animation: grain-shift 1.2s steps(6) infinite;
+    pointer-events: none;
+  }
+  @keyframes grain-shift {
+    0%   { transform: translate(0,0); }
+    20%  { transform: translate(-2%,1%); }
+    40%  { transform: translate(1%,-2%); }
+    60%  { transform: translate(-1%,2%); }
+    80%  { transform: translate(2%,-1%); }
+    100% { transform: translate(0,0); }
+  }
+  /* Lens shimmer — soft moving sheen across the foreground */
+  .lens-shimmer {
+    position: absolute; inset: 0;
+    background: linear-gradient(115deg, transparent 40%, color-mix(in oklab, var(--primary) 18%, transparent) 50%, transparent 60%);
+    mix-blend-mode: screen;
+    animation: shimmer-sweep 11s ease-in-out infinite;
+    pointer-events: none;
+  }
+  @keyframes shimmer-sweep {
+    0%   { transform: translateX(-60%); opacity: 0; }
+    40%  { opacity: 0.7; }
+    100% { transform: translateX(60%); opacity: 0; }
   }
 }
