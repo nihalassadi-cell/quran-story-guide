@@ -291,7 +291,12 @@ function SurahPlayer() {
             />
           ))}
         </div>
-        {/* Light vignette only — keep imagery visible */}
+        {/* Cinematic foreground layers — light leak, shimmer, grain, vignette */}
+        <div className="light-leak" />
+        <div className="lens-shimmer" />
+        <div className="film-grain" />
+        <div className="vignette-pulse" />
+        {/* Light gradient to keep text readable */}
         <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-transparent to-background/85" />
       </div>
 
