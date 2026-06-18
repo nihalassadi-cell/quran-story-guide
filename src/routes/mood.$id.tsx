@@ -68,27 +68,71 @@ function MoodPlayer() {
     setCache({});
   }, [language]);
 
-  // Load scene images for the verses in this mood
+  // Load scene images + trigger background generation + subscribe to realtime updates
   useEffect(() => {
     let cancelled = false;
+    const verseIdToKey = new Map<string, string>();
+    const uniqueSurahs = Array.from(new Set(mood.verses.map((v) => v.surah)));
+
     (async () => {
       const next: Record<string, string> = {};
+      const missingSurahs = new Set<number>();
       for (const v of mood.verses) {
         const { data } = await supabase
           .from("verses")
-          .select("verse_number, surah_number, scenes(image_url, status)")
+          .select("id, verse_number, surah_number, scenes(image_url, status)")
           .eq("surah_number", v.surah)
           .eq("verse_number", v.verse)
           .maybeSingle();
         if (cancelled) return;
-        const scene = Array.isArray((data as any)?.scenes) ? (data as any).scenes[0] : (data as any)?.scenes;
+        const row: any = data;
+        if (row?.id) verseIdToKey.set(row.id, `${v.surah}:${v.verse}`);
+        const scene = Array.isArray(row?.scenes) ? row.scenes[0] : row?.scenes;
         if (scene?.image_url && scene.status === "ready") {
           next[`${v.surah}:${v.verse}`] = scene.image_url;
+        } else {
+          missingSurahs.add(v.surah);
         }
       }
-      if (!cancelled) setScenes(next);
+      if (cancelled) return;
+      setScenes(next);
+
+      // Kick off background generation per surah that has any missing verse.
+      for (const surahNumber of missingSurahs) {
+        (async () => {
+          for (let i = 0; i < 20 && !cancelled; i++) {
+            const { data, error } = await supabase.functions.invoke("generate-surah", {
+              body: { surahNumber, batchSize: 8, concurrency: 4 },
+            });
+            if (error || !data) break;
+            if ((data as any).done) break;
+            if (((data as any).processed ?? []).length === 0) break;
+          }
+        })();
+      }
     })();
-    return () => { cancelled = true; };
+
+    const channel = supabase
+      .channel(`scenes-mood-${mood.id}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "scenes" },
+        (payload: any) => {
+          const row = payload.new ?? payload.old;
+          if (!row) return;
+          const key = verseIdToKey.get(row.verse_id);
+          if (!key) return;
+          if (row.status === "ready" && row.image_url) {
+            setScenes((prev) => ({ ...prev, [key]: row.image_url }));
+          }
+        },
+      )
+      .subscribe();
+
+    return () => {
+      cancelled = true;
+      supabase.removeChannel(channel);
+    };
   }, [mood.id]);
 
   // Sequenced playback: Arabic → translation → next
