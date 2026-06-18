@@ -16,6 +16,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AnimateRouteImport } from './routes/animate'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SurahNumberRouteImport } from './routes/surah.$number'
+import { Route as MoodIdRouteImport } from './routes/mood.$id'
 
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
@@ -52,6 +53,11 @@ const SurahNumberRoute = SurahNumberRouteImport.update({
   path: '/surah/$number',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MoodIdRoute = MoodIdRouteImport.update({
+  id: '/mood/$id',
+  path: '/mood/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -60,6 +66,7 @@ export interface FileRoutesByFullPath {
   '/bookmarks': typeof BookmarksRoute
   '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
+  '/mood/$id': typeof MoodIdRoute
   '/surah/$number': typeof SurahNumberRoute
 }
 export interface FileRoutesByTo {
@@ -69,6 +76,7 @@ export interface FileRoutesByTo {
   '/bookmarks': typeof BookmarksRoute
   '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
+  '/mood/$id': typeof MoodIdRoute
   '/surah/$number': typeof SurahNumberRoute
 }
 export interface FileRoutesById {
@@ -79,6 +87,7 @@ export interface FileRoutesById {
   '/bookmarks': typeof BookmarksRoute
   '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
+  '/mood/$id': typeof MoodIdRoute
   '/surah/$number': typeof SurahNumberRoute
 }
 export interface FileRouteTypes {
@@ -90,6 +99,7 @@ export interface FileRouteTypes {
     | '/bookmarks'
     | '/search'
     | '/settings'
+    | '/mood/$id'
     | '/surah/$number'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -99,6 +109,7 @@ export interface FileRouteTypes {
     | '/bookmarks'
     | '/search'
     | '/settings'
+    | '/mood/$id'
     | '/surah/$number'
   id:
     | '__root__'
@@ -108,6 +119,7 @@ export interface FileRouteTypes {
     | '/bookmarks'
     | '/search'
     | '/settings'
+    | '/mood/$id'
     | '/surah/$number'
   fileRoutesById: FileRoutesById
 }
@@ -118,6 +130,7 @@ export interface RootRouteChildren {
   BookmarksRoute: typeof BookmarksRoute
   SearchRoute: typeof SearchRoute
   SettingsRoute: typeof SettingsRoute
+  MoodIdRoute: typeof MoodIdRoute
   SurahNumberRoute: typeof SurahNumberRoute
 }
 
@@ -172,6 +185,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SurahNumberRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/mood/$id': {
+      id: '/mood/$id'
+      path: '/mood/$id'
+      fullPath: '/mood/$id'
+      preLoaderRoute: typeof MoodIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -182,6 +202,7 @@ const rootRouteChildren: RootRouteChildren = {
   BookmarksRoute: BookmarksRoute,
   SearchRoute: SearchRoute,
   SettingsRoute: SettingsRoute,
+  MoodIdRoute: MoodIdRoute,
   SurahNumberRoute: SurahNumberRoute,
 }
 export const routeTree = rootRouteImport
