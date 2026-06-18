@@ -72,7 +72,7 @@ function MoodPlayer() {
   useEffect(() => {
     let cancelled = false;
     const verseIdToKey = new Map<string, string>();
-    const uniqueSurahs = Array.from(new Set(mood.verses.map((v) => v.surah)));
+    
 
     (async () => {
       const next: Record<string, string> = {};
