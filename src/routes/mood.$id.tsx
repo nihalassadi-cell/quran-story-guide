@@ -303,19 +303,19 @@ function MoodPlayer() {
 
       {ayah && (
         <div className="relative z-10 px-3 pb-1 space-y-1.5">
-          <div className="mx-auto max-w-2xl flex items-center justify-between gap-2 text-[10px] uppercase tracking-wider">
+          <div className="mx-auto max-w-2xl flex flex-wrap items-center justify-between gap-2 text-[10px] uppercase tracking-wider">
             <Link
               to="/surah/$number"
               params={{ number: String(current.surah) }}
               search={{ verse: current.verse }}
-              className="inline-flex items-center gap-1 text-primary/90 hover:text-primary bg-background/40 backdrop-blur px-2 py-0.5 rounded-full border border-border/60"
+              className="inline-flex items-center gap-1 text-primary/90 hover:text-primary bg-background/40 backdrop-blur px-2 py-0.5 rounded-full border border-border/60 shrink-0"
             >
               <BookOpen className="h-3 w-3" />
               {current.surahName} · {current.surah}:{current.verse}
             </Link>
             <span className="inline-flex items-center gap-1 text-foreground/80 bg-background/40 backdrop-blur px-2 py-0.5 rounded-full border border-border/60">
-              <Sparkles className="h-3 w-3 text-primary" />
-              <span className="normal-case tracking-normal text-[11px]">{current.reason}</span>
+              <Sparkles className="h-3 w-3 text-primary shrink-0" />
+              <span className="normal-case tracking-normal text-[11px] break-words">{current.reason}</span>
             </span>
           </div>
           <div
