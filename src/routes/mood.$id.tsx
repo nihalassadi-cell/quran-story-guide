@@ -280,9 +280,13 @@ function MoodPlayer() {
       </div>
 
       <header className="relative z-10 flex items-center justify-between p-4">
-        <Link to="/animate" className="rounded-full bg-card/60 backdrop-blur p-2 border border-border">
+        <button
+          onClick={() => { setStarted(false); setPlaying(false); }}
+          className="rounded-full bg-card/60 backdrop-blur p-2 border border-border"
+          aria-label="Back to verse list"
+        >
           <ChevronLeft className="h-5 w-5" />
-        </Link>
+        </button>
         <div className="text-center">
           <p className="text-xs uppercase tracking-widest text-primary/80">For when you feel</p>
           <p className="text-lg font-semibold gold-text">{mood.emoji} {mood.label}</p>
