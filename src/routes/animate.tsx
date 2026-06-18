@@ -1,76 +1,46 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/AppShell";
-import { Sparkles, Play } from "lucide-react";
+import { Sparkles, Heart } from "lucide-react";
+import { MOODS } from "@/lib/moods";
 
 export const Route = createFileRoute("/animate")({
   head: () => ({
     meta: [
-      { title: "Animate a Surah — Noor" },
-      { name: "description", content: "Generate reverent AI scenes for any Surah of the Quran." },
+      { title: "How are you feeling? — Noor" },
+      { name: "description", content: "Pick your mood and let the Quran meet you where you are." },
     ],
   }),
   component: AnimatePage,
 });
 
-interface SurahRow {
-  number: number;
-  name_ar: string;
-  name_en: string;
-  verse_count: number;
-  is_animated: boolean;
-}
-
 function AnimatePage() {
-  const [surahs, setSurahs] = useState<SurahRow[] | null>(null);
-  const [selected, setSelected] = useState<number>(1);
-
-  useEffect(() => {
-    supabase
-      .from("surahs")
-      .select("number, name_ar, name_en, verse_count, is_animated")
-      .order("number")
-      .then(({ data }) => setSurahs((data as SurahRow[]) ?? []));
-  }, []);
-
   return (
     <AppShell>
       <div className="max-w-2xl mx-auto px-4 pt-8 pb-24">
         <div className="flex items-center gap-2 mb-1">
-          <Sparkles className="h-5 w-5 text-primary" />
-          <h1 className="text-2xl font-bold gold-text">Animate a Surah</h1>
+          <Heart className="h-5 w-5 text-primary" />
+          <h1 className="text-2xl font-bold gold-text">How are you feeling right now?</h1>
         </div>
-        <p className="text-sm text-muted-foreground mb-5">
-          Generate reverent AI scenes for any Surah. Verses mentioning the Prophet ﷺ get symbolic imagery only.
-          Available to everyone — no account needed.
+        <p className="text-sm text-muted-foreground mb-6">
+          Pick a mood. We'll play a few hand-picked verses chosen for that feeling — with the reason each one was chosen, and where it comes from in the Quran.
         </p>
 
-        <div className="rounded-xl border border-border bg-card/60 p-5 space-y-3">
-          <label className="text-xs uppercase tracking-wider text-muted-foreground">Select Surah</label>
-          <select
-            value={selected}
-            onChange={(e) => setSelected(parseInt(e.target.value, 10))}
-            disabled={!surahs}
-            className="w-full bg-input border border-border rounded-md px-3 py-2"
-          >
-            {(surahs ?? []).map((s) => (
-              <option key={s.number} value={s.number}>
-                {s.number}. {s.name_en} — {s.name_ar} ({s.verse_count} verses) {s.is_animated ? "✓ animated" : ""}
-              </option>
-            ))}
-          </select>
-          <Link
-            to="/surah/$number"
-            params={{ number: String(selected) }}
-            className="w-full rounded-md bg-gradient-to-r from-primary to-primary-glow text-primary-foreground font-medium py-2.5 flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
-          >
-            <Play className="h-4 w-4" />
-            Play
-          </Link>
-          <p className="text-xs text-muted-foreground text-center">
-            Playback starts instantly. Scenes generate in the background and stream in as they're ready.
-          </p>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          {MOODS.map((m) => (
+            <Link
+              key={m.id}
+              to="/mood/$id"
+              params={{ id: m.id }}
+              className="group rounded-xl border border-border bg-card/60 backdrop-blur p-4 flex flex-col items-start gap-1 hover:border-primary/60 hover:bg-card transition-colors"
+            >
+              <span className="text-3xl">{m.emoji}</span>
+              <span className="font-semibold text-foreground">{m.label}</span>
+              <span className="text-xs text-muted-foreground leading-snug">{m.blurb}</span>
+              <span className="text-[10px] uppercase tracking-wider text-primary/70 mt-1 flex items-center gap-1">
+                <Sparkles className="h-3 w-3" /> {m.verses.length} verses
+              </span>
+            </Link>
+          ))}
         </div>
       </div>
     </AppShell>
