@@ -259,7 +259,7 @@ function MoodPlayer() {
     );
   }
 
-
+  return (
     <div className="fixed inset-0 bg-background overflow-hidden flex flex-col">
       <div className="absolute inset-0">
         {sceneUrl ? (
