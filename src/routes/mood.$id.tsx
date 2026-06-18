@@ -58,17 +58,15 @@ function MoodPlayer() {
   const ayah = surahData?.ayahs.find((a) => a.numberInSurah === current.verse);
   const translation = surahData?.translations.find((t) => t.numberInSurah === current.verse);
 
-  // Fetch current + next surah (prefetch)
+  // Prefetch all surahs referenced by this mood so the list & player are instant.
   useEffect(() => {
-    const toFetch = [current.surah, mood.verses[idx + 1]?.surah].filter(
-      (n): n is number => !!n && !cache[n],
-    );
-    toFetch.forEach((n) => {
+    const unique = Array.from(new Set(mood.verses.map((v) => v.surah))).filter((n) => !cache[n]);
+    unique.forEach((n) => {
       fetchSurahWithTranslation(n, language)
         .then((d) => setCache((c) => ({ ...c, [n]: d })))
         .catch((e) => { console.error("[mood] fetch failed", n, e); toast.error(`Failed to load Surah ${n}`); });
     });
-  }, [current.surah, idx, language, mood.verses, cache]);
+  }, [language, mood.verses, cache]);
 
   // Refetch all loaded surahs when language changes
   useEffect(() => {
