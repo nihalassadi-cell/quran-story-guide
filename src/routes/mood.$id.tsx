@@ -211,29 +211,28 @@ function MoodPlayer() {
       </div>
 
       {ayah && (
-        <div className="relative z-10 px-4 pb-2 space-y-2">
-          <div
-            key={`${current.surah}:${current.verse}`}
-            className="fade-in mx-auto max-w-2xl text-center space-y-2 rounded-xl bg-card/85 backdrop-blur-md px-4 py-3 border border-border shadow-lg"
-          >
-            <p className="arabic text-2xl md:text-3xl leading-snug text-foreground">{ayah.text}</p>
-            <p className="text-sm md:text-base font-medium leading-snug text-foreground/90">{translation?.text}</p>
+        <div className="relative z-10 px-3 pb-1 space-y-1.5">
+          <div className="mx-auto max-w-2xl flex items-center justify-between gap-2 text-[10px] uppercase tracking-wider">
             <Link
               to="/surah/$number"
               params={{ number: String(current.surah) }}
               search={{ verse: current.verse }}
-              className="inline-flex items-center gap-1.5 text-xs text-primary/90 hover:text-primary"
+              className="inline-flex items-center gap-1 text-primary/90 hover:text-primary bg-background/40 backdrop-blur px-2 py-0.5 rounded-full border border-border/60"
             >
-              <BookOpen className="h-3.5 w-3.5" />
-              Surah {current.surahName} · {current.surah}:{current.verse}
+              <BookOpen className="h-3 w-3" />
+              {current.surahName} · {current.surah}:{current.verse}
             </Link>
+            <span className="inline-flex items-center gap-1 text-foreground/80 bg-background/40 backdrop-blur px-2 py-0.5 rounded-full border border-border/60">
+              <Sparkles className="h-3 w-3 text-primary" />
+              <span className="normal-case tracking-normal text-[11px]">{current.reason}</span>
+            </span>
           </div>
-          <div className="mx-auto max-w-2xl rounded-lg bg-primary/10 border border-primary/30 px-3 py-2 flex gap-2 items-start">
-            <Sparkles className="h-3.5 w-3.5 text-primary mt-0.5 shrink-0" />
-            <p className="text-xs text-foreground/85 leading-snug">
-              <span className="font-semibold text-primary">Why this verse: </span>
-              {current.reason}
-            </p>
+          <div
+            key={`${current.surah}:${current.verse}`}
+            className="fade-in mx-auto max-w-2xl text-center space-y-1 rounded-lg bg-background/55 backdrop-blur-sm px-3 py-2 border border-border/40"
+          >
+            <p className="arabic text-xl md:text-2xl leading-snug text-foreground">{ayah.text}</p>
+            <p className="text-xs md:text-sm leading-snug text-foreground/85">{translation?.text}</p>
           </div>
         </div>
       )}
