@@ -180,7 +180,86 @@ function MoodPlayer() {
   const sceneUrl = scenes[`${current.surah}:${current.verse}`];
   const total = mood.verses.length;
 
-  return (
+  if (!started) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="absolute inset-0 pointer-events-none bg-gradient-to-br from-primary/10 via-background to-accent/10" />
+        <div className="relative max-w-2xl mx-auto px-4 pt-6 pb-24">
+          <div className="flex items-center justify-between mb-6">
+            <Link
+              to="/animate"
+              className="rounded-full bg-card/60 backdrop-blur p-2 border border-border hover:border-primary/60"
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </Link>
+            <div className="text-center">
+              <p className="text-[11px] uppercase tracking-widest text-primary/80">For when you feel</p>
+              <p className="text-lg font-semibold gold-text">{mood.emoji} {mood.label}</p>
+            </div>
+            <div className="w-9" />
+          </div>
+
+          <p className="text-sm text-muted-foreground text-center mb-5 italic">{mood.blurb}</p>
+
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-sm font-semibold text-foreground/90">Choose a verse</h2>
+            <button
+              onClick={() => startAt(0)}
+              className="text-xs inline-flex items-center gap-1 rounded-full bg-gradient-to-br from-primary to-primary-glow text-primary-foreground px-3 py-1.5 glow-shadow"
+            >
+              <Play className="h-3 w-3" /> Play all
+            </button>
+          </div>
+
+          <ul className="space-y-2.5">
+            {mood.verses.map((v, i) => {
+              const surahData = cache[v.surah];
+              const ayah = surahData?.ayahs.find((a) => a.numberInSurah === v.verse);
+              const sceneUrl = scenes[`${v.surah}:${v.verse}`];
+              return (
+                <li key={`${v.surah}:${v.verse}`}>
+                  <button
+                    onClick={() => startAt(i)}
+                    className="group w-full text-left rounded-xl border border-border bg-card/60 backdrop-blur hover:border-primary/60 hover:bg-card transition-colors overflow-hidden flex"
+                  >
+                    <div className="relative w-20 sm:w-24 shrink-0 bg-gradient-to-br from-primary/20 to-accent/20">
+                      {sceneUrl ? (
+                        <img src={sceneUrl} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                      ) : (
+                        <div className="absolute inset-0 flex items-center justify-center text-primary/60 text-2xl font-bold">
+                          {String(i + 1).padStart(2, "0")}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1 p-3 space-y-1.5">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider text-primary/90">
+                          <BookOpen className="h-3 w-3" />
+                          {v.surahName} · {v.surah}:{v.verse}
+                        </span>
+                        <Play className="h-4 w-4 text-primary opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </div>
+                      {ayah && (
+                        <p className="arabic text-base leading-snug text-foreground/95 truncate" dir="rtl">
+                          {ayah.text}
+                        </p>
+                      )}
+                      <p className="text-xs text-muted-foreground leading-snug">
+                        <Sparkles className="inline h-3 w-3 text-primary/80 mr-1 -mt-0.5" />
+                        {v.reason}
+                      </p>
+                    </div>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      </div>
+    );
+  }
+
+
     <div className="fixed inset-0 bg-background overflow-hidden flex flex-col">
       <div className="absolute inset-0">
         {sceneUrl ? (
