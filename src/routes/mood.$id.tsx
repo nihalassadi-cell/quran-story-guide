@@ -144,7 +144,7 @@ function MoodPlayer() {
 
   // Sequenced playback: Arabic → translation → next
   useEffect(() => {
-    if (!ayah) return;
+    if (!ayah || !started) return;
     if (!audioRef.current) audioRef.current = new Audio();
     const audio = audioRef.current;
 
