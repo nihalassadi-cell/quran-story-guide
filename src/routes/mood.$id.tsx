@@ -16,6 +16,8 @@ function translationAudioUrl(language: string, surah: number, verse: number): st
   return `https://everyayah.com/data/${folder}/${String(surah).padStart(3, "0")}${String(verse).padStart(3, "0")}.mp3`;
 }
 
+const DEFAULT_LANGUAGE: LanguageCode = "ur";
+
 export const Route = createFileRoute("/mood/$id")({
   head: ({ params }) => {
     const m = getMood(params.id);
