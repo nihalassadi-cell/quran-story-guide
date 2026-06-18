@@ -218,11 +218,14 @@ function MoodPlayer() {
               const sceneUrl = scenes[`${v.surah}:${v.verse}`];
               return (
                 <li key={`${v.surah}:${v.verse}`}>
-                  <button
+                  <div
+                    role="button"
+                    tabIndex={0}
                     onClick={() => startAt(i)}
-                    className="group w-full text-left rounded-xl border border-border bg-card/60 backdrop-blur hover:border-primary/60 hover:bg-card transition-colors overflow-hidden flex"
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); startAt(i); } }}
+                    className="group w-full text-left rounded-xl border border-border bg-card/60 backdrop-blur hover:border-primary/60 hover:bg-card transition-colors flex cursor-pointer"
                   >
-                    <div className="relative w-20 sm:w-24 shrink-0 bg-gradient-to-br from-primary/20 to-accent/20">
+                    <div className="relative w-20 sm:w-24 shrink-0 min-h-[72px] bg-gradient-to-br from-primary/20 to-accent/20">
                       {sceneUrl ? (
                         <img src={sceneUrl} alt="" className="absolute inset-0 w-full h-full object-cover" />
                       ) : (
@@ -231,25 +234,25 @@ function MoodPlayer() {
                         </div>
                       )}
                     </div>
-                    <div className="flex-1 p-3 space-y-1.5">
+                    <div className="flex-1 min-w-0 p-3 space-y-1.5">
                       <div className="flex items-center justify-between gap-2">
-                        <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider text-primary/90">
+                        <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider text-primary/90 shrink-0">
                           <BookOpen className="h-3 w-3" />
                           {v.surahName} · {v.surah}:{v.verse}
                         </span>
-                        <Play className="h-4 w-4 text-primary opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <Play className="h-4 w-4 text-primary opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
                       </div>
                       {ayah && (
-                        <p className="arabic text-base leading-snug text-foreground/95 truncate" dir="rtl">
+                        <p className="arabic text-sm leading-snug text-foreground/95 truncate" dir="rtl">
                           {ayah.text}
                         </p>
                       )}
-                      <p className="text-xs text-muted-foreground leading-snug">
-                        <Sparkles className="inline h-3 w-3 text-primary/80 mr-1 -mt-0.5" />
+                      <p className="text-xs text-muted-foreground leading-snug break-words">
+                        <Sparkles className="inline h-3 w-3 text-primary/80 mr-1 -mt-0.5 shrink-0" />
                         {v.reason}
                       </p>
                     </div>
-                  </button>
+                  </div>
                 </li>
               );
             })}
