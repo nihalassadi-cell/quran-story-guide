@@ -16,6 +16,8 @@ function translationAudioUrl(language: string, surah: number, verse: number): st
   return `https://everyayah.com/data/${folder}/${String(surah).padStart(3, "0")}${String(verse).padStart(3, "0")}.mp3`;
 }
 
+const DEFAULT_LANGUAGE: LanguageCode = "ur";
+
 export const Route = createFileRoute("/mood/$id")({
   head: ({ params }) => {
     const m = getMood(params.id);
@@ -39,7 +41,7 @@ function MoodPlayer() {
   const [idx, setIdx] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [reciter, setReciter] = useState<string>("ar.alafasy");
-  const [language, setLanguage] = useState<LanguageCode>("en");
+  const [language, setLanguage] = useState<LanguageCode>(DEFAULT_LANGUAGE);
   const [cache, setCache] = useState<AyahCache>({});
   const [scenes, setScenes] = useState<Record<string, string>>({}); // key `${surah}:${verse}`
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -66,27 +68,71 @@ function MoodPlayer() {
     setCache({});
   }, [language]);
 
-  // Load scene images for the verses in this mood
+  // Load scene images + trigger background generation + subscribe to realtime updates
   useEffect(() => {
     let cancelled = false;
+    const verseIdToKey = new Map<string, string>();
+    
+
     (async () => {
       const next: Record<string, string> = {};
+      const missingSurahs = new Set<number>();
       for (const v of mood.verses) {
         const { data } = await supabase
           .from("verses")
-          .select("verse_number, surah_number, scenes(image_url, status)")
+          .select("id, verse_number, surah_number, scenes(image_url, status)")
           .eq("surah_number", v.surah)
           .eq("verse_number", v.verse)
           .maybeSingle();
         if (cancelled) return;
-        const scene = Array.isArray((data as any)?.scenes) ? (data as any).scenes[0] : (data as any)?.scenes;
+        const row: any = data;
+        if (row?.id) verseIdToKey.set(row.id, `${v.surah}:${v.verse}`);
+        const scene = Array.isArray(row?.scenes) ? row.scenes[0] : row?.scenes;
         if (scene?.image_url && scene.status === "ready") {
           next[`${v.surah}:${v.verse}`] = scene.image_url;
+        } else {
+          missingSurahs.add(v.surah);
         }
       }
-      if (!cancelled) setScenes(next);
+      if (cancelled) return;
+      setScenes(next);
+
+      // Kick off background generation per surah that has any missing verse.
+      for (const surahNumber of missingSurahs) {
+        (async () => {
+          for (let i = 0; i < 20 && !cancelled; i++) {
+            const { data, error } = await supabase.functions.invoke("generate-surah", {
+              body: { surahNumber, batchSize: 8, concurrency: 4 },
+            });
+            if (error || !data) break;
+            if ((data as any).done) break;
+            if (((data as any).processed ?? []).length === 0) break;
+          }
+        })();
+      }
     })();
-    return () => { cancelled = true; };
+
+    const channel = supabase
+      .channel(`scenes-mood-${mood.id}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "scenes" },
+        (payload: any) => {
+          const row = payload.new ?? payload.old;
+          if (!row) return;
+          const key = verseIdToKey.get(row.verse_id);
+          if (!key) return;
+          if (row.status === "ready" && row.image_url) {
+            setScenes((prev) => ({ ...prev, [key]: row.image_url }));
+          }
+        },
+      )
+      .subscribe();
+
+    return () => {
+      cancelled = true;
+      supabase.removeChannel(channel);
+    };
   }, [mood.id]);
 
   // Sequenced playback: Arabic → translation → next
@@ -165,29 +211,28 @@ function MoodPlayer() {
       </div>
 
       {ayah && (
-        <div className="relative z-10 px-4 pb-2 space-y-2">
-          <div
-            key={`${current.surah}:${current.verse}`}
-            className="fade-in mx-auto max-w-2xl text-center space-y-2 rounded-xl bg-card/85 backdrop-blur-md px-4 py-3 border border-border shadow-lg"
-          >
-            <p className="arabic text-2xl md:text-3xl leading-snug text-foreground">{ayah.text}</p>
-            <p className="text-sm md:text-base font-medium leading-snug text-foreground/90">{translation?.text}</p>
+        <div className="relative z-10 px-3 pb-1 space-y-1.5">
+          <div className="mx-auto max-w-2xl flex items-center justify-between gap-2 text-[10px] uppercase tracking-wider">
             <Link
               to="/surah/$number"
               params={{ number: String(current.surah) }}
               search={{ verse: current.verse }}
-              className="inline-flex items-center gap-1.5 text-xs text-primary/90 hover:text-primary"
+              className="inline-flex items-center gap-1 text-primary/90 hover:text-primary bg-background/40 backdrop-blur px-2 py-0.5 rounded-full border border-border/60"
             >
-              <BookOpen className="h-3.5 w-3.5" />
-              Surah {current.surahName} · {current.surah}:{current.verse}
+              <BookOpen className="h-3 w-3" />
+              {current.surahName} · {current.surah}:{current.verse}
             </Link>
+            <span className="inline-flex items-center gap-1 text-foreground/80 bg-background/40 backdrop-blur px-2 py-0.5 rounded-full border border-border/60">
+              <Sparkles className="h-3 w-3 text-primary" />
+              <span className="normal-case tracking-normal text-[11px]">{current.reason}</span>
+            </span>
           </div>
-          <div className="mx-auto max-w-2xl rounded-lg bg-primary/10 border border-primary/30 px-3 py-2 flex gap-2 items-start">
-            <Sparkles className="h-3.5 w-3.5 text-primary mt-0.5 shrink-0" />
-            <p className="text-xs text-foreground/85 leading-snug">
-              <span className="font-semibold text-primary">Why this verse: </span>
-              {current.reason}
-            </p>
+          <div
+            key={`${current.surah}:${current.verse}`}
+            className="fade-in mx-auto max-w-2xl text-center space-y-1 rounded-lg bg-background/55 backdrop-blur-sm px-3 py-2 border border-border/40"
+          >
+            <p className="arabic text-xl md:text-2xl leading-snug text-foreground">{ayah.text}</p>
+            <p className="text-xs md:text-sm leading-snug text-foreground/85">{translation?.text}</p>
           </div>
         </div>
       )}
