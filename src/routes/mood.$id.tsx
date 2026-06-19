@@ -155,16 +155,14 @@ function MoodPlayer() {
   useEffect(() => {
     try { localStorage.setItem("noor:ambient", ambientOn ? "1" : "0"); } catch {}
     if (!padRef.current) return;
-    if (!ambientOn) padRef.current.stop();
+    if (ambientOn) padRef.current.start().catch(() => {});
+    else padRef.current.stop();
   }, [ambientOn]);
-  // Start the ambient pad — only invoked from explicit user actions
-  // (the big tasbih circle or the Auto-recite button) per product spec.
   const startAmbient = () => {
     if (!ambientOn) return;
-    const pad = padRef.current;
-    if (!pad) return;
-    pad.start().catch(() => {});
+    padRef.current?.start().catch(() => {});
   };
+
 
 
   // Optional verse player (opens when user expands a verse)
