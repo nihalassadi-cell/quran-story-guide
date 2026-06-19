@@ -1,5 +1,7 @@
 import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
 import { Onboarding } from "@/components/Onboarding";
+import { Toaster } from "sonner";
+
 
 import appCss from "../styles.css?url";
 
@@ -82,6 +84,8 @@ function RootComponent() {
     <>
       <Outlet />
       <Onboarding />
+      <Toaster position="top-center" richColors theme="dark" />
     </>
+
   );
 }
