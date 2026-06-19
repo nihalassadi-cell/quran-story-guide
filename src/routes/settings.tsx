@@ -88,7 +88,7 @@ function SettingsPage() {
           </label>
         </Field>
 
-        <button onClick={save} className="w-full rounded-md bg-primary text-primary-foreground py-2 font-medium">Save preferences</button>
+        <button onClick={save} className="w-full rounded-md bg-primary text-primary-foreground py-2 font-medium transition-transform duration-150 active:scale-[0.97] hover:bg-primary/90">Save preferences</button>
       </div>
     </AppShell>
   );
