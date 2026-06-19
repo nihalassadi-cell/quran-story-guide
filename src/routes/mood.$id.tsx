@@ -370,6 +370,22 @@ function MoodPlayer() {
           <p className="mt-3 text-xs sm:text-sm text-foreground/90 italic">{kalima.transliteration}</p>
           <p className="mt-1 text-xs sm:text-sm text-muted-foreground">“{kalima.translation}”</p>
           <p className="mt-3 text-[10px] uppercase tracking-widest text-primary/70">{kalima.source}</p>
+          {kalima.ayah ? (
+            <div className="mt-3 flex items-center justify-center gap-2 text-[11px]">
+              <span className="text-muted-foreground">Reciter:</span>
+              <select
+                value={reciter}
+                onChange={(e) => setReciter(e.target.value)}
+                className="bg-card/70 backdrop-blur border border-border rounded px-2 py-0.5 text-[11px]"
+              >
+                {RECITERS.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
+              </select>
+            </div>
+          ) : (
+            <p className="mt-2 text-[10px] text-muted-foreground italic">
+              (Hadith dhikr — recited via device voice)
+            </p>
+          )}
         </div>
 
         {/* Tasbih counter */}
