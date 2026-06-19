@@ -50,24 +50,8 @@ function SettingsPage() {
       <div className="max-w-md mx-auto px-4 pt-8 space-y-5">
         <h1 className="text-2xl font-bold gold-text">Settings</h1>
 
-        <Field label="Theme">
-          <div className="grid grid-cols-1 gap-2">
-            {THEMES.map((t) => (
-              <button
-                key={t.id}
-                type="button"
-                onClick={() => onThemeChange(t.id)}
-                className={`flex items-center justify-between rounded-md border px-3 py-2 text-left transition ${theme === t.id ? "border-primary bg-primary/10" : "border-border bg-card hover:border-primary/50"}`}
-              >
-                <div>
-                  <div className="text-sm font-medium text-foreground">{t.name}</div>
-                  <div className="text-xs text-muted-foreground">{t.description}</div>
-                </div>
-                {theme === t.id && <span className="text-xs text-primary">●</span>}
-              </button>
-            ))}
-          </div>
-        </Field>
+
+
 
         <Field label="Translation language">
           <select value={language} onChange={(e) => setLanguage(e.target.value as LanguageCode)} className="w-full bg-card border border-border rounded-md px-3 py-2">
