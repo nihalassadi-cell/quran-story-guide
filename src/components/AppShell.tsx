@@ -1,14 +1,12 @@
 import { Link, useLocation } from "@tanstack/react-router";
-import { Home, Search, Bookmark, Settings, Sparkles } from "lucide-react";
+import { Home, Settings, Sparkles } from "lucide-react";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const loc = useLocation();
 
   const tabs = [
     { to: "/", icon: Home, label: "Surahs" },
-    { to: "/search", icon: Search, label: "Search" },
-    { to: "/animate", icon: Sparkles, label: "Animate" },
-    { to: "/bookmarks", icon: Bookmark, label: "Saved" },
+    { to: "/animate", icon: Sparkles, label: "How do you feel?" },
     { to: "/settings", icon: Settings, label: "Settings" },
   ];
 
@@ -29,7 +27,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   }`}
                 >
                   <Icon className="h-5 w-5" />
-                  <span>{t.label}</span>
+                  <span className="text-center leading-tight">{t.label}</span>
                 </Link>
               </li>
             );

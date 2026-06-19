@@ -1,49 +1,40 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/AppShell";
 import { TRANSLATION_LANGUAGES, RECITERS, type LanguageCode } from "@/lib/quran-api";
 import { toast } from "sonner";
-import { LogOut } from "lucide-react";
 
 export const Route = createFileRoute("/settings")({
   head: () => ({ meta: [{ title: "Settings — Noor" }, { name: "description", content: "Choose translation language, reciter, and playback options." }] }),
   component: SettingsPage,
 });
 
+const STORAGE_KEY = "noor:settings";
+
 function SettingsPage() {
-  const navigate = useNavigate();
-  const [userId, setUserId] = useState<string | null>(null);
-  const [email, setEmail] = useState<string | null>(null);
   const [language, setLanguage] = useState<LanguageCode>("en");
   const [reciter, setReciter] = useState("ar.alafasy");
   const [autoplay, setAutoplay] = useState(true);
 
   useEffect(() => {
-    supabase.auth.getUser().then(async ({ data: { user } }) => {
-      setUserId(user?.id ?? null);
-      setEmail(user?.email ?? null);
-      if (user) {
-        const { data } = await supabase.from("user_settings").select("*").eq("user_id", user.id).maybeSingle();
-        if (data) {
-          setLanguage(data.translation_language as LanguageCode);
-          setReciter(data.reciter);
-          setAutoplay(data.autoplay);
-        }
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const s = JSON.parse(raw);
+        if (s.translation_language) setLanguage(s.translation_language);
+        if (s.reciter) setReciter(s.reciter);
+        if (typeof s.autoplay === "boolean") setAutoplay(s.autoplay);
       }
-    });
+    } catch {}
   }, []);
 
-  const save = async () => {
-    if (!userId) { navigate({ to: "/auth" }); return; }
-    await supabase.from("user_settings").upsert({ user_id: userId, translation_language: language, reciter, autoplay });
-    toast.success("Settings saved");
-  };
-
-  const signOut = async () => {
-    await supabase.auth.signOut();
-    toast.success("Signed out");
-    navigate({ to: "/" });
+  const save = () => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ translation_language: language, reciter, autoplay }));
+      toast.success("Preferences saved");
+    } catch {
+      toast.error("Could not save preferences");
+    }
   };
 
   return (
@@ -71,19 +62,6 @@ function SettingsPage() {
         </Field>
 
         <button onClick={save} className="w-full rounded-md bg-primary text-primary-foreground py-2 font-medium">Save preferences</button>
-
-        <div className="pt-6 border-t border-border">
-          {userId ? (
-            <>
-              <p className="text-xs text-muted-foreground mb-2">Signed in as {email}</p>
-              <button onClick={signOut} className="w-full flex items-center justify-center gap-2 rounded-md border border-border py-2 text-sm hover:bg-card">
-                <LogOut className="h-4 w-4" /> Sign out
-              </button>
-            </>
-          ) : (
-            <button onClick={() => navigate({ to: "/auth" })} className="w-full rounded-md border border-border py-2 text-sm hover:bg-card">Sign in to save preferences</button>
-          )}
-        </div>
       </div>
     </AppShell>
   );

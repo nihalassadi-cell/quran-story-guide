@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+
 import { fetchSurahWithTranslation, ayahAudioUrl, RECITERS, TRANSLATION_LANGUAGES, type LanguageCode } from "@/lib/quran-api";
 import { ChevronLeft, Play, Pause, ChevronRight, Bookmark, BookmarkCheck, Loader2, Volume2, VolumeX, Youtube } from "lucide-react";
 import { toast } from "sonner";
@@ -69,7 +69,7 @@ function SurahPlayer() {
   const [reciter, setReciter] = useState<string>("ar.alafasy");
   const [language, setLanguage] = useState<LanguageCode>("ur");
   const [bookmarked, setBookmarked] = useState(false);
-  const [userId, setUserId] = useState<string | null>(null);
+  
   const [voiceoverOn, setVoiceoverOn] = useState(true);
   const [ytOpen, setYtOpen] = useState(false);
   const [flipDir, setFlipDir] = useState<"next" | "prev" | null>(null);
@@ -77,26 +77,16 @@ function SurahPlayer() {
   const [wordIdx, setWordIdx] = useState<number>(-1);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Auth + saved settings
+  // Load saved settings from localStorage (no sign-in required)
   useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (cancelled) return;
-        const user = session?.user ?? null;
-        setUserId(user?.id ?? null);
-        if (user) {
-          const { data: s } = await supabase.from("user_settings").select("*").eq("user_id", user.id).maybeSingle();
-          if (cancelled || !s) return;
-          setReciter(s.reciter);
-          setLanguage(s.translation_language as LanguageCode);
-        }
-      } catch (e) {
-        console.warn("auth/settings load failed", e);
+    try {
+      const raw = localStorage.getItem("noor:settings");
+      if (raw) {
+        const s = JSON.parse(raw);
+        if (s.reciter) setReciter(s.reciter);
+        if (s.translation_language) setLanguage(s.translation_language as LanguageCode);
       }
-    })();
-    return () => { cancelled = true; };
+    } catch {}
   }, []);
 
   // Load Surah text + translation
@@ -155,18 +145,14 @@ function SurahPlayer() {
     setActiveVerse(verseToPlay ?? pages[nextIdx][0].numberInSurah);
   }, [flipDir, pageIdx, pages]);
 
-  // Bookmark check
+  // Bookmark check (local-only, no sign-in)
   useEffect(() => {
-    if (!userId) { setBookmarked(false); return; }
-    supabase
-      .from("bookmarks")
-      .select("id")
-      .eq("user_id", userId)
-      .eq("surah_number", surahNum)
-      .eq("verse_number", activeVerse)
-      .maybeSingle()
-      .then(({ data }) => setBookmarked(!!data));
-  }, [userId, surahNum, activeVerse]);
+    try {
+      const raw = localStorage.getItem("noor:bookmarks");
+      const list: Array<{ surah: number; verse: number }> = raw ? JSON.parse(raw) : [];
+      setBookmarked(list.some((b) => b.surah === surahNum && b.verse === activeVerse));
+    } catch { setBookmarked(false); }
+  }, [surahNum, activeVerse]);
 
   const ayah = useMemo(() => data?.ayahs.find((a) => a.numberInSurah === activeVerse), [data, activeVerse]);
   const translation = useMemo(
@@ -266,26 +252,31 @@ function SurahPlayer() {
     turnToPage(next, delta > 0 ? "next" : "prev");
   };
 
-  const toggleBookmark = async () => {
-    if (!userId) { toast.error("Sign in to save this page"); navigate({ to: "/auth" }); return; }
-    if (bookmarked) {
-      await supabase.from("bookmarks").delete().eq("user_id", userId).eq("surah_number", surahNum).eq("verse_number", activeVerse);
-      setBookmarked(false);
-      toast.success("Page bookmark removed");
-    } else {
-      await supabase.from("bookmarks").insert({ user_id: userId, surah_number: surahNum, verse_number: activeVerse });
-      setBookmarked(true);
-      toast.success("Page saved");
-    }
-    // Always update localStorage continue-reading anchor on save action
-    if (data) {
-      try {
+  const toggleBookmark = () => {
+    try {
+      const raw = localStorage.getItem("noor:bookmarks");
+      const list: Array<{ surah: number; verse: number; page: number; surahName?: string; ts: number }> =
+        raw ? JSON.parse(raw) : [];
+      const exists = list.some((b) => b.surah === surahNum && b.verse === activeVerse);
+      const next = exists
+        ? list.filter((b) => !(b.surah === surahNum && b.verse === activeVerse))
+        : [
+            { surah: surahNum, verse: activeVerse, page: pageIdx + 1, surahName: data?.name_en ?? `Surah ${surahNum}`, ts: Date.now() },
+            ...list,
+          ];
+      localStorage.setItem("noor:bookmarks", JSON.stringify(next));
+      setBookmarked(!exists);
+      toast.success(exists ? "Page bookmark removed" : "Page saved");
+      // Saving a page also updates "Continue reading" anchor
+      if (!exists && data) {
         localStorage.setItem("noor:lastPage", JSON.stringify({
           surah: surahNum, page: pageIdx + 1, verse: activeVerse,
           surahName: data.name_en ?? `Surah ${surahNum}`,
           ts: Date.now(),
         }));
-      } catch {}
+      }
+    } catch {
+      toast.error("Could not save bookmark");
     }
   };
 

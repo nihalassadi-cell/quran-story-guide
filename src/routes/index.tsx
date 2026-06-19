@@ -1,16 +1,16 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/AppShell";
 import { Input } from "@/components/ui/input";
-import { Search, Sparkles, BookOpen, BookMarked } from "lucide-react";
+import { Search, Sparkles, BookMarked, Loader2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "Noor — All Surahs" },
-      { name: "description", content: "Browse all 114 Surahs of the Quran. Tap any to begin the animated experience." },
+      { name: "description", content: "Browse all 114 Surahs of the Quran. Tap any to begin." },
     ],
   }),
   component: HomePage,
@@ -26,11 +26,15 @@ interface Surah {
   is_animated: boolean;
 }
 
+interface VerseHit { surah_number: number; verse_number: number; text: string; }
+
 type LastPage = { surah: number; page: number; verse: number; surahName?: string; ts: number };
 
 function HomePage() {
   const [surahs, setSurahs] = useState<Surah[] | null>(null);
   const [filter, setFilter] = useState("");
+  const [verseHits, setVerseHits] = useState<VerseHit[]>([]);
+  const [verseLoading, setVerseLoading] = useState(false);
   const [lastPage, setLastPage] = useState<LastPage | null>(null);
 
   useEffect(() => {
@@ -45,7 +49,29 @@ function HomePage() {
     } catch {}
   }, []);
 
-  const filtered = surahs?.filter((s) => {
+  // Verse-level search across the entire Quran
+  useEffect(() => {
+    const q = filter.trim();
+    if (q.length < 2) { setVerseHits([]); setVerseLoading(false); return; }
+    setVerseLoading(true);
+    const t = setTimeout(async () => {
+      const term = `%${q}%`;
+      const { data } = await supabase
+        .from("translations")
+        .select("text, verses!inner(surah_number, verse_number)")
+        .ilike("text", term)
+        .limit(20);
+      setVerseHits(((data as any) ?? []).map((r: any) => ({
+        surah_number: r.verses.surah_number,
+        verse_number: r.verses.verse_number,
+        text: r.text,
+      })));
+      setVerseLoading(false);
+    }, 250);
+    return () => clearTimeout(t);
+  }, [filter]);
+
+  const filtered = useMemo(() => surahs?.filter((s) => {
     if (!filter) return true;
     const q = filter.toLowerCase();
     return (
@@ -54,7 +80,7 @@ function HomePage() {
       s.name_translit.toLowerCase().includes(q) ||
       s.name_ar.includes(filter)
     );
-  });
+  }), [surahs, filter]);
 
   return (
     <AppShell>
@@ -63,7 +89,7 @@ function HomePage() {
           <p className="text-xs uppercase tracking-[0.3em] text-primary/80 flex items-center gap-2">
             <Sparkles className="h-3.5 w-3.5" /> Noor
           </p>
-          <h1 className="text-[clamp(1.75rem,7vw,2.5rem)] font-bold mt-2 gold-text leading-tight">The Animated Quran</h1>
+          <h1 className="text-[clamp(1.75rem,7vw,2.5rem)] font-bold mt-2 gold-text leading-tight">The Quran</h1>
           <p className="text-sm text-muted-foreground mt-2">
             114 chapters. Recitation and translation — verse by verse.
           </p>
@@ -74,20 +100,10 @@ function HomePage() {
           <Input
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
-            placeholder="Find a Surah..."
+            placeholder="Search across the entire Quran"
             className="pl-9 bg-card/60 border-border"
           />
         </div>
-
-        <Link
-          to="/search"
-          className="mb-5 flex items-center justify-between rounded-xl bg-card/60 border border-border px-4 py-3 hover:border-primary/40 transition-colors"
-        >
-          <span className="flex items-center gap-2 text-sm">
-            <BookOpen className="h-4 w-4 text-primary" /> Search verses across the entire Quran
-          </span>
-          <span className="text-xs text-muted-foreground">→</span>
-        </Link>
 
         {lastPage && !filter && (
           <Link
@@ -108,6 +124,33 @@ function HomePage() {
             </div>
             <span className="text-xs text-muted-foreground shrink-0">→</span>
           </Link>
+        )}
+
+        {filter && verseHits.length > 0 && (
+          <section className="mb-5">
+            <h2 className="text-xs uppercase tracking-widest text-primary/80 mb-2 flex items-center gap-2">
+              Verses {verseLoading && <Loader2 className="h-3 w-3 animate-spin" />}
+            </h2>
+            <ul className="space-y-2">
+              {verseHits.map((v, i) => (
+                <li key={i}>
+                  <Link
+                    to="/surah/$number"
+                    params={{ number: String(v.surah_number) }}
+                    search={{ verse: v.verse_number }}
+                    className="block rounded-lg bg-card/60 border border-border px-4 py-2.5 hover:border-primary/50"
+                  >
+                    <p className="text-[11px] text-primary mb-0.5">Surah {v.surah_number}, verse {v.verse_number}</p>
+                    <p className="text-sm line-clamp-2">{v.text}</p>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
+        {filter && (filtered?.length ?? 0) > 0 && (
+          <h2 className="text-xs uppercase tracking-widest text-primary/80 mb-2">Surahs</h2>
         )}
 
         <ul className="space-y-2">
@@ -144,6 +187,12 @@ function HomePage() {
             </li>
           ))}
         </ul>
+
+        {filter && (filtered?.length ?? 0) === 0 && verseHits.length === 0 && !verseLoading && (
+          <p className="text-center text-sm text-muted-foreground mt-8">
+            No matches. Try a different word.
+          </p>
+        )}
       </div>
     </AppShell>
   );

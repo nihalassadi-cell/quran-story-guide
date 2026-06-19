@@ -6,17 +6,6 @@ import { fetchSurahWithTranslation, ayahAudioUrl, RECITERS, TRANSLATION_LANGUAGE
 import { getMood } from "@/lib/moods";
 import { toast } from "sonner";
 
-const EVERYAYAH_TRANSLATIONS: Record<string, string> = {
-  en: "English/Sahih_Intnl_Ibrahim_Walk_192kbps",
-  ur: "translations/urdu_shamshad_ali_khan_46kbps",
-};
-function translationAudioUrl(language: string, surah: number, verse: number): string | null {
-  const folder = EVERYAYAH_TRANSLATIONS[language];
-  if (!folder) return null;
-  return `https://everyayah.com/data/${folder}/${String(surah).padStart(3, "0")}${String(verse).padStart(3, "0")}.mp3`;
-}
-
-const DEFAULT_LANGUAGE: LanguageCode = "ur";
 
 export const Route = createFileRoute("/mood/$id")({
   head: ({ params }) => {
@@ -42,7 +31,7 @@ function MoodPlayer() {
   const [started, setStarted] = useState(false);
   const [playing, setPlaying] = useState(false);
   const [reciter, setReciter] = useState<string>("ar.alafasy");
-  const [language, setLanguage] = useState<LanguageCode>(DEFAULT_LANGUAGE);
+  const [language, setLanguage] = useState<LanguageCode>("en");
   const [cache, setCache] = useState<AyahCache>({});
   const [scenes, setScenes] = useState<Record<string, string>>({}); // key `${surah}:${verse}`
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -140,14 +129,13 @@ function MoodPlayer() {
     };
   }, [mood.id]);
 
-  // Sequenced playback: Arabic → translation → next
+  // Sequenced playback: Arabic recital only → next (no translation recital)
   useEffect(() => {
     if (!ayah || !started) return;
     if (!audioRef.current) audioRef.current = new Audio();
     const audio = audioRef.current;
 
     let cancelled = false;
-    const ttsRef: { current: HTMLAudioElement | null } = { current: null };
 
     const advance = () => {
       if (cancelled) return;
@@ -155,27 +143,16 @@ function MoodPlayer() {
       else setPlaying(false);
     };
 
-    const playTranslationThenAdvance = () => {
-      const url = translationAudioUrl(language, current.surah, current.verse);
-      if (!url) { advance(); return; }
-      const tts = new Audio(url);
-      ttsRef.current = tts;
-      tts.onended = advance;
-      tts.onerror = advance;
-      tts.play().catch(advance);
-    };
-
     audio.src = ayahAudioUrl(ayah.number, reciter);
-    audio.onended = playTranslationThenAdvance;
+    audio.onended = advance;
     if (playing) audio.play().catch(() => setPlaying(false));
     else audio.pause();
 
     return () => {
       cancelled = true;
       audio.pause();
-      if (ttsRef.current) ttsRef.current.pause();
     };
-  }, [ayah, reciter, playing, idx, current.surah, current.verse, language, mood.verses.length]);
+  }, [ayah, reciter, playing, idx, mood.verses.length]);
 
   const sceneUrl = scenes[`${current.surah}:${current.verse}`];
   const total = mood.verses.length;
@@ -322,8 +299,8 @@ function MoodPlayer() {
             key={`${current.surah}:${current.verse}`}
             className="fade-in mx-auto max-w-2xl text-center space-y-1 rounded-lg bg-background/55 backdrop-blur-sm px-3 py-2 border border-border/40"
           >
-            <p className="arabic text-lg sm:text-xl md:text-2xl leading-relaxed text-foreground break-words">{ayah.text}</p>
-            <p className="text-[11px] sm:text-xs md:text-sm leading-snug text-foreground/85 break-words">{translation?.text}</p>
+            <p className="arabic text-lg sm:text-xl md:text-2xl leading-relaxed text-foreground break-words line-clamp-3">{ayah.text}</p>
+            <p className="text-[11px] sm:text-xs md:text-sm leading-snug text-foreground/85 break-words line-clamp-4">{translation?.text}</p>
           </div>
         </div>
       )}
