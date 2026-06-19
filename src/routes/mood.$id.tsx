@@ -1,9 +1,10 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ChevronLeft, Play, Pause, RotateCcw, BookOpen, Sparkles, ChevronDown, ChevronUp, Loader2, SkipBack, SkipForward } from "lucide-react";
+import { ChevronLeft, Play, Pause, RotateCcw, BookOpen, Sparkles, ChevronDown, ChevronUp, Loader2, SkipBack, SkipForward, Music, VolumeX } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchSurahWithTranslation, ayahAudioUrl, RECITERS, type LanguageCode } from "@/lib/quran-api";
 import { getMood } from "@/lib/moods";
+import { createAmbientPad } from "@/lib/ambient-pad";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/mood/$id")({
@@ -138,6 +139,42 @@ function MoodPlayer() {
       return () => window.speechSynthesis?.removeEventListener?.("voiceschanged", handler);
     } catch { /* ignore */ }
   }, []);
+
+  // Calming ambient background music — auto-starts on first user interaction,
+  // can be toggled, and stops on unmount. Persisted preference.
+  const padRef = useRef<ReturnType<typeof createAmbientPad> | null>(null);
+  const [ambientOn, setAmbientOn] = useState<boolean>(() => {
+    try { return localStorage.getItem("noor:ambient") !== "0"; } catch { return true; }
+  });
+  useEffect(() => {
+    if (!padRef.current) padRef.current = createAmbientPad();
+    return () => { padRef.current?.stop(); };
+  }, []);
+  useEffect(() => {
+    try { localStorage.setItem("noor:ambient", ambientOn ? "1" : "0"); } catch {}
+    if (!padRef.current) return;
+    if (ambientOn) {
+      // Browsers require a user gesture; if blocked, we'll start on next tap.
+      padRef.current.start().catch(() => {});
+    } else {
+      padRef.current.stop();
+    }
+  }, [ambientOn]);
+  // Ensure ambient starts on the user's first interaction (autoplay policy).
+  useEffect(() => {
+    if (!ambientOn) return;
+    const kick = () => {
+      padRef.current?.start().catch(() => {});
+      window.removeEventListener("pointerdown", kick);
+      window.removeEventListener("keydown", kick);
+    };
+    window.addEventListener("pointerdown", kick, { once: true });
+    window.addEventListener("keydown", kick, { once: true });
+    return () => {
+      window.removeEventListener("pointerdown", kick);
+      window.removeEventListener("keydown", kick);
+    };
+  }, [ambientOn]);
 
   // Optional verse player (opens when user expands a verse)
   const [versesOpen, setVersesOpen] = useState(false);
@@ -326,7 +363,13 @@ function MoodPlayer() {
             <p className="text-[10px] sm:text-[11px] uppercase tracking-widest text-primary/80 truncate">For when you feel</p>
             <p className="text-base sm:text-lg font-semibold gold-text truncate">{mood.emoji} {mood.label}</p>
           </div>
-          <div className="w-9 shrink-0" />
+          <button
+            onClick={() => setAmbientOn((v) => !v)}
+            title={ambientOn ? "Mute ambient music" : "Play ambient music"}
+            className="rounded-full bg-card/60 backdrop-blur p-2 border border-border hover:border-primary/60 shrink-0"
+          >
+            {ambientOn ? <Music className="h-5 w-5 text-primary" /> : <VolumeX className="h-5 w-5 text-muted-foreground" />}
+          </button>
         </div>
 
         {/* Kalima picker */}
