@@ -34,40 +34,40 @@
 }
 
 :root {
-  /* Dark, warm, reverent palette inspired by Islamic manuscript illumination */
+  /* Sage & Cream — serene, soft morning-light palette */
   --radius: 0.875rem;
-  --background: oklch(0.18 0.02 70);            /* deep warm charcoal */
-  --foreground: oklch(0.96 0.02 80);            /* parchment cream */
-  --card: oklch(0.22 0.025 70);
-  --card-foreground: oklch(0.96 0.02 80);
-  --popover: oklch(0.22 0.025 70);
-  --popover-foreground: oklch(0.96 0.02 80);
-  --primary: oklch(0.78 0.14 75);               /* warm gold */
-  --primary-foreground: oklch(0.15 0.02 70);
-  --primary-glow: oklch(0.85 0.15 80);
-  --secondary: oklch(0.30 0.03 70);
-  --secondary-foreground: oklch(0.96 0.02 80);
-  --muted: oklch(0.26 0.02 70);
-  --muted-foreground: oklch(0.72 0.03 80);
-  --accent: oklch(0.45 0.10 180);               /* deep teal accent */
-  --accent-foreground: oklch(0.96 0.02 80);
-  --destructive: oklch(0.62 0.20 25);
+  --background: oklch(0.96 0.015 90);            /* warm cream */
+  --foreground: oklch(0.28 0.02 145);            /* deep forest text */
+  --card: oklch(0.98 0.012 90);
+  --card-foreground: oklch(0.28 0.02 145);
+  --popover: oklch(0.98 0.012 90);
+  --popover-foreground: oklch(0.28 0.02 145);
+  --primary: oklch(0.62 0.06 145);               /* sage green */
+  --primary-foreground: oklch(0.98 0.012 90);
+  --primary-glow: oklch(0.74 0.07 145);
+  --secondary: oklch(0.90 0.025 135);            /* light sage */
+  --secondary-foreground: oklch(0.28 0.02 145);
+  --muted: oklch(0.92 0.018 100);
+  --muted-foreground: oklch(0.45 0.02 140);
+  --accent: oklch(0.74 0.12 85);                 /* warm gold accent */
+  --accent-foreground: oklch(0.22 0.03 90);
+  --destructive: oklch(0.58 0.20 25);
   --destructive-foreground: oklch(0.98 0 0);
-  --border: oklch(0.30 0.025 70);
-  --input: oklch(0.28 0.025 70);
-  --ring: oklch(0.78 0.14 75);
+  --border: oklch(0.86 0.02 130);
+  --input: oklch(0.90 0.02 130);
+  --ring: oklch(0.62 0.06 145);
 
   --font-display: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-arabic: "Amiri", "Scheherazade New", "Noto Naskh Arabic", serif;
 
-  --gradient-warm: linear-gradient(135deg, oklch(0.22 0.03 70), oklch(0.18 0.02 70));
+  --gradient-warm: linear-gradient(135deg, oklch(0.96 0.015 90), oklch(0.92 0.025 135));
   --gradient-gold: linear-gradient(135deg, var(--primary), var(--primary-glow));
-  --shadow-glow: 0 0 60px -10px color-mix(in oklab, var(--primary) 40%, transparent);
+  --shadow-glow: 0 0 60px -10px color-mix(in oklab, var(--primary) 35%, transparent);
 }
 
 .dark {
-  --background: oklch(0.18 0.02 70);
-  --foreground: oklch(0.96 0.02 80);
+  --background: oklch(0.96 0.015 90);
+  --foreground: oklch(0.28 0.02 145);
 }
 
 @layer base {
