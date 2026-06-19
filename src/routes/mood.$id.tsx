@@ -140,14 +140,13 @@ function MoodPlayer() {
     };
   }, [mood.id]);
 
-  // Sequenced playback: Arabic → translation → next
+  // Sequenced playback: Arabic recital only → next (no translation recital)
   useEffect(() => {
     if (!ayah || !started) return;
     if (!audioRef.current) audioRef.current = new Audio();
     const audio = audioRef.current;
 
     let cancelled = false;
-    const ttsRef: { current: HTMLAudioElement | null } = { current: null };
 
     const advance = () => {
       if (cancelled) return;
@@ -155,27 +154,16 @@ function MoodPlayer() {
       else setPlaying(false);
     };
 
-    const playTranslationThenAdvance = () => {
-      const url = translationAudioUrl(language, current.surah, current.verse);
-      if (!url) { advance(); return; }
-      const tts = new Audio(url);
-      ttsRef.current = tts;
-      tts.onended = advance;
-      tts.onerror = advance;
-      tts.play().catch(advance);
-    };
-
     audio.src = ayahAudioUrl(ayah.number, reciter);
-    audio.onended = playTranslationThenAdvance;
+    audio.onended = advance;
     if (playing) audio.play().catch(() => setPlaying(false));
     else audio.pause();
 
     return () => {
       cancelled = true;
       audio.pause();
-      if (ttsRef.current) ttsRef.current.pause();
     };
-  }, [ayah, reciter, playing, idx, current.surah, current.verse, language, mood.verses.length]);
+  }, [ayah, reciter, playing, idx, mood.verses.length]);
 
   const sceneUrl = scenes[`${current.surah}:${current.verse}`];
   const total = mood.verses.length;
