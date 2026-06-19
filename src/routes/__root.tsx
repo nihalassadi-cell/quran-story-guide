@@ -84,6 +84,8 @@ function RootComponent() {
     <>
       <Outlet />
       <Onboarding />
+      <Toaster position="top-center" richColors theme="dark" />
     </>
+
   );
 }
