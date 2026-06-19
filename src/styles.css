@@ -73,6 +73,8 @@
 @layer base {
   * { border-color: var(--color-border); }
   html, body { background: var(--background); color: var(--foreground); }
+  /* Fluid base font: scales smoothly between small phones and tablets, capped at 16px */
+  html { font-size: clamp(14px, 0.85rem + 0.35vw, 16px); -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
   body {
     font-family: var(--font-display);
     -webkit-font-smoothing: antialiased;
@@ -81,8 +83,11 @@
       radial-gradient(ellipse at bottom, color-mix(in oklab, var(--accent) 6%, transparent), transparent 60%);
     background-attachment: fixed;
     min-height: 100vh;
+    overflow-wrap: break-word;
   }
-  .arabic { font-family: var(--font-arabic); direction: rtl; }
+  /* Prevent long words / URLs / Arabic strings from overflowing their containers */
+  h1, h2, h3, h4, h5, h6, p, span, a, li, button, label { overflow-wrap: anywhere; word-break: normal; hyphens: auto; }
+  .arabic { font-family: var(--font-arabic); direction: rtl; line-height: 1.9; word-break: normal; overflow-wrap: break-word; hyphens: none; }
 }
 
 @layer utilities {
