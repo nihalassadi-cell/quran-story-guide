@@ -37,26 +37,58 @@ function MoodPlayer() {
   const target = kalima.repeat;
   const progress = Math.min(1, count / target);
 
-  // Recite the kalima in Arabic via SpeechSynthesis.
-  // Create the utterance synchronously inside the gesture / timer handler
-  // so browsers don't block playback.
-  const speakKalima = () => {
+  // Audio element used for both kalima and verse playback. Created up here so
+  // the kalima recital can use the same studio audio as the surah pages.
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [reciter, setReciter] = useState<string>("ar.alafasy");
+  const [language] = useState<LanguageCode>("en");
+  const [cache, setCache] = useState<AyahCache>({});
+
+  // Resolve the global ayah number for the current kalima (when it's a verse).
+  const kalimaSurah = kalima.ayah ? cache[kalima.ayah.surah] : undefined;
+  const kalimaAyah = kalima.ayah && kalimaSurah?.ayahs.find((a) => a.numberInSurah === kalima.ayah!.verse);
+  const kalimaAudioUrl = kalimaAyah ? ayahAudioUrl(kalimaAyah.number, reciter) : null;
+
+  // Recite the kalima. If we have a Qur'anic ayah for it, play the same
+  // studio recital used in the surah pages. Otherwise (hadith-only dhikr)
+  // fall back to the browser's Arabic speech synthesis.
+  const reciteKalima = () => {
     try {
+      // Stop any previous playback so taps feel responsive
+      try { window.speechSynthesis?.cancel(); } catch {}
+      if (audioRef.current) { audioRef.current.pause(); audioRef.current.currentTime = 0; }
+
+      if (kalimaAudioUrl) {
+        if (!audioRef.current) audioRef.current = new Audio();
+        audioRef.current.src = kalimaAudioUrl;
+        audioRef.current.play().catch((e) => console.warn("[mood] audio play failed", e));
+        return;
+      }
+
       const synth = window.speechSynthesis;
       if (!synth) return;
       const u = new SpeechSynthesisUtterance(kalima.arabic);
       u.lang = "ar-SA";
       u.rate = 0.85;
-      u.pitch = 1;
       const voices = synth.getVoices();
       const arVoice = voices.find((v) => v.lang?.toLowerCase().startsWith("ar"));
       if (arVoice) u.voice = arVoice;
-      synth.cancel();
       synth.speak(u);
     } catch (e) {
-      console.warn("[mood] speech failed", e);
+      console.warn("[mood] recite failed", e);
     }
   };
+  const speakKalima = reciteKalima;
+
+  // Prefetch the surah for the current kalima so audio is ready
+  useEffect(() => {
+    if (!kalima.ayah) return;
+    const s = kalima.ayah.surah;
+    if (cache[s]) return;
+    fetchSurahWithTranslation(s, language)
+      .then((d) => setCache((c) => ({ ...c, [s]: d })))
+      .catch((e) => console.error("[mood] kalima surah fetch failed", e));
+  }, [kalima.ayah, language, cache]);
 
   // Auto loop — pulse + recite every 3s
   useEffect(() => {
@@ -111,11 +143,7 @@ function MoodPlayer() {
   const [versesOpen, setVersesOpen] = useState(false);
   const [playerIdx, setPlayerIdx] = useState<number | null>(null);
   const [playing, setPlaying] = useState(false);
-  const [reciter, setReciter] = useState<string>("ar.alafasy");
-  const [language] = useState<LanguageCode>("en");
-  const [cache, setCache] = useState<AyahCache>({});
   const [scenes, setScenes] = useState<Record<string, string>>({});
-  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const playerVerse = playerIdx != null ? mood.verses[playerIdx] : null;
   const surahData = playerVerse ? cache[playerVerse.surah] : undefined;
@@ -267,23 +295,23 @@ function MoodPlayer() {
   return (
     <div className="min-h-screen bg-background relative">
       {/* Ambient backdrop */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/12 via-background to-accent/12" />
         <div className="absolute -top-32 -left-32 h-96 w-96 rounded-full bg-primary/15 blur-3xl kalima-orb-a" />
         <div className="absolute -bottom-40 -right-32 h-[28rem] w-[28rem] rounded-full bg-accent/15 blur-3xl kalima-orb-b" />
         {/* Floating positive particles */}
-        {Array.from({ length: 14 }).map((_, i) => (
+        {Array.from({ length: 18 }).map((_, i) => (
           <span
             key={i}
             className="kalima-particle"
             style={{
-              left: `${(i * 7.3) % 100}%`,
-              animationDelay: `${(i * 0.7) % 8}s`,
-              animationDuration: `${10 + (i % 5) * 2}s`,
-              fontSize: `${10 + (i % 4) * 4}px`,
+              left: `${(i * 5.7) % 100}%`,
+              animationDelay: `${(i * 0.6) % 9}s`,
+              animationDuration: `${9 + (i % 6) * 2}s`,
+              fontSize: `${12 + (i % 4) * 5}px`,
             }}
           >
-            {["✦", "✧", "❀", "✺", "✿"][i % 5]}
+            {["✦", "✧", "❀", "✺", "✿", "★"][i % 6]}
           </span>
         ))}
       </div>
@@ -322,7 +350,7 @@ function MoodPlayer() {
                   }`}
                   title={k.translation}
                 >
-                  Option {i + 1} · {k.repeat}×
+                  Kalima {i + 1} · {k.repeat}×
                 </button>
               ))}
             </div>
@@ -342,6 +370,22 @@ function MoodPlayer() {
           <p className="mt-3 text-xs sm:text-sm text-foreground/90 italic">{kalima.transliteration}</p>
           <p className="mt-1 text-xs sm:text-sm text-muted-foreground">“{kalima.translation}”</p>
           <p className="mt-3 text-[10px] uppercase tracking-widest text-primary/70">{kalima.source}</p>
+          {kalima.ayah ? (
+            <div className="mt-3 flex items-center justify-center gap-2 text-[11px]">
+              <span className="text-muted-foreground">Reciter:</span>
+              <select
+                value={reciter}
+                onChange={(e) => setReciter(e.target.value)}
+                className="bg-card/70 backdrop-blur border border-border rounded px-2 py-0.5 text-[11px]"
+              >
+                {RECITERS.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
+              </select>
+            </div>
+          ) : (
+            <p className="mt-2 text-[10px] text-muted-foreground italic">
+              (Hadith dhikr — recited via device voice)
+            </p>
+          )}
         </div>
 
         {/* Tasbih counter */}
