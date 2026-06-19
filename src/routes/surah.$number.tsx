@@ -314,12 +314,52 @@ function SurahPlayer() {
   );
 
   return (
-    // placeholder, replaced below
-    null as any
-  );
-}
+    <div className="fixed inset-0 overflow-hidden flex flex-col bg-gradient-to-br from-background via-background to-accent/10">
+      {/* Header */}
+      <header className="relative z-20 flex items-center justify-between p-3 border-b border-border/50 bg-background/80 backdrop-blur">
+        <Link to="/" className="rounded-full bg-card/70 backdrop-blur p-2 border border-border shrink-0">
+          <ChevronLeft className="h-5 w-5" />
+        </Link>
+        <div className="text-center min-w-0 flex-1 px-2">
+          <p className="text-[10px] uppercase tracking-widest text-primary/80 truncate">Surah {surahNum} · {data?.name_en ?? "..."}</p>
+          <p className="arabic text-base sm:text-lg gold-text truncate">{data?.name_ar ?? "..."}</p>
+        </div>
+        <button onClick={toggleBookmark} className="rounded-full bg-card/70 backdrop-blur p-2 border border-border shrink-0" aria-label="Save page">
+          {bookmarked ? <BookmarkCheck className="h-5 w-5 text-primary" /> : <Bookmark className="h-5 w-5" />}
+        </button>
+      </header>
 
-function _unused() { return (
+      {/* Book stage */}
+      <div className="book-stage relative z-10 flex-1 overflow-hidden flex items-stretch justify-center px-2 sm:px-6 py-3">
+        {!data && (
+          <div className="absolute inset-0 grid place-items-center">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        )}
+
+        {data && (
+          <div className="relative w-full max-w-2xl">
+            {/* Incoming page (always rendered) */}
+            <div
+              key={`page-${surahNum}-${pageIdx}`}
+              className={`mushaf-page parchment relative w-full rounded-xl overflow-y-auto h-full ${flipDir ? "page-rise" : "fade-in"}`}
+            >
+              {renderPageContent(pageIdx, currentPageAyahs)}
+            </div>
+
+            {/* Outgoing page overlay during flip */}
+            {flipDir && prevPageIdx != null && (
+              <div
+                key={`flip-${prevPageIdx}-${flipDir}`}
+                className={`mushaf-page parchment page-flip-layer rounded-xl overflow-hidden ${flipDir === "next" ? "page-flip-next" : "page-flip-prev"}`}
+                onAnimationEnd={() => { setFlipDir(null); setPrevPageIdx(null); }}
+              >
+                {renderPageContent(prevPageIdx, prevPageAyahs)}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
 
       {/* Page-turn controls */}
       <div className="relative z-20 flex items-center justify-between gap-2 px-3 py-2 bg-background/80 backdrop-blur border-t border-border/50">
@@ -328,7 +368,7 @@ function _unused() { return (
           disabled={pageIdx <= 0}
           className="flex items-center gap-1.5 rounded-full bg-card/80 backdrop-blur px-3 py-2 border border-border disabled:opacity-30 text-sm"
         >
-          <ChevLeft className="h-4 w-4" /> Prev
+          <ChevLeft className="h-4 w-4" /> Prev page
         </button>
 
         <div className="flex items-center gap-3">
@@ -346,7 +386,7 @@ function _unused() { return (
           disabled={pageIdx >= totalPages - 1}
           className="flex items-center gap-1.5 rounded-full bg-card/80 backdrop-blur px-3 py-2 border border-border disabled:opacity-30 text-sm"
         >
-          Next <ChevronRight className="h-4 w-4" />
+          Next page <ChevronRight className="h-4 w-4" />
         </button>
       </div>
 
