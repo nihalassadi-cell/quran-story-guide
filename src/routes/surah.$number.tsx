@@ -90,10 +90,10 @@ function SurahPlayer() {
 
   // Pages: chunk ayahs into fixed-size pages
   const pages = useMemo(() => {
-    if (!data) return [] as Array<typeof data.ayahs>;
-    const out: Array<typeof data.ayahs> = [];
-    for (let i = 0; i < data.ayahs.length; i += VERSES_PER_PAGE) {
-      out.push(data.ayahs.slice(i, i + VERSES_PER_PAGE));
+    const ayahs = data?.ayahs ?? [];
+    const out: typeof ayahs[] = [];
+    for (let i = 0; i < ayahs.length; i += VERSES_PER_PAGE) {
+      out.push(ayahs.slice(i, i + VERSES_PER_PAGE));
     }
     return out;
   }, [data]);
