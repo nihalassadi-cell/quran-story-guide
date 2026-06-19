@@ -1,17 +1,20 @@
 import type { CapacitorConfig } from "@capacitor/cli";
 
+// The native shell loads the bundled web build from `dist/` so the app
+// works offline and is independent of any remote host (including Lovable).
+//
+// Workflow for native builds:
+//   1. npm run build           → produces dist/
+//   2. npx cap sync            → copies dist/ into the native projects
+//   3. npx cap open ios|android
+//
+// To temporarily point the shell at a live URL again (e.g. for hot-reload
+// during development), add a `server: { url: "...", cleartext: false }`
+// block back in. Do not ship that to the Play Store.
 const config: CapacitorConfig = {
   appId: "app.lovable.quranstoryguide",
   appName: "Noor",
-  // Point the native shell at your published Lovable URL so the app
-  // always loads the latest deployed version. To bundle the web build
-  // inside the app instead, remove `server.url` and set `webDir: "dist"`
-  // after running `npm run build`.
   webDir: "dist",
-  server: {
-    url: "https://quran-story-guide.lovable.app",
-    cleartext: false,
-  },
   ios: {
     contentInset: "always",
   },
