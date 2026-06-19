@@ -2,7 +2,6 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { TRANSLATION_LANGUAGES, RECITERS, type LanguageCode } from "@/lib/quran-api";
-import { THEMES, getStoredTheme, setTheme as applyAndSaveTheme, type ThemeId } from "@/lib/theme";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/settings")({
@@ -16,7 +15,6 @@ function SettingsPage() {
   const [language, setLanguage] = useState<LanguageCode>("en");
   const [reciter, setReciter] = useState("ar.alafasy");
   const [autoplay, setAutoplay] = useState(true);
-  const [theme, setThemeState] = useState<ThemeId>("default");
 
   useEffect(() => {
     try {
@@ -28,13 +26,9 @@ function SettingsPage() {
         if (typeof s.autoplay === "boolean") setAutoplay(s.autoplay);
       }
     } catch {}
-    setThemeState(getStoredTheme());
   }, []);
 
-  const onThemeChange = (id: ThemeId) => {
-    setThemeState(id);
-    applyAndSaveTheme(id);
-  };
+
 
   const save = () => {
     try {
