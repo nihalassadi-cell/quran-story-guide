@@ -16,6 +16,14 @@ export function createAmbientPad(): AmbientPad {
   let chimeTimer: number | null = null;
   let playing = false;
   let targetVol = 0.28; // audible but gentle
+  let silentEl: HTMLAudioElement | null = null;
+
+  // Tiny silent looping WAV — when played via <audio> on a user gesture,
+  // iOS switches the page's audio session to "playback", which routes
+  // WebAudio through the media volume and ignores the silent switch.
+  const SILENT_WAV =
+    "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA";
+
 
   // Soft, consonant chord — A minor 9 voicing
   // A2, E3, A3, C4, E4, G4
@@ -28,6 +36,24 @@ export function createAmbientPad(): AmbientPad {
     if (playing) return;
     const AC = (window.AudioContext || (window as any).webkitAudioContext);
     if (!AC) return;
+
+    // Kick off a silent looping <audio> SYNCHRONOUSLY in the gesture, so iOS
+    // promotes the page's audio session to "playback" — this lets the music
+    // play even when the ringer/silent switch is on (volume controls it).
+    if (!silentEl) {
+      try {
+        silentEl = new Audio(SILENT_WAV);
+        silentEl.loop = true;
+        silentEl.preload = "auto";
+        (silentEl as any).playsInline = true;
+        silentEl.setAttribute("playsinline", "");
+        silentEl.setAttribute("webkit-playsinline", "");
+        silentEl.muted = false; // must be unmuted for session promotion
+        silentEl.volume = 0.0001; // effectively silent
+      } catch {}
+    }
+    try { silentEl?.play().catch(() => {}); } catch {}
+
     // IMPORTANT: AudioContext must be CREATED inside a user gesture on iOS,
     // otherwise it is born in "suspended" state and resume() won't unlock it.
     if (!ctx) ctx = new AC();
@@ -41,6 +67,7 @@ export function createAmbientPad(): AmbientPad {
       ctx = null;
       return;
     }
+
 
 
     master = ctx.createGain();
@@ -156,6 +183,7 @@ export function createAmbientPad(): AmbientPad {
     ctx = null;
     master = null;
     playing = false;
+    try { silentEl?.pause(); } catch {}
   };
 
   const setVolume = (v: number) => {
