@@ -113,6 +113,30 @@
   --shadow-glow: 0 0 60px -10px color-mix(in oklab, var(--primary) 35%, transparent);
 }
 
+/* Emerald & Sand — premium warm balance */
+[data-theme="emerald"] {
+  --background: #faf8f5;
+  --foreground: #064e3b;
+  --card: #fcfaf7;
+  --card-foreground: #064e3b;
+  --popover: #fcfaf7;
+  --popover-foreground: #064e3b;
+  --primary: #0d7a5f;                            /* emerald */
+  --primary-foreground: #faf8f5;
+  --primary-glow: #1a9e7d;
+  --secondary: #9bcfc1;                          /* soft aqua */
+  --secondary-foreground: #064e3b;
+  --muted: #f0ebe3;
+  --muted-foreground: #4a7a6b;
+  --accent: #c9a84c;                             /* gold */
+  --accent-foreground: #064e3b;
+  --border: #e8e2d9;
+  --input: #f2ede5;
+  --ring: #0d7a5f;
+  --gradient-warm: linear-gradient(135deg, #faf8f5, #9bcfc1);
+  --shadow-glow: 0 0 60px -10px color-mix(in oklab, var(--primary) 35%, transparent);
+}
+
 @layer base {
   * { border-color: var(--color-border); }
   html, body { background: var(--background); color: var(--foreground); }
