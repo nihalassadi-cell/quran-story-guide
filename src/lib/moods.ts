@@ -87,6 +87,7 @@ const HASBUNALLAH: Kalima = {
   repeat: 70,
   source: "Qur'an 3:173 · Bukhari 4563 — said by Ibrāhīm ﷺ in the fire and by the Prophet ﷺ at Uḥud.",
   why: "Words spoken inside flames and on a battlefield — they did not burn, they did not lose. Borrow them.",
+  ayah: { surah: 3, verse: 173 },
 };
 
 const YUNUS_DUA: Kalima = {
@@ -96,6 +97,7 @@ const YUNUS_DUA: Kalima = {
   repeat: 40,
   source: "Qur'an 21:87 · Tirmidhī 3505 — the duʿāʾ of Yūnus ﷺ from the belly of the whale.",
   why: "“No Muslim ever supplicates with these words for anything except Allah answers him.”",
+  ayah: { surah: 21, verse: 87 },
 };
 
 const TAHLIL: Kalima = {
