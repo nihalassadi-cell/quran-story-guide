@@ -298,6 +298,7 @@ function SurahPlayer() {
               {currentPageAyahs.map((a) => {
                 const tr = data.translations.find((t) => t.numberInSurah === a.numberInSurah);
                 const isActive = a.numberInSurah === activeVerse;
+                const words = a.text.split(/\s+/).filter(Boolean);
                 return (
                   <div
                     key={a.numberInSurah}
@@ -308,7 +309,17 @@ function SurahPlayer() {
                       <span className="inline-flex items-center justify-center align-middle h-7 w-7 sm:h-8 sm:w-8 mx-1 rounded-full text-[11px] sm:text-xs font-bold verse-num">
                         {a.numberInSurah}
                       </span>
-                      {a.text}
+                      {words.map((w, i) => {
+                        const highlight = isActive && playing && i === wordIdx;
+                        return (
+                          <span
+                            key={i}
+                            className={highlight ? "word-active" : "word"}
+                          >
+                            {w}{i < words.length - 1 ? " " : ""}
+                          </span>
+                        );
+                      })}
                     </p>
                     {tr?.text && (
                       <p className="ayah-translation text-xs sm:text-sm leading-relaxed mt-1.5 italic">
