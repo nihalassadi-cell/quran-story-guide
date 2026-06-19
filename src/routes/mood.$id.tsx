@@ -322,8 +322,8 @@ function MoodPlayer() {
             key={`${current.surah}:${current.verse}`}
             className="fade-in mx-auto max-w-2xl text-center space-y-1 rounded-lg bg-background/55 backdrop-blur-sm px-3 py-2 border border-border/40"
           >
-            <p className="arabic text-xl md:text-2xl leading-snug text-foreground">{ayah.text}</p>
-            <p className="text-xs md:text-sm leading-snug text-foreground/85">{translation?.text}</p>
+            <p className="arabic text-lg sm:text-xl md:text-2xl leading-relaxed text-foreground break-words">{ayah.text}</p>
+            <p className="text-[11px] sm:text-xs md:text-sm leading-snug text-foreground/85 break-words">{translation?.text}</p>
           </div>
         </div>
       )}
