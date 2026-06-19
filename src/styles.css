@@ -282,3 +282,29 @@
       url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='300'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.4  0 0 0 0 0.3  0 0 0 0 0.15  0 0 0 0.18 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/></svg>");
   }
 }
+
+/* === Kalima (mood dhikr) animations === */
+@keyframes kalima-pulse-kf {
+  0% { transform: scale(1); box-shadow: 0 0 0 0 hsl(var(--primary) / 0.5); }
+  60% { transform: scale(1.04); box-shadow: 0 0 0 24px hsl(var(--primary) / 0); }
+  100% { transform: scale(1); box-shadow: 0 0 0 0 hsl(var(--primary) / 0); }
+}
+.kalima-pulse { animation: kalima-pulse-kf 0.55s ease-out; }
+
+@keyframes kalima-glow-kf {
+  0% { text-shadow: 0 0 0 hsl(var(--primary) / 0); }
+  50% { text-shadow: 0 0 24px hsl(var(--primary) / 0.55), 0 0 4px hsl(var(--primary) / 0.4); }
+  100% { text-shadow: 0 0 0 hsl(var(--primary) / 0); }
+}
+.kalima-glow { animation: kalima-glow-kf 0.7s ease-out; }
+
+@keyframes orb-drift-a {
+  0%,100% { transform: translate(0,0) scale(1); }
+  50% { transform: translate(40px,30px) scale(1.08); }
+}
+@keyframes orb-drift-b {
+  0%,100% { transform: translate(0,0) scale(1); }
+  50% { transform: translate(-50px,-20px) scale(1.1); }
+}
+.kalima-orb-a { animation: orb-drift-a 14s ease-in-out infinite; }
+.kalima-orb-b { animation: orb-drift-b 17s ease-in-out infinite; }
