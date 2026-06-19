@@ -33,11 +33,11 @@ function AnimatePage() {
               params={{ id: m.id }}
               className="group rounded-xl border border-border bg-card/60 backdrop-blur p-4 flex flex-col items-start gap-1 hover:border-primary/60 hover:bg-card transition-colors"
             >
-              <span className="text-3xl">{m.emoji}</span>
-              <span className="font-semibold text-foreground">{m.label}</span>
-              <span className="text-xs text-muted-foreground leading-snug">{m.blurb}</span>
+              <span className="text-2xl sm:text-3xl">{m.emoji}</span>
+              <span className="font-semibold text-foreground text-sm sm:text-base">{m.label}</span>
+              <span className="text-[11px] sm:text-xs text-muted-foreground leading-snug">{m.blurb}</span>
               <span className="text-[10px] uppercase tracking-wider text-primary/70 mt-1 flex items-center gap-1">
-                <Sparkles className="h-3 w-3" /> {m.verses.length} verses
+                <Sparkles className="h-3 w-3 shrink-0" /> {m.verses.length} verses
               </span>
             </Link>
           ))}
