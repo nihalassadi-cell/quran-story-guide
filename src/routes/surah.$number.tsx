@@ -2,17 +2,15 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchSurahWithTranslation, ayahAudioUrl, RECITERS, TRANSLATION_LANGUAGES, type LanguageCode } from "@/lib/quran-api";
-import { ChevronLeft, Play, Pause, SkipBack, SkipForward, Bookmark, BookmarkCheck, Loader2, Volume2, VolumeX, Youtube } from "lucide-react";
+import { ChevronLeft, Play, Pause, ChevronRight, ChevronLeft as ChevLeft, Bookmark, BookmarkCheck, Loader2, Volume2, VolumeX, Youtube } from "lucide-react";
 import { toast } from "sonner";
-type SurahSearch = { verse?: number };
 
-// Free, human-recorded translation audio. Each entry is a path under
-// https://everyayah.com/data/{path}/{SSS}{VVV}.mp3 — no API key, no cost, no limits.
+type SurahSearch = { verse?: number; page?: number };
+
 const EVERYAYAH_TRANSLATIONS: Record<string, string> = {
   en: "English/Sahih_Intnl_Ibrahim_Walk_192kbps",
   ur: "translations/urdu_shamshad_ali_khan_46kbps",
 };
-
 function translationAudioUrl(language: string, surah: number, verse: number): string | null {
   const folder = EVERYAYAH_TRANSLATIONS[language];
   if (!folder) return null;
@@ -21,15 +19,21 @@ function translationAudioUrl(language: string, surah: number, verse: number): st
   return `https://everyayah.com/data/${folder}/${s}${v}.mp3`;
 }
 
+const VERSES_PER_PAGE = 8;
+
 export const Route = createFileRoute("/surah/$number")({
   validateSearch: (search: Record<string, unknown>): SurahSearch => {
     const v = Number(search.verse);
-    return { verse: Number.isFinite(v) && v >= 1 ? Math.floor(v) : undefined };
+    const p = Number(search.page);
+    return {
+      verse: Number.isFinite(v) && v >= 1 ? Math.floor(v) : undefined,
+      page: Number.isFinite(p) && p >= 1 ? Math.floor(p) : undefined,
+    };
   },
   head: ({ params }) => ({
     meta: [
       { title: `Surah ${params.number} — Noor` },
-      { name: "description", content: `Animated recitation of Surah ${params.number} with translation.` },
+      { name: "description", content: `Read Surah ${params.number} in a Quran-style book layout with page-turn navigation.` },
     ],
   }),
   component: SurahPlayer,
@@ -37,13 +41,13 @@ export const Route = createFileRoute("/surah/$number")({
 
 function SurahPlayer() {
   const { number } = Route.useParams();
-  const { verse } = Route.useSearch();
+  const { verse, page } = Route.useSearch();
   const navigate = useNavigate({ from: "/surah/$number" });
   const surahNum = parseInt(number, 10);
 
   const [data, setData] = useState<Awaited<ReturnType<typeof fetchSurahWithTranslation>> | null>(null);
-  const [scenes, setScenes] = useState<Record<number, string>>({});
-  const [currentVerse, setCurrentVerse] = useState<number>(verse ?? 1);
+  const [pageIdx, setPageIdx] = useState<number>((page ?? 1) - 1);
+  const [activeVerse, setActiveVerse] = useState<number>(verse ?? 1);
   const [playing, setPlaying] = useState(false);
   const [reciter, setReciter] = useState<string>("ar.alafasy");
   const [language, setLanguage] = useState<LanguageCode>("ur");
@@ -51,25 +55,10 @@ function SurahPlayer() {
   const [userId, setUserId] = useState<string | null>(null);
   const [voiceoverOn, setVoiceoverOn] = useState(true);
   const [ytOpen, setYtOpen] = useState(false);
+  const [flipDir, setFlipDir] = useState<"next" | "prev" | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const [ttsVoicesReady, setTtsVoicesReady] = useState(false);
 
-  // Map translation LanguageCode to BCP47 for SpeechSynthesis
-  const ttsLang = useMemo(() => {
-    const map: Record<string, string> = { en: "en-US", ur: "ur", id: "id-ID", tr: "tr-TR" };
-    return map[language] ?? "en-US";
-  }, [language]);
-
-  useEffect(() => {
-    if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
-    const synth = window.speechSynthesis;
-    const markReady = () => setTtsVoicesReady(synth.getVoices().length > 0);
-    markReady();
-    synth.addEventListener("voiceschanged", markReady);
-    return () => synth.removeEventListener("voiceschanged", markReady);
-  }, []);
-
-  // Load user settings + auth (non-blocking — never await before fetching Surah)
+  // Auth + saved settings
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -94,76 +83,41 @@ function SurahPlayer() {
   // Load Surah text + translation
   useEffect(() => {
     setData(null);
-    console.log("[surah] fetching", surahNum, language);
     fetchSurahWithTranslation(surahNum, language)
-      .then((d) => { console.log("[surah] loaded", d.ayahs.length, "ayahs"); setData(d); })
+      .then((d) => setData(d))
       .catch((e) => { console.error("[surah] fetch failed", e); toast.error("Failed to load Surah"); });
   }, [surahNum, language]);
 
-  // Load scene images for this Surah from DB + subscribe to realtime updates,
-  // and kick off background generation if anything is missing.
+  // Pages: chunk ayahs into fixed-size pages
+  const pages = useMemo(() => {
+    const ayahs = data?.ayahs ?? [];
+    const out: typeof ayahs[] = [];
+    for (let i = 0; i < ayahs.length; i += VERSES_PER_PAGE) {
+      out.push(ayahs.slice(i, i + VERSES_PER_PAGE));
+    }
+    return out;
+  }, [data]);
+
+  const totalPages = pages.length;
+
+  // If a saved verse was passed in search, jump to its page once data loads
   useEffect(() => {
-    let verseIdToNumber = new Map<string, number>();
-    let cancelled = false;
+    if (!data || !verse) return;
+    const idx = Math.max(0, Math.floor((verse - 1) / VERSES_PER_PAGE));
+    setPageIdx(idx);
+    setActiveVerse(verse);
+  }, [data, verse]);
 
-    const load = async () => {
-      const { data: verses } = await supabase
-        .from("verses")
-        .select("id, verse_number, scenes(image_url, status)")
-        .eq("surah_number", surahNum);
-      if (!verses || cancelled) return;
-      const map: Record<number, string> = {};
-      let missing = 0;
-      for (const v of verses as any[]) {
-        verseIdToNumber.set(v.id, v.verse_number);
-        const scene = Array.isArray(v.scenes) ? v.scenes[0] : v.scenes;
-        if (scene?.image_url && scene.status === "ready") map[v.verse_number] = scene.image_url;
-        else missing++;
-      }
-      setScenes(map);
+  // Keep active verse pointing to the first verse of the page when changing pages
+  useEffect(() => {
+    const pageAyahs = pages[pageIdx];
+    if (!pageAyahs || pageAyahs.length === 0) return;
+    if (!pageAyahs.find((a) => a.numberInSurah === activeVerse)) {
+      setActiveVerse(pageAyahs[0].numberInSurah);
+    }
+  }, [pageIdx, pages]); // eslint-disable-line react-hooks/exhaustive-deps
 
-      // Kick off background generation if anything's missing — fire and forget,
-      // realtime will stream new images in as they become available.
-      if (missing > 0) {
-        const loop = async () => {
-          for (let i = 0; i < 50 && !cancelled; i++) {
-            const { data, error } = await supabase.functions.invoke("generate-surah", {
-              body: { surahNumber: surahNum, batchSize: 12, concurrency: 6 },
-            });
-            if (error || !data) break;
-            if ((data as any).done) break;
-            if (((data as any).processed ?? []).length === 0) break;
-          }
-        };
-        loop();
-      }
-    };
-    load();
-
-    const channel = supabase
-      .channel(`scenes-surah-${surahNum}`)
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "scenes" },
-        (payload: any) => {
-          const row = payload.new ?? payload.old;
-          if (!row) return;
-          const num = verseIdToNumber.get(row.verse_id);
-          if (!num) return;
-          if (row.status === "ready" && row.image_url) {
-            setScenes((prev) => ({ ...prev, [num]: row.image_url }));
-          }
-        },
-      )
-      .subscribe();
-
-    return () => {
-      cancelled = true;
-      supabase.removeChannel(channel);
-    };
-  }, [surahNum]);
-
-  // Check bookmark
+  // Bookmark check
   useEffect(() => {
     if (!userId) { setBookmarked(false); return; }
     supabase
@@ -171,258 +125,258 @@ function SurahPlayer() {
       .select("id")
       .eq("user_id", userId)
       .eq("surah_number", surahNum)
-      .eq("verse_number", currentVerse)
+      .eq("verse_number", activeVerse)
       .maybeSingle()
       .then(({ data }) => setBookmarked(!!data));
-  }, [userId, surahNum, currentVerse]);
+  }, [userId, surahNum, activeVerse]);
 
-  const ayah = useMemo(() => data?.ayahs.find((a) => a.numberInSurah === currentVerse), [data, currentVerse]);
+  const ayah = useMemo(() => data?.ayahs.find((a) => a.numberInSurah === activeVerse), [data, activeVerse]);
   const translation = useMemo(
-    () => data?.translations.find((t) => t.numberInSurah === currentVerse),
-    [data, currentVerse],
+    () => data?.translations.find((t) => t.numberInSurah === activeVerse),
+    [data, activeVerse],
   );
 
-  // Sequenced playback: Arabic recitation → translation voiceover → next verse (Arabic again)
+  // Sequenced playback
   useEffect(() => {
     if (!ayah) return;
     if (!audioRef.current) audioRef.current = new Audio();
     const audio = audioRef.current;
 
-    // Cancel any in-flight TTS whenever verse/settings change
-    if (typeof window !== "undefined" && "speechSynthesis" in window) {
-      window.speechSynthesis.cancel();
-    }
+    let cancelled = false;
+    const ttsRef: { current: HTMLAudioElement | null } = { current: null };
 
-    let cancelledTts = false;
-    const ttsAudioRef: { current: HTMLAudioElement | null } = { current: null };
-
-    const playTranslationThenAdvance = async () => {
-      const advance = () => {
-        if (cancelledTts) return;
-        if (data && currentVerse < data.ayahs.length) {
-          setCurrentVerse((v: number) => v + 1);
-        } else {
-          setPlaying(false);
-        }
-      };
-      if (!voiceoverOn || !translation?.text) {
-        advance();
-        return;
-      }
-
-      // Free human-recorded translation audio from EveryAyah — no key, no cost, no limits.
-      const url = translationAudioUrl(language, surahNum, currentVerse);
-
-      if (cancelledTts) return;
+    const advance = () => {
+      if (cancelled || !data) return;
+      if (activeVerse < data.ayahs.length) setActiveVerse((v) => v + 1);
+      else setPlaying(false);
+    };
+    const playTranslationThenAdvance = () => {
+      if (!voiceoverOn || !translation?.text) { advance(); return; }
+      const url = translationAudioUrl(language, surahNum, activeVerse);
       if (!url) { advance(); return; }
-
-      const ttsAudio = new Audio(url);
-      ttsAudioRef.current = ttsAudio;
-      ttsAudio.onended = advance;
-      ttsAudio.onerror = advance;
-      try { await ttsAudio.play(); } catch { advance(); }
+      const tts = new Audio(url);
+      ttsRef.current = tts;
+      tts.onended = advance;
+      tts.onerror = advance;
+      tts.play().catch(advance);
     };
 
     audio.src = ayahAudioUrl(ayah.number, reciter);
     audio.onended = playTranslationThenAdvance;
-
     if (playing) audio.play().catch(() => setPlaying(false));
     else audio.pause();
 
     return () => {
-      cancelledTts = true;
+      cancelled = true;
       audio.pause();
-      if (ttsAudioRef.current) { ttsAudioRef.current.pause(); ttsAudioRef.current = null; }
-      if (typeof window !== "undefined" && "speechSynthesis" in window) {
-        window.speechSynthesis.cancel();
-      }
+      if (ttsRef.current) ttsRef.current.pause();
     };
-  }, [ayah, reciter, playing, data, currentVerse, translation?.text, voiceoverOn, ttsLang, ttsVoicesReady]);
+  }, [ayah, reciter, playing, data, activeVerse, translation?.text, voiceoverOn, language, surahNum]);
 
-  // Sync URL with current verse
+  // Auto-advance page when active verse moves out of current page during playback
   useEffect(() => {
-    navigate({ search: { verse: currentVerse }, replace: true });
-  }, [currentVerse, navigate]);
+    const pageAyahs = pages[pageIdx];
+    if (!pageAyahs || !pageAyahs.length) return;
+    const last = pageAyahs[pageAyahs.length - 1].numberInSurah;
+    if (activeVerse > last && pageIdx < totalPages - 1) {
+      setFlipDir("next");
+      setPageIdx((p) => p + 1);
+    }
+  }, [activeVerse, pageIdx, pages, totalPages]);
 
-  const total = data?.ayahs.length ?? 0;
-  const sceneUrl = scenes[currentVerse];
+  // Persist last page to localStorage so the home tab can offer "Continue reading"
+  useEffect(() => {
+    if (!data) return;
+    try {
+      const payload = {
+        surah: surahNum,
+        page: pageIdx + 1,
+        verse: activeVerse,
+        surahName: data.name_en ?? `Surah ${surahNum}`,
+        ts: Date.now(),
+      };
+      localStorage.setItem("noor:lastPage", JSON.stringify(payload));
+    } catch {}
+  }, [data, surahNum, pageIdx, activeVerse]);
+
+  // Sync URL with current page + verse
+  useEffect(() => {
+    navigate({ search: { verse: activeVerse, page: pageIdx + 1 }, replace: true });
+  }, [activeVerse, pageIdx, navigate]);
+
+  const goPage = (delta: number) => {
+    const next = Math.max(0, Math.min(totalPages - 1, pageIdx + delta));
+    if (next === pageIdx) return;
+    setFlipDir(delta > 0 ? "next" : "prev");
+    setPageIdx(next);
+  };
 
   const toggleBookmark = async () => {
-    if (!userId) { toast.error("Sign in to save verses"); navigate({ to: "/auth" }); return; }
+    if (!userId) { toast.error("Sign in to save this page"); navigate({ to: "/auth" }); return; }
     if (bookmarked) {
-      await supabase.from("bookmarks").delete().eq("user_id", userId).eq("surah_number", surahNum).eq("verse_number", currentVerse);
+      await supabase.from("bookmarks").delete().eq("user_id", userId).eq("surah_number", surahNum).eq("verse_number", activeVerse);
       setBookmarked(false);
-      toast.success("Bookmark removed");
+      toast.success("Page bookmark removed");
     } else {
-      await supabase.from("bookmarks").insert({ user_id: userId, surah_number: surahNum, verse_number: currentVerse });
+      await supabase.from("bookmarks").insert({ user_id: userId, surah_number: surahNum, verse_number: activeVerse });
       setBookmarked(true);
-      toast.success("Verse bookmarked");
+      toast.success("Page saved");
+    }
+    // Always update localStorage continue-reading anchor on save action
+    if (data) {
+      try {
+        localStorage.setItem("noor:lastPage", JSON.stringify({
+          surah: surahNum, page: pageIdx + 1, verse: activeVerse,
+          surahName: data.name_en ?? `Surah ${surahNum}`,
+          ts: Date.now(),
+        }));
+      } catch {}
     }
   };
 
-  return (
-    <div className="fixed inset-0 bg-background overflow-hidden flex flex-col">
-      {/* Background scene with cinematic Ken Burns + crossfade */}
-      <div className="absolute inset-0">
-        {sceneUrl ? (
-          <img
-            key={sceneUrl}
-            src={sceneUrl}
-            alt=""
-            className={`w-full h-full object-cover scene-fade kb-${(currentVerse % 4) + 1}`}
-          />
-        ) : (
-          <div className="w-full h-full bg-gradient-to-br from-card via-background to-accent/20" />
-        )}
-        {/* Drifting light motes for atmospheric depth */}
-        <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          {[...Array(8)].map((_, i) => (
-            <div
-              key={i}
-              className="particle absolute rounded-full bg-primary/40 blur-sm"
-              style={{
-                width: `${4 + (i % 3) * 3}px`,
-                height: `${4 + (i % 3) * 3}px`,
-                left: `${(i * 13 + 7) % 100}%`,
-                top: `${(i * 19 + 11) % 100}%`,
-                animationDelay: `${i * 1.7}s`,
-                animationDuration: `${10 + (i % 4) * 3}s`,
-              }}
-            />
-          ))}
-        </div>
-        {/* Cinematic foreground layers — light leak, shimmer, grain, vignette */}
-        <div className="light-leak" />
-        <div className="lens-shimmer" />
-        <div className="film-grain" />
-        <div className="vignette-pulse" />
-        {/* Light gradient to keep text readable */}
-        <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-transparent to-background/85" />
-      </div>
+  const currentPageAyahs = pages[pageIdx] ?? [];
 
+  return (
+    <div className="fixed inset-0 overflow-hidden flex flex-col bg-gradient-to-br from-background via-background to-accent/10">
       {/* Header */}
-      <header className="relative z-10 flex items-center justify-between p-4">
-        <Link to="/" className="rounded-full bg-card/60 backdrop-blur p-2 border border-border">
+      <header className="relative z-20 flex items-center justify-between p-3 border-b border-border/50 bg-background/80 backdrop-blur">
+        <Link to="/" className="rounded-full bg-card/70 backdrop-blur p-2 border border-border shrink-0">
           <ChevronLeft className="h-5 w-5" />
         </Link>
-        <div className="text-center">
-          <p className="text-xs uppercase tracking-widest text-primary/80">Surah {surahNum}</p>
-          <p className="arabic text-lg gold-text">{data?.name_ar ?? "..."}</p>
+        <div className="text-center min-w-0 flex-1 px-2">
+          <p className="text-[10px] uppercase tracking-widest text-primary/80 truncate">Surah {surahNum} · {data?.name_en ?? "..."}</p>
+          <p className="arabic text-base sm:text-lg gold-text truncate">{data?.name_ar ?? "..."}</p>
         </div>
-        <button onClick={toggleBookmark} className="rounded-full bg-card/60 backdrop-blur p-2 border border-border">
+        <button onClick={toggleBookmark} className="rounded-full bg-card/70 backdrop-blur p-2 border border-border shrink-0" aria-label="Save page">
           {bookmarked ? <BookmarkCheck className="h-5 w-5 text-primary" /> : <Bookmark className="h-5 w-5" />}
         </button>
       </header>
 
-      {/* Spacer — let the artwork breathe */}
-      <div className="relative z-10 flex-1 flex items-center justify-center">
-        {!data && <Loader2 className="h-8 w-8 animate-spin text-primary" />}
+      {/* Book stage */}
+      <div className="book-stage relative z-10 flex-1 overflow-hidden flex items-stretch justify-center px-2 sm:px-6 py-3">
+        {!data && (
+          <div className="absolute inset-0 grid place-items-center">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        )}
+
+        {data && (
+          <div
+            key={`${surahNum}-${pageIdx}`}
+            className={`mushaf-page parchment relative w-full max-w-2xl rounded-xl overflow-y-auto ${flipDir === "next" ? "page-turn-next" : flipDir === "prev" ? "page-turn-prev" : "fade-in"}`}
+            onAnimationEnd={() => setFlipDir(null)}
+          >
+            {/* Page header — show Bismillah only on page 1 (and only if not Surah 1 or 9) */}
+            <div className="px-5 sm:px-8 pt-5 pb-3 text-center">
+              {pageIdx === 0 && surahNum !== 1 && surahNum !== 9 && (
+                <p className="arabic text-xl sm:text-2xl mb-2" style={{ color: "oklch(0.35 0.10 60)" }}>
+                  بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
+                </p>
+              )}
+              <div className="flex items-center justify-center gap-3 text-[11px] uppercase tracking-[0.25em] opacity-70">
+                <span className="page-divider h-px flex-1" />
+                <span>Page {pageIdx + 1} of {totalPages}</span>
+                <span className="page-divider h-px flex-1" />
+              </div>
+            </div>
+
+            {/* Verses */}
+            <div className="px-5 sm:px-8 pb-24 space-y-5">
+              {currentPageAyahs.map((a) => {
+                const tr = data.translations.find((t) => t.numberInSurah === a.numberInSurah);
+                const isActive = a.numberInSurah === activeVerse;
+                return (
+                  <div
+                    key={a.numberInSurah}
+                    onClick={() => { setActiveVerse(a.numberInSurah); setPlaying(true); }}
+                    className={`group cursor-pointer rounded-lg px-2 py-2 transition-colors ${isActive ? "bg-amber-500/15 ring-1 ring-amber-600/30" : "hover:bg-amber-500/10"}`}
+                  >
+                    <p className="arabic text-right text-2xl sm:text-3xl leading-[2.4] tracking-wide" dir="rtl">
+                      <span className="inline-flex items-center justify-center align-middle h-7 w-7 sm:h-8 sm:w-8 mx-1 rounded-full text-[11px] sm:text-xs font-bold verse-num">
+                        {a.numberInSurah}
+                      </span>
+                      {a.text}
+                    </p>
+                    {tr?.text && (
+                      <p className="ayah-translation text-xs sm:text-sm leading-relaxed mt-1.5 italic">
+                        {tr.text}
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Subtitle bar — anchored near the bottom, compact, film-style */}
-      {ayah && (
-        <div className="relative z-10 px-4 pb-2">
-          <div
-            key={currentVerse}
-            className="fade-in mx-auto max-w-2xl text-center space-y-1.5 rounded-xl bg-card/85 backdrop-blur-md px-4 py-2.5 border border-border shadow-lg"
-          >
-            <p className="arabic text-2xl md:text-3xl leading-snug text-foreground">
-              {ayah.text}
-            </p>
-            <p className="text-sm md:text-base font-medium leading-snug text-foreground/90">
-              {translation?.text}
-            </p>
-          </div>
-        </div>
-      )}
+      {/* Page-turn controls */}
+      <div className="relative z-20 flex items-center justify-between gap-2 px-3 py-2 bg-background/80 backdrop-blur border-t border-border/50">
+        <button
+          onClick={() => goPage(-1)}
+          disabled={pageIdx <= 0}
+          className="flex items-center gap-1.5 rounded-full bg-card/80 backdrop-blur px-3 py-2 border border-border disabled:opacity-30 text-sm"
+        >
+          <ChevLeft className="h-4 w-4" /> Prev
+        </button>
 
-      {/* Controls */}
-      <div className="relative z-10 p-5 pb-8 space-y-3">
-        <div className="flex items-center justify-between text-xs text-muted-foreground">
-          <span>Verse {currentVerse} of {total}</span>
-          <select
-            value={reciter}
-            onChange={(e) => setReciter(e.target.value)}
-            className="bg-card/70 backdrop-blur border border-border rounded px-2 py-1 text-xs"
-          >
-            {RECITERS.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
-          </select>
-        </div>
-        <div className="h-1 bg-card/60 rounded-full overflow-hidden">
-          <div className="h-full bg-gradient-to-r from-primary to-primary-glow transition-all" style={{ width: total ? `${(currentVerse / total) * 100}%` : 0 }} />
-        </div>
-        <div className="flex items-center justify-center gap-6">
+        <div className="flex items-center gap-3">
           <button
-            disabled={currentVerse <= 1}
-            onClick={() => setCurrentVerse((v: number) => Math.max(1, v - 1))}
-            className="rounded-full bg-card/70 backdrop-blur p-3 border border-border disabled:opacity-30"
+            onClick={() => setPlaying((p) => !p)}
+            className="rounded-full bg-gradient-to-br from-primary to-primary-glow text-primary-foreground p-3 glow-shadow"
+            aria-label={playing ? "Pause" : "Play"}
           >
-            <SkipBack className="h-5 w-5" />
-          </button>
-          <button
-            onClick={() => {
-              // iOS Safari requires speechSynthesis to be invoked inside a user
-              // gesture at least once per session. Speak an empty utterance now
-              // to "unlock" it so later voiceovers (fired from audio.onended)
-              // are allowed to play.
-              if (typeof window !== "undefined" && "speechSynthesis" in window) {
-                try {
-                  const unlock = new SpeechSynthesisUtterance("");
-                  unlock.volume = 0;
-                  window.speechSynthesis.speak(unlock);
-                } catch {}
-              }
-              setPlaying((p) => !p);
-            }}
-            className="rounded-full bg-gradient-to-br from-primary to-primary-glow text-primary-foreground p-5 glow-shadow"
-          >
-            {playing ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6 ml-0.5" />}
-          </button>
-          <button
-            disabled={currentVerse >= total}
-            onClick={() => setCurrentVerse((v: number) => Math.min(total, v + 1))}
-            className="rounded-full bg-card/70 backdrop-blur p-3 border border-border disabled:opacity-30"
-          >
-            <SkipForward className="h-5 w-5" />
+            {playing ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5 ml-0.5" />}
           </button>
         </div>
-        <div className="flex items-center gap-2">
-          <select
-            value={language}
-            onChange={(e) => setLanguage(e.target.value as LanguageCode)}
-            className="flex-1 bg-card/70 backdrop-blur border border-border rounded px-2 py-1 text-xs text-center"
-          >
-            {TRANSLATION_LANGUAGES.map((l) => <option key={l.code} value={l.code}>{l.name}</option>)}
-          </select>
-          <button
-            onClick={() => setVoiceoverOn((v) => !v)}
-            title={voiceoverOn ? "Mute AI voiceover" : "Enable AI voiceover"}
-            className="rounded bg-card/70 backdrop-blur border border-border p-1.5"
-          >
-            {voiceoverOn ? <Volume2 className="h-4 w-4 text-primary" /> : <VolumeX className="h-4 w-4 text-muted-foreground" />}
-          </button>
-          <button
-            onClick={() => setYtOpen(true)}
-            title="Watch full surah on YouTube"
-            className="rounded bg-card/70 backdrop-blur border border-border p-1.5 flex items-center"
-          >
-            <Youtube className="h-4 w-4 text-red-500" />
-          </button>
-        </div>
+
+        <button
+          onClick={() => goPage(1)}
+          disabled={pageIdx >= totalPages - 1}
+          className="flex items-center gap-1.5 rounded-full bg-card/80 backdrop-blur px-3 py-2 border border-border disabled:opacity-30 text-sm"
+        >
+          Next <ChevronRight className="h-4 w-4" />
+        </button>
+      </div>
+
+      {/* Secondary controls */}
+      <div className="relative z-20 flex items-center gap-2 px-3 pb-3 pt-1 bg-background/80 backdrop-blur">
+        <span className="text-[10px] text-muted-foreground shrink-0">V {activeVerse}/{data?.ayahs.length ?? 0}</span>
+        <select
+          value={reciter}
+          onChange={(e) => setReciter(e.target.value)}
+          className="flex-1 min-w-0 bg-card/70 backdrop-blur border border-border rounded px-2 py-1 text-[11px]"
+        >
+          {RECITERS.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
+        </select>
+        <select
+          value={language}
+          onChange={(e) => setLanguage(e.target.value as LanguageCode)}
+          className="flex-1 min-w-0 bg-card/70 backdrop-blur border border-border rounded px-2 py-1 text-[11px]"
+        >
+          {TRANSLATION_LANGUAGES.map((l) => <option key={l.code} value={l.code}>{l.name}</option>)}
+        </select>
+        <button
+          onClick={() => setVoiceoverOn((v) => !v)}
+          title={voiceoverOn ? "Mute voiceover" : "Enable voiceover"}
+          className="rounded bg-card/70 backdrop-blur border border-border p-1.5 shrink-0"
+        >
+          {voiceoverOn ? <Volume2 className="h-4 w-4 text-primary" /> : <VolumeX className="h-4 w-4 text-muted-foreground" />}
+        </button>
+        <button
+          onClick={() => setYtOpen(true)}
+          title="Watch full surah"
+          className="rounded bg-card/70 backdrop-blur border border-border p-1.5 shrink-0"
+        >
+          <Youtube className="h-4 w-4 text-red-500" />
+        </button>
       </div>
 
       {ytOpen && (
         <div className="fixed inset-0 z-[60] bg-black/95 backdrop-blur-md flex flex-col">
           <div className="flex items-center justify-between p-3 border-b border-border bg-background">
-            <p className="text-sm font-medium">
-              Surah {data?.name_en ?? surahNum} — Mishary Alafasy (full recitation)
-            </p>
-            <button
-              onClick={() => setYtOpen(false)}
-              className="rounded-full bg-card border border-border px-3 py-1 text-xs"
-            >
-              Close
-            </button>
+            <p className="text-sm font-medium truncate">Surah {data?.name_en ?? surahNum} — Mishary Alafasy</p>
+            <button onClick={() => setYtOpen(false)} className="rounded-full bg-card border border-border px-3 py-1 text-xs shrink-0">Close</button>
           </div>
           <div className="flex-1 w-full">
             <iframe
@@ -433,9 +387,6 @@ function SurahPlayer() {
               allowFullScreen
             />
           </div>
-          <p className="text-[11px] text-muted-foreground text-center p-2 bg-background">
-            Tap the next ▶ button inside the player to skip to surah {surahNum} if it doesn't auto-jump.
-          </p>
         </div>
       )}
     </div>

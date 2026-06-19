@@ -197,4 +197,50 @@
     40%  { opacity: 0.7; }
     100% { transform: translateX(60%); opacity: 0; }
   }
+
+  /* ── Mushaf book / page-turn ─────────────────────────────────── */
+  .book-stage { perspective: 1800px; perspective-origin: 50% 50%; }
+  .mushaf-page {
+    background:
+      radial-gradient(ellipse at top, color-mix(in oklab, var(--primary) 8%, transparent), transparent 65%),
+      linear-gradient(180deg, oklch(0.94 0.04 85), oklch(0.88 0.05 80));
+    color: oklch(0.22 0.04 60);
+    box-shadow:
+      0 30px 60px -20px rgba(0,0,0,0.55),
+      inset 0 0 0 1px color-mix(in oklab, var(--primary) 25%, transparent),
+      inset 0 0 60px color-mix(in oklab, var(--primary) 10%, transparent);
+    background-color: oklch(0.92 0.04 85);
+    transform-style: preserve-3d;
+    will-change: transform, opacity;
+  }
+  .mushaf-page .verse-num {
+    color: var(--primary-foreground);
+    background: radial-gradient(circle at 30% 30%, var(--primary-glow), var(--primary));
+    box-shadow: 0 0 0 1px color-mix(in oklab, var(--primary) 60%, transparent), 0 2px 6px rgba(0,0,0,0.2);
+  }
+  .mushaf-page .ayah-translation { color: oklch(0.32 0.04 60); }
+  .mushaf-page .page-divider {
+    background: linear-gradient(90deg, transparent, color-mix(in oklab, var(--primary) 60%, transparent), transparent);
+  }
+
+  .page-turn-next { animation: page-turn-next 0.65s cubic-bezier(0.6, 0.05, 0.3, 1) both; transform-origin: left center; }
+  .page-turn-prev { animation: page-turn-prev 0.65s cubic-bezier(0.6, 0.05, 0.3, 1) both; transform-origin: right center; }
+  @keyframes page-turn-next {
+    0%   { transform: rotateY(85deg) translateZ(0); opacity: 0; filter: brightness(0.8); }
+    60%  { opacity: 1; }
+    100% { transform: rotateY(0deg)  translateZ(0); opacity: 1; filter: brightness(1); }
+  }
+  @keyframes page-turn-prev {
+    0%   { transform: rotateY(-85deg) translateZ(0); opacity: 0; filter: brightness(0.8); }
+    60%  { opacity: 1; }
+    100% { transform: rotateY(0deg)   translateZ(0); opacity: 1; filter: brightness(1); }
+  }
+
+  /* Subtle parchment texture */
+  .parchment {
+    background-image:
+      radial-gradient(circle at 20% 30%, rgba(120,80,30,0.06), transparent 40%),
+      radial-gradient(circle at 80% 70%, rgba(120,80,30,0.05), transparent 45%),
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='300'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.4  0 0 0 0 0.3  0 0 0 0 0.15  0 0 0 0.18 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/></svg>");
+  }
 }

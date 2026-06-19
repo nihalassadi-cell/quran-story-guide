@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/AppShell";
 import { Input } from "@/components/ui/input";
-import { Search, Sparkles, BookOpen } from "lucide-react";
+import { Search, Sparkles, BookOpen, BookMarked } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export const Route = createFileRoute("/")({
@@ -26,9 +26,12 @@ interface Surah {
   is_animated: boolean;
 }
 
+type LastPage = { surah: number; page: number; verse: number; surahName?: string; ts: number };
+
 function HomePage() {
   const [surahs, setSurahs] = useState<Surah[] | null>(null);
   const [filter, setFilter] = useState("");
+  const [lastPage, setLastPage] = useState<LastPage | null>(null);
 
   useEffect(() => {
     supabase
@@ -36,6 +39,10 @@ function HomePage() {
       .select("*")
       .order("number")
       .then(({ data }) => setSurahs((data as Surah[]) ?? []));
+    try {
+      const raw = localStorage.getItem("noor:lastPage");
+      if (raw) setLastPage(JSON.parse(raw));
+    } catch {}
   }, []);
 
   const filtered = surahs?.filter((s) => {
@@ -58,7 +65,7 @@ function HomePage() {
           </p>
           <h1 className="text-[clamp(1.75rem,7vw,2.5rem)] font-bold mt-2 gold-text leading-tight">The Animated Quran</h1>
           <p className="text-sm text-muted-foreground mt-2">
-            114 chapters. Recitation, translation, and visual scenes — verse by verse.
+            114 chapters. Recitation and translation — verse by verse.
           </p>
         </header>
 
@@ -81,6 +88,27 @@ function HomePage() {
           </span>
           <span className="text-xs text-muted-foreground">→</span>
         </Link>
+
+        {lastPage && !filter && (
+          <Link
+            to="/surah/$number"
+            params={{ number: String(lastPage.surah) }}
+            search={{ verse: lastPage.verse, page: lastPage.page }}
+            className="fade-in mb-3 flex items-center gap-3 rounded-xl border border-primary/40 bg-gradient-to-br from-primary/15 via-card/70 to-accent/10 px-4 py-3 hover:border-primary/70 transition-colors"
+          >
+            <div className="h-11 w-11 shrink-0 rounded-lg bg-gradient-to-br from-primary to-primary-glow grid place-items-center text-primary-foreground glow-shadow">
+              <BookMarked className="h-5 w-5" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[10px] uppercase tracking-widest text-primary/90">Continue reading</p>
+              <p className="text-sm font-semibold truncate">
+                {lastPage.surahName ?? `Surah ${lastPage.surah}`} · Page {lastPage.page}
+              </p>
+              <p className="text-[11px] text-muted-foreground truncate">Verse {lastPage.verse} · pick up where you left off</p>
+            </div>
+            <span className="text-xs text-muted-foreground shrink-0">→</span>
+          </Link>
+        )}
 
         <ul className="space-y-2">
           {!surahs &&
