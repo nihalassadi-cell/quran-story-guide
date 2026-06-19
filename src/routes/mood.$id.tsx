@@ -37,26 +37,58 @@ function MoodPlayer() {
   const target = kalima.repeat;
   const progress = Math.min(1, count / target);
 
-  // Recite the kalima in Arabic via SpeechSynthesis.
-  // Create the utterance synchronously inside the gesture / timer handler
-  // so browsers don't block playback.
-  const speakKalima = () => {
+  // Audio element used for both kalima and verse playback. Created up here so
+  // the kalima recital can use the same studio audio as the surah pages.
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [reciter, setReciter] = useState<string>("ar.alafasy");
+  const [language] = useState<LanguageCode>("en");
+  const [cache, setCache] = useState<AyahCache>({});
+
+  // Resolve the global ayah number for the current kalima (when it's a verse).
+  const kalimaSurah = kalima.ayah ? cache[kalima.ayah.surah] : undefined;
+  const kalimaAyah = kalima.ayah && kalimaSurah?.ayahs.find((a) => a.numberInSurah === kalima.ayah!.verse);
+  const kalimaAudioUrl = kalimaAyah ? ayahAudioUrl(kalimaAyah.number, reciter) : null;
+
+  // Recite the kalima. If we have a Qur'anic ayah for it, play the same
+  // studio recital used in the surah pages. Otherwise (hadith-only dhikr)
+  // fall back to the browser's Arabic speech synthesis.
+  const reciteKalima = () => {
     try {
+      // Stop any previous playback so taps feel responsive
+      try { window.speechSynthesis?.cancel(); } catch {}
+      if (audioRef.current) { audioRef.current.pause(); audioRef.current.currentTime = 0; }
+
+      if (kalimaAudioUrl) {
+        if (!audioRef.current) audioRef.current = new Audio();
+        audioRef.current.src = kalimaAudioUrl;
+        audioRef.current.play().catch((e) => console.warn("[mood] audio play failed", e));
+        return;
+      }
+
       const synth = window.speechSynthesis;
       if (!synth) return;
       const u = new SpeechSynthesisUtterance(kalima.arabic);
       u.lang = "ar-SA";
       u.rate = 0.85;
-      u.pitch = 1;
       const voices = synth.getVoices();
       const arVoice = voices.find((v) => v.lang?.toLowerCase().startsWith("ar"));
       if (arVoice) u.voice = arVoice;
-      synth.cancel();
       synth.speak(u);
     } catch (e) {
-      console.warn("[mood] speech failed", e);
+      console.warn("[mood] recite failed", e);
     }
   };
+  const speakKalima = reciteKalima;
+
+  // Prefetch the surah for the current kalima so audio is ready
+  useEffect(() => {
+    if (!kalima.ayah) return;
+    const s = kalima.ayah.surah;
+    if (cache[s]) return;
+    fetchSurahWithTranslation(s, language)
+      .then((d) => setCache((c) => ({ ...c, [s]: d })))
+      .catch((e) => console.error("[mood] kalima surah fetch failed", e));
+  }, [kalima.ayah, language, cache]);
 
   // Auto loop — pulse + recite every 3s
   useEffect(() => {
