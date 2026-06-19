@@ -363,7 +363,7 @@ function SurahPlayer() {
         <Link to="/" className="rounded-full bg-card/70 backdrop-blur p-2 border border-border shrink-0">
           <ChevronLeft className="h-5 w-5" />
         </Link>
-        <div className="text-center min-w-0 flex-1 px-2">
+        <div className="text-center min-w-0 flex-1 px-2 hidden sm:block">
           <p className="text-[10px] uppercase tracking-widest text-primary/80 truncate">Surah {surahNum} · {data?.name_en ?? "..."}</p>
           <p className="arabic text-base sm:text-lg gold-text truncate">{data?.name_ar ?? "..."}</p>
         </div>
