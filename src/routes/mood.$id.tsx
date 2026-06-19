@@ -235,6 +235,7 @@ function MoodPlayer() {
   // Vibrate on tap (mobile, harmless if unsupported)
   const tapWithBuzz = () => {
     try { (navigator as any).vibrate?.(15); } catch {}
+    startAmbient();
     tap();
   };
 
