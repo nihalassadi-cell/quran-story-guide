@@ -1,4 +1,5 @@
 import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
+import { Onboarding } from "@/components/Onboarding";
 
 import appCss from "../styles.css?url";
 
