@@ -21,6 +21,23 @@ function translationAudioUrl(language: string, surah: number, verse: number): st
 
 const VERSES_PER_PAGE = 3;
 
+// Ayah count for every surah (1..114) — used for global Quran page tracker
+const AYAH_COUNTS = [
+  7,286,200,176,120,165,206,75,129,109,123,111,43,52,99,128,111,110,98,135,
+  112,78,118,64,77,227,93,88,69,60,34,30,73,54,45,83,182,88,75,85,
+  54,53,89,59,37,35,38,29,18,45,60,49,62,55,78,96,29,22,24,13,
+  14,11,11,18,12,12,30,52,52,44,28,28,20,56,40,31,50,40,46,42,
+  29,19,36,25,22,17,19,26,30,20,15,21,11,8,8,19,5,8,8,11,
+  11,8,3,9,5,4,7,3,6,3,5,4,5,6,
+];
+const SURAH_PAGES = AYAH_COUNTS.map((c) => Math.ceil(c / VERSES_PER_PAGE));
+const PAGES_BEFORE: number[] = (() => {
+  const arr = [0];
+  for (let i = 0; i < SURAH_PAGES.length; i++) arr.push(arr[i] + SURAH_PAGES[i]);
+  return arr;
+})();
+const TOTAL_QURAN_PAGES = PAGES_BEFORE[PAGES_BEFORE.length - 1];
+
 export const Route = createFileRoute("/surah/$number")({
   validateSearch: (search: Record<string, unknown>): SurahSearch => {
     const v = Number(search.verse);
@@ -86,7 +103,17 @@ function SurahPlayer() {
   useEffect(() => {
     setData(null);
     fetchSurahWithTranslation(surahNum, language)
-      .then((d) => setData(d))
+      .then((d) => {
+        setData(d);
+        try {
+          if (localStorage.getItem("noor:autoplay") === "1") {
+            localStorage.removeItem("noor:autoplay");
+            setPageIdx(0);
+            setActiveVerse(1);
+            setPlaying(true);
+          }
+        } catch {}
+      })
       .catch((e) => { console.error("[surah] fetch failed", e); toast.error("Failed to load Surah"); });
   }, [surahNum, language]);
 
@@ -167,7 +194,19 @@ function SurahPlayer() {
     const advance = () => {
       if (cancelled || !data) return;
       setWordIdx(-1);
-      if (activeVerse >= data.ayahs.length) { setPlaying(false); return; }
+      if (activeVerse >= data.ayahs.length) {
+        // End of surah — auto-proceed to next surah if available
+        if (surahNum < 114) {
+          try { localStorage.setItem("noor:autoplay", "1"); } catch {}
+          setPlaying(false);
+          toast.success(`Starting Surah ${surahNum + 1}`);
+          navigate({ to: "/surah/$number", params: { number: String(surahNum + 1) }, search: { verse: 1, page: 1 } });
+        } else {
+          setPlaying(false);
+          toast.success("You have completed the Quran 🌙");
+        }
+        return;
+      }
 
       const nextVerse = activeVerse + 1;
       const nextPageIdx = pages.findIndex((pageAyahs) => pageAyahs.some((a) => a.numberInSurah === nextVerse));
@@ -253,9 +292,21 @@ function SurahPlayer() {
   const currentPageAyahs = pages[pageIdx] ?? [];
   const prevPageAyahs = prevPageIdx != null ? (pages[prevPageIdx] ?? []) : [];
 
-  const renderPageContent = (idx: number, ayahs: typeof currentPageAyahs) => (
+  const renderPageContent = (idx: number, ayahs: typeof currentPageAyahs) => {
+    const quranPage = PAGES_BEFORE[surahNum - 1] + idx + 1;
+    return (
     <>
       <div className="px-4 sm:px-7 pt-4 pb-2 text-center shrink-0">
+        {idx === 0 && (
+          <div className="mb-3">
+            <p className="text-[10px] uppercase tracking-[0.3em] opacity-60">Surah {surahNum}</p>
+            <p className="arabic text-3xl sm:text-4xl gold-text leading-tight mt-0.5">{data?.name_ar ?? ""}</p>
+            <p className="text-sm sm:text-base font-semibold mt-0.5" style={{ color: "oklch(0.35 0.10 60)" }}>
+              {data?.name_en ?? ""}
+            </p>
+            <p className="text-[10px] opacity-60 mt-0.5">{data?.ayahs.length ?? 0} verses</p>
+          </div>
+        )}
         {idx === 0 && surahNum !== 1 && surahNum !== 9 && (
           <p className="arabic text-xl sm:text-2xl mb-2" style={{ color: "oklch(0.35 0.10 60)" }}>
             بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
@@ -263,7 +314,7 @@ function SurahPlayer() {
         )}
         <div className="flex items-center justify-center gap-3 text-[11px] uppercase tracking-[0.25em] opacity-70">
           <span className="page-divider h-px flex-1" />
-          <span>Page {idx + 1} of {totalPages}</span>
+          <span>Page {idx + 1}/{totalPages} · Quran {quranPage}/{TOTAL_QURAN_PAGES}</span>
           <span className="page-divider h-px flex-1" />
         </div>
       </div>
@@ -311,7 +362,8 @@ function SurahPlayer() {
           : <><Bookmark className="h-4 w-4" /> Save page</>}
       </button>
     </>
-  );
+    );
+  };
 
   return (
     <div className="fixed inset-0 overflow-hidden flex flex-col bg-gradient-to-br from-background via-background to-accent/10">
