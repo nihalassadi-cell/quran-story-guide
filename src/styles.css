@@ -199,7 +199,7 @@
   }
 
   /* ── Mushaf book / page-turn ─────────────────────────────────── */
-  .book-stage { perspective: 1800px; perspective-origin: 50% 50%; }
+  .book-stage { perspective: 2200px; perspective-origin: 50% 40%; }
   .mushaf-page {
     background:
       radial-gradient(ellipse at top, color-mix(in oklab, var(--primary) 8%, transparent), transparent 65%),
