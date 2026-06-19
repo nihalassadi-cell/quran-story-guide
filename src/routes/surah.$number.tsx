@@ -193,6 +193,7 @@ function SurahPlayer() {
     if (!pageAyahs || !pageAyahs.length) return;
     const last = pageAyahs[pageAyahs.length - 1].numberInSurah;
     if (activeVerse > last && pageIdx < totalPages - 1) {
+      setPrevPageIdx(pageIdx);
       setFlipDir("next");
       setPageIdx((p) => p + 1);
     }
