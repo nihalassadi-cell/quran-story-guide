@@ -251,91 +251,75 @@ function SurahPlayer() {
   };
 
   const currentPageAyahs = pages[pageIdx] ?? [];
+  const prevPageAyahs = prevPageIdx != null ? (pages[prevPageIdx] ?? []) : [];
 
-  return (
-    <div className="fixed inset-0 overflow-hidden flex flex-col bg-gradient-to-br from-background via-background to-accent/10">
-      {/* Header */}
-      <header className="relative z-20 flex items-center justify-between p-3 border-b border-border/50 bg-background/80 backdrop-blur">
-        <Link to="/" className="rounded-full bg-card/70 backdrop-blur p-2 border border-border shrink-0">
-          <ChevronLeft className="h-5 w-5" />
-        </Link>
-        <div className="text-center min-w-0 flex-1 px-2">
-          <p className="text-[10px] uppercase tracking-widest text-primary/80 truncate">Surah {surahNum} · {data?.name_en ?? "..."}</p>
-          <p className="arabic text-base sm:text-lg gold-text truncate">{data?.name_ar ?? "..."}</p>
-        </div>
-        <button onClick={toggleBookmark} className="rounded-full bg-card/70 backdrop-blur p-2 border border-border shrink-0" aria-label="Save page">
-          {bookmarked ? <BookmarkCheck className="h-5 w-5 text-primary" /> : <Bookmark className="h-5 w-5" />}
-        </button>
-      </header>
-
-      {/* Book stage */}
-      <div className="book-stage relative z-10 flex-1 overflow-hidden flex items-stretch justify-center px-2 sm:px-6 py-3">
-        {!data && (
-          <div className="absolute inset-0 grid place-items-center">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          </div>
+  const renderPageContent = (idx: number, ayahs: typeof currentPageAyahs) => (
+    <>
+      <div className="px-5 sm:px-8 pt-5 pb-3 text-center">
+        {idx === 0 && surahNum !== 1 && surahNum !== 9 && (
+          <p className="arabic text-xl sm:text-2xl mb-2" style={{ color: "oklch(0.35 0.10 60)" }}>
+            بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
+          </p>
         )}
-
-        {data && (
-          <div
-            key={`${surahNum}-${pageIdx}`}
-            className={`mushaf-page parchment relative w-full max-w-2xl rounded-xl overflow-y-auto ${flipDir === "next" ? "page-turn-next" : flipDir === "prev" ? "page-turn-prev" : "fade-in"}`}
-            onAnimationEnd={() => setFlipDir(null)}
-          >
-            {/* Page header — show Bismillah only on page 1 (and only if not Surah 1 or 9) */}
-            <div className="px-5 sm:px-8 pt-5 pb-3 text-center">
-              {pageIdx === 0 && surahNum !== 1 && surahNum !== 9 && (
-                <p className="arabic text-xl sm:text-2xl mb-2" style={{ color: "oklch(0.35 0.10 60)" }}>
-                  بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
+        <div className="flex items-center justify-center gap-3 text-[11px] uppercase tracking-[0.25em] opacity-70">
+          <span className="page-divider h-px flex-1" />
+          <span>Page {idx + 1} of {totalPages}</span>
+          <span className="page-divider h-px flex-1" />
+        </div>
+      </div>
+      <div className="px-5 sm:px-8 pb-24 space-y-5">
+        {ayahs.map((a) => {
+          const tr = data!.translations.find((t) => t.numberInSurah === a.numberInSurah);
+          const isActive = a.numberInSurah === activeVerse && idx === pageIdx;
+          const words = a.text.split(/\s+/).filter(Boolean);
+          return (
+            <div
+              key={a.numberInSurah}
+              onClick={() => { if (idx !== pageIdx) return; setActiveVerse(a.numberInSurah); setPlaying(true); }}
+              className={`group cursor-pointer rounded-lg px-2 py-2 transition-colors ${isActive ? "bg-amber-500/15 ring-1 ring-amber-600/30" : "hover:bg-amber-500/10"}`}
+            >
+              <p className="arabic text-right text-2xl sm:text-3xl leading-[2.4] tracking-wide" dir="rtl">
+                <span className="inline-flex items-center justify-center align-middle h-7 w-7 sm:h-8 sm:w-8 mx-1 rounded-full text-[11px] sm:text-xs font-bold verse-num">
+                  {a.numberInSurah}
+                </span>
+                {words.map((w, i) => {
+                  const highlight = isActive && playing && i === wordIdx;
+                  return (
+                    <span key={i} className={highlight ? "word-active" : "word"}>
+                      {w}{i < words.length - 1 ? " " : ""}
+                    </span>
+                  );
+                })}
+              </p>
+              {tr?.text && (
+                <p className="ayah-translation text-xs sm:text-sm leading-relaxed mt-1.5 italic">
+                  {tr.text}
                 </p>
               )}
-              <div className="flex items-center justify-center gap-3 text-[11px] uppercase tracking-[0.25em] opacity-70">
-                <span className="page-divider h-px flex-1" />
-                <span>Page {pageIdx + 1} of {totalPages}</span>
-                <span className="page-divider h-px flex-1" />
-              </div>
             </div>
-
-            {/* Verses */}
-            <div className="px-5 sm:px-8 pb-24 space-y-5">
-              {currentPageAyahs.map((a) => {
-                const tr = data.translations.find((t) => t.numberInSurah === a.numberInSurah);
-                const isActive = a.numberInSurah === activeVerse;
-                const words = a.text.split(/\s+/).filter(Boolean);
-                return (
-                  <div
-                    key={a.numberInSurah}
-                    onClick={() => { setActiveVerse(a.numberInSurah); setPlaying(true); }}
-                    className={`group cursor-pointer rounded-lg px-2 py-2 transition-colors ${isActive ? "bg-amber-500/15 ring-1 ring-amber-600/30" : "hover:bg-amber-500/10"}`}
-                  >
-                    <p className="arabic text-right text-2xl sm:text-3xl leading-[2.4] tracking-wide" dir="rtl">
-                      <span className="inline-flex items-center justify-center align-middle h-7 w-7 sm:h-8 sm:w-8 mx-1 rounded-full text-[11px] sm:text-xs font-bold verse-num">
-                        {a.numberInSurah}
-                      </span>
-                      {words.map((w, i) => {
-                        const highlight = isActive && playing && i === wordIdx;
-                        return (
-                          <span
-                            key={i}
-                            className={highlight ? "word-active" : "word"}
-                          >
-                            {w}{i < words.length - 1 ? " " : ""}
-                          </span>
-                        );
-                      })}
-                    </p>
-                    {tr?.text && (
-                      <p className="ayah-translation text-xs sm:text-sm leading-relaxed mt-1.5 italic">
-                        {tr.text}
-                      </p>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
+          );
+        })}
       </div>
+      {/* Per-page bookmark button — visible inside the page */}
+      <button
+        onClick={(e) => { e.stopPropagation(); if (idx === pageIdx) toggleBookmark(); }}
+        className="absolute bottom-3 right-3 flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium border shadow-sm bg-white/70 backdrop-blur border-amber-700/30 text-amber-900 hover:bg-amber-100 transition-colors"
+        aria-label="Save this page"
+      >
+        {bookmarked && idx === pageIdx
+          ? <><BookmarkCheck className="h-4 w-4 text-amber-700" /> Saved</>
+          : <><Bookmark className="h-4 w-4" /> Save page</>}
+      </button>
+    </>
+  );
+
+  return (
+    // placeholder, replaced below
+    null as any
+  );
+}
+
+function _unused() { return (
 
       {/* Page-turn controls */}
       <div className="relative z-20 flex items-center justify-between gap-2 px-3 py-2 bg-background/80 backdrop-blur border-t border-border/50">
