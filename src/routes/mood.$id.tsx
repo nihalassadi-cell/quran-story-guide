@@ -157,32 +157,14 @@ function MoodPlayer() {
     if (!padRef.current) return;
     if (!ambientOn) padRef.current.stop();
   }, [ambientOn]);
-  // Start ambient on the user's first interaction (autoplay policy / iOS).
-  useEffect(() => {
+  // Start the ambient pad — only invoked from explicit user actions
+  // (the big tasbih circle or the Auto-recite button) per product spec.
+  const startAmbient = () => {
     if (!ambientOn) return;
-    let started = false;
-    const kick = () => {
-      if (started) return;
-      const pad = padRef.current;
-      if (!pad) return;
-      pad.start()
-        .then(() => {
-          if (pad.isPlaying()) {
-            started = true;
-            cleanup();
-          }
-        })
-        .catch(() => {});
-    };
-    const events: (keyof WindowEventMap)[] = [
-      "pointerdown", "touchend", "click", "keydown",
-    ];
-    const cleanup = () => {
-      events.forEach((e) => window.removeEventListener(e, kick as any));
-    };
-    events.forEach((e) => window.addEventListener(e, kick as any, { passive: true }));
-    return cleanup;
-  }, [ambientOn]);
+    const pad = padRef.current;
+    if (!pad) return;
+    pad.start().catch(() => {});
+  };
 
 
   // Optional verse player (opens when user expands a verse)
@@ -253,6 +235,7 @@ function MoodPlayer() {
   // Vibrate on tap (mobile, harmless if unsupported)
   const tapWithBuzz = () => {
     try { (navigator as any).vibrate?.(15); } catch {}
+    startAmbient();
     tap();
   };
 
@@ -477,7 +460,7 @@ function MoodPlayer() {
 
           <div className="flex items-center gap-2 mt-5">
             <button
-              onClick={() => setAuto((a) => !a)}
+              onClick={() => setAuto((a) => { const next = !a; if (next) startAmbient(); return next; })}
               className={`inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm border transition-colors ${
                 auto ? "bg-primary text-primary-foreground border-primary" : "bg-card/70 backdrop-blur border-border hover:border-primary/60"
               }`}
