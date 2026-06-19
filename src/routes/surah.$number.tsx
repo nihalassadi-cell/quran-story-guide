@@ -184,7 +184,19 @@ function SurahPlayer() {
     const advance = () => {
       if (cancelled || !data) return;
       setWordIdx(-1);
-      if (activeVerse >= data.ayahs.length) { setPlaying(false); return; }
+      if (activeVerse >= data.ayahs.length) {
+        // End of surah — auto-proceed to next surah if available
+        if (surahNum < 114) {
+          try { localStorage.setItem("noor:autoplay", "1"); } catch {}
+          setPlaying(false);
+          toast.success(`Starting Surah ${surahNum + 1}`);
+          navigate({ to: "/surah/$number", params: { number: String(surahNum + 1) }, search: { verse: 1, page: 1 } });
+        } else {
+          setPlaying(false);
+          toast.success("You have completed the Quran 🌙");
+        }
+        return;
+      }
 
       const nextVerse = activeVerse + 1;
       const nextPageIdx = pages.findIndex((pageAyahs) => pageAyahs.some((a) => a.numberInSurah === nextVerse));
