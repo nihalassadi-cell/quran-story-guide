@@ -183,6 +183,7 @@ export function createAmbientPad(): AmbientPad {
     ctx = null;
     master = null;
     playing = false;
+    try { silentEl?.pause(); } catch {}
   };
 
   const setVolume = (v: number) => {
