@@ -222,6 +222,7 @@ function SurahPlayer() {
   const goPage = (delta: number) => {
     const next = Math.max(0, Math.min(totalPages - 1, pageIdx + delta));
     if (next === pageIdx) return;
+    setPrevPageIdx(pageIdx);
     setFlipDir(delta > 0 ? "next" : "prev");
     setPageIdx(next);
   };
