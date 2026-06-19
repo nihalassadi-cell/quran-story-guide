@@ -12,7 +12,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen flex flex-col pb-20">
-      <main className="flex-1">{children}</main>
+      <main className="flex-1 pt-[calc(env(safe-area-inset-top)+3.5rem)]">{children}</main>
       <nav className="fixed bottom-0 inset-x-0 z-40 bg-card/90 backdrop-blur-xl border-t border-border">
         <ul className="flex items-stretch justify-around max-w-md mx-auto">
           {tabs.map((t) => {
