@@ -243,7 +243,7 @@ function MoodPlayer() {
                         <Play className="h-4 w-4 text-primary opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
                       </div>
                       {ayah && (
-                        <p className="arabic text-sm leading-snug text-foreground/95 truncate" dir="rtl">
+                        <p className="arabic text-sm leading-relaxed text-foreground/95 line-clamp-2 break-words" dir="rtl">
                           {ayah.text}
                         </p>
                       )}
