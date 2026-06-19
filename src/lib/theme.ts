@@ -1,9 +1,7 @@
-export type ThemeId = "default" | "sage" | "forest" | "emerald";
+export type ThemeId = "default" | "emerald";
 
 export const THEMES: { id: ThemeId; name: string; description: string }[] = [
   { id: "default", name: "Noor (Default)", description: "Warm charcoal & gold" },
-  { id: "sage", name: "Sage & Cream", description: "Serene morning light" },
-  { id: "forest", name: "Forest & Moss", description: "Grounded nature green" },
   { id: "emerald", name: "Emerald & Sand", description: "Premium warm balance" },
 ];
 
@@ -13,7 +11,7 @@ export function getStoredTheme(): ThemeId {
   if (typeof window === "undefined") return "default";
   try {
     const v = localStorage.getItem(KEY);
-    if (v === "sage" || v === "forest" || v === "emerald" || v === "default") return v;
+    if (v === "emerald" || v === "default") return v;
   } catch {}
   return "default";
 }
