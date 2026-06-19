@@ -345,7 +345,7 @@ function MoodPlayer() {
 
       <div className="relative max-w-2xl mx-auto px-4 pt-[calc(env(safe-area-inset-top)+3.5rem)] pb-28">
         {/* Header */}
-        <div className="flex items-center justify-between mb-5 pr-12">
+        <div className="flex items-center justify-between mb-5">
           <Link to="/animate" className="rounded-full bg-card/60 backdrop-blur p-2 border border-border hover:border-primary/60">
             <ChevronLeft className="h-5 w-5" />
           </Link>

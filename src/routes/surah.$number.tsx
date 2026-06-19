@@ -359,11 +359,12 @@ function SurahPlayer() {
   return (
     <div className="fixed inset-0 overflow-hidden flex flex-col bg-gradient-to-br from-background via-background to-accent/10">
       {/* Header */}
-      <header className="relative z-20 flex items-center justify-between p-3 pr-14 border-b border-border/50 bg-background/80 backdrop-blur">
+      <header className="relative z-20 flex items-center justify-between p-3 border-b border-border/50 bg-background/80 backdrop-blur">
         <Link to="/" className="rounded-full bg-card/70 backdrop-blur p-2 border border-border shrink-0">
           <ChevronLeft className="h-5 w-5" />
         </Link>
         <div className="text-center min-w-0 flex-1 px-2">
+          <p className="text-[10px] uppercase tracking-widest text-primary/80 truncate">Surah {surahNum} · {data?.name_en ?? "..."}</p>
           <p className="arabic text-base sm:text-lg gold-text truncate">{data?.name_ar ?? "..."}</p>
         </div>
         <button onClick={toggleBookmark} className="rounded-full bg-card/70 backdrop-blur p-2 border border-border shrink-0" aria-label="Save page">
