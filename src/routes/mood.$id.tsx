@@ -460,7 +460,7 @@ function MoodPlayer() {
 
           <div className="flex items-center gap-2 mt-5">
             <button
-              onClick={() => setAuto((a) => !a)}
+              onClick={() => setAuto((a) => { const next = !a; if (next) startAmbient(); return next; })}
               className={`inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm border transition-colors ${
                 auto ? "bg-primary text-primary-foreground border-primary" : "bg-card/70 backdrop-blur border-border hover:border-primary/60"
               }`}
