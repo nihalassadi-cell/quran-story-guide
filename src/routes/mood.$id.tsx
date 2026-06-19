@@ -6,17 +6,6 @@ import { fetchSurahWithTranslation, ayahAudioUrl, RECITERS, TRANSLATION_LANGUAGE
 import { getMood } from "@/lib/moods";
 import { toast } from "sonner";
 
-const EVERYAYAH_TRANSLATIONS: Record<string, string> = {
-  en: "English/Sahih_Intnl_Ibrahim_Walk_192kbps",
-  ur: "translations/urdu_shamshad_ali_khan_46kbps",
-};
-function translationAudioUrl(language: string, surah: number, verse: number): string | null {
-  const folder = EVERYAYAH_TRANSLATIONS[language];
-  if (!folder) return null;
-  return `https://everyayah.com/data/${folder}/${String(surah).padStart(3, "0")}${String(verse).padStart(3, "0")}.mp3`;
-}
-
-const DEFAULT_LANGUAGE: LanguageCode = "ur";
 
 export const Route = createFileRoute("/mood/$id")({
   head: ({ params }) => {
