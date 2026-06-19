@@ -292,9 +292,21 @@ function SurahPlayer() {
   const currentPageAyahs = pages[pageIdx] ?? [];
   const prevPageAyahs = prevPageIdx != null ? (pages[prevPageIdx] ?? []) : [];
 
-  const renderPageContent = (idx: number, ayahs: typeof currentPageAyahs) => (
+  const renderPageContent = (idx: number, ayahs: typeof currentPageAyahs) => {
+    const quranPage = PAGES_BEFORE[surahNum - 1] + idx + 1;
+    return (
     <>
       <div className="px-4 sm:px-7 pt-4 pb-2 text-center shrink-0">
+        {idx === 0 && (
+          <div className="mb-3">
+            <p className="text-[10px] uppercase tracking-[0.3em] opacity-60">Surah {surahNum}</p>
+            <p className="arabic text-3xl sm:text-4xl gold-text leading-tight mt-0.5">{data?.name_ar ?? ""}</p>
+            <p className="text-sm sm:text-base font-semibold mt-0.5" style={{ color: "oklch(0.35 0.10 60)" }}>
+              {data?.name_en ?? ""}
+            </p>
+            <p className="text-[10px] opacity-60 mt-0.5">{data?.ayahs.length ?? 0} verses</p>
+          </div>
+        )}
         {idx === 0 && surahNum !== 1 && surahNum !== 9 && (
           <p className="arabic text-xl sm:text-2xl mb-2" style={{ color: "oklch(0.35 0.10 60)" }}>
             بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
@@ -302,7 +314,7 @@ function SurahPlayer() {
         )}
         <div className="flex items-center justify-center gap-3 text-[11px] uppercase tracking-[0.25em] opacity-70">
           <span className="page-divider h-px flex-1" />
-          <span>Page {idx + 1} of {totalPages}</span>
+          <span>Page {idx + 1}/{totalPages} · Quran {quranPage}/{TOTAL_QURAN_PAGES}</span>
           <span className="page-divider h-px flex-1" />
         </div>
       </div>
