@@ -10,8 +10,6 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SettingsRouteImport } from './routes/settings'
-import { Route as SearchRouteImport } from './routes/search'
-import { Route as BookmarksRouteImport } from './routes/bookmarks'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AnimateRouteImport } from './routes/animate'
 import { Route as IndexRouteImport } from './routes/index'
@@ -21,16 +19,6 @@ import { Route as MoodIdRouteImport } from './routes/mood.$id'
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SearchRoute = SearchRouteImport.update({
-  id: '/search',
-  path: '/search',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const BookmarksRoute = BookmarksRouteImport.update({
-  id: '/bookmarks',
-  path: '/bookmarks',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -63,8 +51,6 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/animate': typeof AnimateRoute
   '/auth': typeof AuthRoute
-  '/bookmarks': typeof BookmarksRoute
-  '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
   '/mood/$id': typeof MoodIdRoute
   '/surah/$number': typeof SurahNumberRoute
@@ -73,8 +59,6 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/animate': typeof AnimateRoute
   '/auth': typeof AuthRoute
-  '/bookmarks': typeof BookmarksRoute
-  '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
   '/mood/$id': typeof MoodIdRoute
   '/surah/$number': typeof SurahNumberRoute
@@ -84,8 +68,6 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/animate': typeof AnimateRoute
   '/auth': typeof AuthRoute
-  '/bookmarks': typeof BookmarksRoute
-  '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
   '/mood/$id': typeof MoodIdRoute
   '/surah/$number': typeof SurahNumberRoute
@@ -96,28 +78,16 @@ export interface FileRouteTypes {
     | '/'
     | '/animate'
     | '/auth'
-    | '/bookmarks'
-    | '/search'
     | '/settings'
     | '/mood/$id'
     | '/surah/$number'
   fileRoutesByTo: FileRoutesByTo
-  to:
-    | '/'
-    | '/animate'
-    | '/auth'
-    | '/bookmarks'
-    | '/search'
-    | '/settings'
-    | '/mood/$id'
-    | '/surah/$number'
+  to: '/' | '/animate' | '/auth' | '/settings' | '/mood/$id' | '/surah/$number'
   id:
     | '__root__'
     | '/'
     | '/animate'
     | '/auth'
-    | '/bookmarks'
-    | '/search'
     | '/settings'
     | '/mood/$id'
     | '/surah/$number'
@@ -127,8 +97,6 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AnimateRoute: typeof AnimateRoute
   AuthRoute: typeof AuthRoute
-  BookmarksRoute: typeof BookmarksRoute
-  SearchRoute: typeof SearchRoute
   SettingsRoute: typeof SettingsRoute
   MoodIdRoute: typeof MoodIdRoute
   SurahNumberRoute: typeof SurahNumberRoute
@@ -141,20 +109,6 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof SettingsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/search': {
-      id: '/search'
-      path: '/search'
-      fullPath: '/search'
-      preLoaderRoute: typeof SearchRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/bookmarks': {
-      id: '/bookmarks'
-      path: '/bookmarks'
-      fullPath: '/bookmarks'
-      preLoaderRoute: typeof BookmarksRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -199,8 +153,6 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AnimateRoute: AnimateRoute,
   AuthRoute: AuthRoute,
-  BookmarksRoute: BookmarksRoute,
-  SearchRoute: SearchRoute,
   SettingsRoute: SettingsRoute,
   MoodIdRoute: MoodIdRoute,
   SurahNumberRoute: SurahNumberRoute,
