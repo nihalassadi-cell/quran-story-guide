@@ -103,7 +103,17 @@ function SurahPlayer() {
   useEffect(() => {
     setData(null);
     fetchSurahWithTranslation(surahNum, language)
-      .then((d) => setData(d))
+      .then((d) => {
+        setData(d);
+        try {
+          if (localStorage.getItem("noor:autoplay") === "1") {
+            localStorage.removeItem("noor:autoplay");
+            setPageIdx(0);
+            setActiveVerse(1);
+            setPlaying(true);
+          }
+        } catch {}
+      })
       .catch((e) => { console.error("[surah] fetch failed", e); toast.error("Failed to load Surah"); });
   }, [surahNum, language]);
 
