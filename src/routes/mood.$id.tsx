@@ -157,32 +157,14 @@ function MoodPlayer() {
     if (!padRef.current) return;
     if (!ambientOn) padRef.current.stop();
   }, [ambientOn]);
-  // Start ambient on the user's first interaction (autoplay policy / iOS).
-  useEffect(() => {
+  // Start the ambient pad — only invoked from explicit user actions
+  // (the big tasbih circle or the Auto-recite button) per product spec.
+  const startAmbient = () => {
     if (!ambientOn) return;
-    let started = false;
-    const kick = () => {
-      if (started) return;
-      const pad = padRef.current;
-      if (!pad) return;
-      pad.start()
-        .then(() => {
-          if (pad.isPlaying()) {
-            started = true;
-            cleanup();
-          }
-        })
-        .catch(() => {});
-    };
-    const events: (keyof WindowEventMap)[] = [
-      "pointerdown", "touchend", "click", "keydown",
-    ];
-    const cleanup = () => {
-      events.forEach((e) => window.removeEventListener(e, kick as any));
-    };
-    events.forEach((e) => window.addEventListener(e, kick as any, { passive: true }));
-    return cleanup;
-  }, [ambientOn]);
+    const pad = padRef.current;
+    if (!pad) return;
+    pad.start().catch(() => {});
+  };
 
 
   // Optional verse player (opens when user expands a verse)
