@@ -84,10 +84,12 @@ function RootShell({ children }: { children: React.ReactNode }) {
 function RootComponent() {
   return (
     <>
+      <ThemeSwitch />
       <Outlet />
       <Onboarding />
       <Toaster position="top-center" richColors theme="dark" />
     </>
+
 
   );
 }
