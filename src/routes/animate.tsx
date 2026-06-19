@@ -18,10 +18,10 @@ function AnimatePage() {
     <AppShell>
       <div className="max-w-2xl mx-auto px-4 pt-8 pb-24">
         <div className="flex items-center gap-2 mb-1">
-          <Heart className="h-5 w-5 text-primary" />
-          <h1 className="text-2xl font-bold gold-text">How are you feeling right now?</h1>
+          <Heart className="h-5 w-5 text-primary shrink-0" />
+          <h1 className="text-[clamp(1.25rem,5.2vw,1.75rem)] font-bold gold-text leading-tight">How are you feeling right now?</h1>
         </div>
-        <p className="text-sm text-muted-foreground mb-6">
+        <p className="text-xs sm:text-sm text-muted-foreground mb-6 leading-relaxed">
           Pick a mood. We'll play a few hand-picked verses chosen for that feeling — with the reason each one was chosen, and where it comes from in the Quran.
         </p>
 
