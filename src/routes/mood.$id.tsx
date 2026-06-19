@@ -33,11 +33,33 @@ function MoodPlayer() {
   const target = mood.kalima.repeat;
   const progress = Math.min(1, count / target);
 
-  // Auto loop — pulse every 2.4s
+  // Recite the kalima in Arabic via SpeechSynthesis.
+  // Create the utterance synchronously inside the gesture / timer handler
+  // so browsers don't block playback.
+  const speakKalima = () => {
+    try {
+      const synth = window.speechSynthesis;
+      if (!synth) return;
+      const u = new SpeechSynthesisUtterance(mood.kalima.arabic);
+      u.lang = "ar-SA";
+      u.rate = 0.85;
+      u.pitch = 1;
+      const voices = synth.getVoices();
+      const arVoice = voices.find((v) => v.lang?.toLowerCase().startsWith("ar"));
+      if (arVoice) u.voice = arVoice;
+      synth.cancel();
+      synth.speak(u);
+    } catch (e) {
+      console.warn("[mood] speech failed", e);
+    }
+  };
+
+  // Auto loop — pulse + recite every 3s
   useEffect(() => {
     if (!auto) return;
     const tick = () => {
       setPulse(true);
+      speakKalima();
       setCount((c) => {
         const next = c + 1;
         if (next >= target) {
@@ -49,11 +71,13 @@ function MoodPlayer() {
       window.setTimeout(() => setPulse(false), 600);
     };
     tick();
-    const iv = window.setInterval(tick, 2400);
+    const iv = window.setInterval(tick, 3000);
     return () => window.clearInterval(iv);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [auto, target]);
 
   const tap = () => {
+    speakKalima();
     setPulse(true);
     setCount((c) => {
       const next = c + 1;
@@ -63,7 +87,21 @@ function MoodPlayer() {
     window.setTimeout(() => setPulse(false), 350);
   };
 
-  const reset = () => { setCount(0); setAuto(false); };
+  const reset = () => {
+    setCount(0);
+    setAuto(false);
+    try { window.speechSynthesis?.cancel(); } catch {}
+  };
+
+  // Prime voices list (some browsers load voices async)
+  useEffect(() => {
+    try {
+      window.speechSynthesis?.getVoices();
+      const handler = () => window.speechSynthesis?.getVoices();
+      window.speechSynthesis?.addEventListener?.("voiceschanged", handler);
+      return () => window.speechSynthesis?.removeEventListener?.("voiceschanged", handler);
+    } catch { /* ignore */ }
+  }, []);
 
   // Optional verse player (opens when user expands a verse)
   const [versesOpen, setVersesOpen] = useState(false);
