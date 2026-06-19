@@ -31,7 +31,7 @@ export function ThemeSwitch() {
         className={`relative h-5 w-9 rounded-full transition-colors ${isLight ? "bg-primary" : "bg-muted"}`}
       >
         <span
-          className={`absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-background shadow transition-transform ${isLight ? "translate-x-4" : "translate-x-0"}`}
+          className={`absolute top-0.5 left-0.5 h-4 w-4 rounded-full shadow transition-transform ${isLight ? "translate-x-4 bg-background" : "translate-x-0 bg-primary"}`}
         />
       </button>
       <span className={`text-[10px] font-medium uppercase tracking-wider transition-colors ${isLight ? "text-primary" : "text-muted-foreground"}`}>
