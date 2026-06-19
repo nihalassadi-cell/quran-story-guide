@@ -58,7 +58,7 @@ function HomePage() {
           </p>
           <h1 className="text-[clamp(1.75rem,7vw,2.5rem)] font-bold mt-2 gold-text leading-tight">The Animated Quran</h1>
           <p className="text-sm text-muted-foreground mt-2">
-            114 chapters. Recitation, translation, and visual scenes — verse by verse.
+            114 chapters. Recitation and translation — verse by verse.
           </p>
         </header>
 
