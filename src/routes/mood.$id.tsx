@@ -363,7 +363,13 @@ function MoodPlayer() {
             <p className="text-[10px] sm:text-[11px] uppercase tracking-widest text-primary/80 truncate">For when you feel</p>
             <p className="text-base sm:text-lg font-semibold gold-text truncate">{mood.emoji} {mood.label}</p>
           </div>
-          <div className="w-9 shrink-0" />
+          <button
+            onClick={() => setAmbientOn((v) => !v)}
+            title={ambientOn ? "Mute ambient music" : "Play ambient music"}
+            className="rounded-full bg-card/60 backdrop-blur p-2 border border-border hover:border-primary/60 shrink-0"
+          >
+            {ambientOn ? <Music className="h-5 w-5 text-primary" /> : <VolumeX className="h-5 w-5 text-muted-foreground" />}
+          </button>
         </div>
 
         {/* Kalima picker */}
