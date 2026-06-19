@@ -192,7 +192,7 @@ function SurahPlayer() {
         surah: surahNum,
         page: pageIdx + 1,
         verse: activeVerse,
-        surahName: data.name_translit ?? data.name_en ?? `Surah ${surahNum}`,
+        surahName: data.name_en ?? `Surah ${surahNum}`,
         ts: Date.now(),
       };
       localStorage.setItem("noor:lastPage", JSON.stringify(payload));
@@ -227,7 +227,7 @@ function SurahPlayer() {
       try {
         localStorage.setItem("noor:lastPage", JSON.stringify({
           surah: surahNum, page: pageIdx + 1, verse: activeVerse,
-          surahName: data.name_translit ?? data.name_en ?? `Surah ${surahNum}`,
+          surahName: data.name_en ?? `Surah ${surahNum}`,
           ts: Date.now(),
         }));
       } catch {}
@@ -244,7 +244,7 @@ function SurahPlayer() {
           <ChevronLeft className="h-5 w-5" />
         </Link>
         <div className="text-center min-w-0 flex-1 px-2">
-          <p className="text-[10px] uppercase tracking-widest text-primary/80 truncate">Surah {surahNum} · {data?.name_translit ?? "..."}</p>
+          <p className="text-[10px] uppercase tracking-widest text-primary/80 truncate">Surah {surahNum} · {data?.name_en ?? "..."}</p>
           <p className="arabic text-base sm:text-lg gold-text truncate">{data?.name_ar ?? "..."}</p>
         </div>
         <button onClick={toggleBookmark} className="rounded-full bg-card/70 backdrop-blur p-2 border border-border shrink-0" aria-label="Save page">
