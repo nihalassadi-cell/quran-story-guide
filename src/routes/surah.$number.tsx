@@ -252,26 +252,31 @@ function SurahPlayer() {
     turnToPage(next, delta > 0 ? "next" : "prev");
   };
 
-  const toggleBookmark = async () => {
-    if (!userId) { toast.error("Sign in to save this page"); navigate({ to: "/auth" }); return; }
-    if (bookmarked) {
-      await supabase.from("bookmarks").delete().eq("user_id", userId).eq("surah_number", surahNum).eq("verse_number", activeVerse);
-      setBookmarked(false);
-      toast.success("Page bookmark removed");
-    } else {
-      await supabase.from("bookmarks").insert({ user_id: userId, surah_number: surahNum, verse_number: activeVerse });
-      setBookmarked(true);
-      toast.success("Page saved");
-    }
-    // Always update localStorage continue-reading anchor on save action
-    if (data) {
-      try {
+  const toggleBookmark = () => {
+    try {
+      const raw = localStorage.getItem("noor:bookmarks");
+      const list: Array<{ surah: number; verse: number; page: number; surahName?: string; ts: number }> =
+        raw ? JSON.parse(raw) : [];
+      const exists = list.some((b) => b.surah === surahNum && b.verse === activeVerse);
+      const next = exists
+        ? list.filter((b) => !(b.surah === surahNum && b.verse === activeVerse))
+        : [
+            { surah: surahNum, verse: activeVerse, page: pageIdx + 1, surahName: data?.name_en ?? `Surah ${surahNum}`, ts: Date.now() },
+            ...list,
+          ];
+      localStorage.setItem("noor:bookmarks", JSON.stringify(next));
+      setBookmarked(!exists);
+      toast.success(exists ? "Page bookmark removed" : "Page saved");
+      // Saving a page also updates "Continue reading" anchor
+      if (!exists && data) {
         localStorage.setItem("noor:lastPage", JSON.stringify({
           surah: surahNum, page: pageIdx + 1, verse: activeVerse,
           surahName: data.name_en ?? `Surah ${surahNum}`,
           ts: Date.now(),
         }));
-      } catch {}
+      }
+    } catch {
+      toast.error("Could not save bookmark");
     }
   };
 
