@@ -192,11 +192,11 @@ function MoodPlayer() {
             >
               <ChevronLeft className="h-5 w-5" />
             </Link>
-            <div className="text-center">
-              <p className="text-[11px] uppercase tracking-widest text-primary/80">For when you feel</p>
-              <p className="text-lg font-semibold gold-text">{mood.emoji} {mood.label}</p>
+            <div className="text-center min-w-0 flex-1 px-2">
+              <p className="text-[10px] sm:text-[11px] uppercase tracking-widest text-primary/80 truncate">For when you feel</p>
+              <p className="text-base sm:text-lg font-semibold gold-text truncate">{mood.emoji} {mood.label}</p>
             </div>
-            <div className="w-9" />
+            <div className="w-9 shrink-0" />
           </div>
 
           <p className="text-sm text-muted-foreground text-center mb-5 italic">{mood.blurb}</p>
@@ -243,7 +243,7 @@ function MoodPlayer() {
                         <Play className="h-4 w-4 text-primary opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
                       </div>
                       {ayah && (
-                        <p className="arabic text-sm leading-snug text-foreground/95 truncate" dir="rtl">
+                        <p className="arabic text-sm leading-relaxed text-foreground/95 line-clamp-2 break-words" dir="rtl">
                           {ayah.text}
                         </p>
                       )}
@@ -290,11 +290,11 @@ function MoodPlayer() {
         >
           <ChevronLeft className="h-5 w-5" />
         </button>
-        <div className="text-center">
-          <p className="text-xs uppercase tracking-widest text-primary/80">For when you feel</p>
-          <p className="text-lg font-semibold gold-text">{mood.emoji} {mood.label}</p>
+        <div className="text-center min-w-0 flex-1 px-2">
+          <p className="text-[10px] sm:text-xs uppercase tracking-widest text-primary/80 truncate">For when you feel</p>
+          <p className="text-base sm:text-lg font-semibold gold-text truncate">{mood.emoji} {mood.label}</p>
         </div>
-        <div className="w-9" />
+        <div className="w-9 shrink-0" />
       </header>
 
       <div className="relative z-10 flex-1 flex items-center justify-center px-4">
@@ -322,8 +322,8 @@ function MoodPlayer() {
             key={`${current.surah}:${current.verse}`}
             className="fade-in mx-auto max-w-2xl text-center space-y-1 rounded-lg bg-background/55 backdrop-blur-sm px-3 py-2 border border-border/40"
           >
-            <p className="arabic text-xl md:text-2xl leading-snug text-foreground">{ayah.text}</p>
-            <p className="text-xs md:text-sm leading-snug text-foreground/85">{translation?.text}</p>
+            <p className="arabic text-lg sm:text-xl md:text-2xl leading-relaxed text-foreground break-words">{ayah.text}</p>
+            <p className="text-[11px] sm:text-xs md:text-sm leading-snug text-foreground/85 break-words">{translation?.text}</p>
           </div>
         </div>
       )}

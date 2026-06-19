@@ -56,7 +56,7 @@ function HomePage() {
           <p className="text-xs uppercase tracking-[0.3em] text-primary/80 flex items-center gap-2">
             <Sparkles className="h-3.5 w-3.5" /> Noor
           </p>
-          <h1 className="text-4xl font-bold mt-2 gold-text">The Animated Quran</h1>
+          <h1 className="text-[clamp(1.75rem,7vw,2.5rem)] font-bold mt-2 gold-text leading-tight">The Animated Quran</h1>
           <p className="text-sm text-muted-foreground mt-2">
             114 chapters. Recitation, translation, and visual scenes — verse by verse.
           </p>
@@ -103,13 +103,13 @@ function HomePage() {
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-baseline justify-between gap-2">
-                    <h3 className="font-semibold truncate">{s.name_translit}</h3>
-                    <span className="arabic text-lg text-primary/90 truncate">{s.name_ar}</span>
+                  <div className="flex items-baseline justify-between gap-2 min-w-0">
+                    <h3 className="font-semibold truncate min-w-0 flex-1 text-sm sm:text-base">{s.name_translit}</h3>
+                    <span className="arabic text-base sm:text-lg text-primary/90 truncate shrink-0 max-w-[45%]">{s.name_ar}</span>
                   </div>
-                  <div className="flex items-center justify-between mt-0.5 text-xs text-muted-foreground">
-                    <span>{s.name_en}</span>
-                    <span>{s.verse_count} verses · {s.revelation_place}</span>
+                  <div className="flex items-center justify-between mt-0.5 text-[11px] sm:text-xs text-muted-foreground gap-2">
+                    <span className="truncate">{s.name_en}</span>
+                    <span className="shrink-0">{s.verse_count} verses · {s.revelation_place}</span>
                   </div>
                 </div>
               </Link>

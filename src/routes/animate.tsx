@@ -18,10 +18,10 @@ function AnimatePage() {
     <AppShell>
       <div className="max-w-2xl mx-auto px-4 pt-8 pb-24">
         <div className="flex items-center gap-2 mb-1">
-          <Heart className="h-5 w-5 text-primary" />
-          <h1 className="text-2xl font-bold gold-text">How are you feeling right now?</h1>
+          <Heart className="h-5 w-5 text-primary shrink-0" />
+          <h1 className="text-[clamp(1.25rem,5.2vw,1.75rem)] font-bold gold-text leading-tight">How are you feeling right now?</h1>
         </div>
-        <p className="text-sm text-muted-foreground mb-6">
+        <p className="text-xs sm:text-sm text-muted-foreground mb-6 leading-relaxed">
           Pick a mood. We'll play a few hand-picked verses chosen for that feeling — with the reason each one was chosen, and where it comes from in the Quran.
         </p>
 
@@ -33,11 +33,11 @@ function AnimatePage() {
               params={{ id: m.id }}
               className="group rounded-xl border border-border bg-card/60 backdrop-blur p-4 flex flex-col items-start gap-1 hover:border-primary/60 hover:bg-card transition-colors"
             >
-              <span className="text-3xl">{m.emoji}</span>
-              <span className="font-semibold text-foreground">{m.label}</span>
-              <span className="text-xs text-muted-foreground leading-snug">{m.blurb}</span>
+              <span className="text-2xl sm:text-3xl">{m.emoji}</span>
+              <span className="font-semibold text-foreground text-sm sm:text-base">{m.label}</span>
+              <span className="text-[11px] sm:text-xs text-muted-foreground leading-snug">{m.blurb}</span>
               <span className="text-[10px] uppercase tracking-wider text-primary/70 mt-1 flex items-center gap-1">
-                <Sparkles className="h-3 w-3" /> {m.verses.length} verses
+                <Sparkles className="h-3 w-3 shrink-0" /> {m.verses.length} verses
               </span>
             </Link>
           ))}
