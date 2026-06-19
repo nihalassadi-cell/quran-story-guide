@@ -56,6 +56,7 @@ function SurahPlayer() {
   const [voiceoverOn, setVoiceoverOn] = useState(true);
   const [ytOpen, setYtOpen] = useState(false);
   const [flipDir, setFlipDir] = useState<"next" | "prev" | null>(null);
+  const [prevSnap, setPrevSnap] = useState<{ idx: number; ayahs: typeof data extends infer T ? any : any } | null>(null);
   const [wordIdx, setWordIdx] = useState<number>(-1);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
