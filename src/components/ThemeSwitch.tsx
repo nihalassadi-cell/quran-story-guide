@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Sun, Moon } from "lucide-react";
 import { getStoredTheme, setTheme, type ThemeId } from "@/lib/theme";
 
 export function ThemeSwitch() {
@@ -17,26 +18,16 @@ export function ThemeSwitch() {
   };
 
   return (
-    <div className="fixed top-[calc(env(safe-area-inset-top)+0.75rem)] right-3 z-50 flex items-center gap-2 rounded-full bg-card/90 backdrop-blur-md border border-border px-2.5 py-1.5 shadow-md">
-      <span className="text-[10px] font-bold uppercase tracking-wider text-primary">Theme</span>
-      <span className={`text-[10px] font-medium uppercase tracking-wider transition-colors ${!isLight ? "text-primary" : "text-muted-foreground"}`}>
-        Dark
-      </span>
-      <button
-        type="button"
-        role="switch"
-        aria-checked={isLight}
-        aria-label="Toggle light/dark theme"
-        onClick={toggle}
-        className={`relative h-5 w-9 rounded-full transition-colors ${isLight ? "bg-primary" : "bg-muted"}`}
-      >
-        <span
-          className={`absolute top-0.5 left-0.5 h-4 w-4 rounded-full shadow transition-transform ${isLight ? "translate-x-4 bg-background" : "translate-x-0 bg-primary"}`}
-        />
-      </button>
-      <span className={`text-[10px] font-medium uppercase tracking-wider transition-colors ${isLight ? "text-primary" : "text-muted-foreground"}`}>
-        Light
-      </span>
-    </div>
+    <button
+      type="button"
+      role="switch"
+      aria-checked={isLight}
+      aria-label={isLight ? "Switch to dark theme" : "Switch to light theme"}
+      title={isLight ? "Light theme" : "Dark theme"}
+      onClick={toggle}
+      className="fixed top-[calc(env(safe-area-inset-top)+0.5rem)] right-2 z-50 flex h-9 w-9 items-center justify-center rounded-full bg-card/85 backdrop-blur-md border border-border shadow-md text-primary hover:border-primary/60 transition-colors"
+    >
+      {isLight ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+    </button>
   );
 }
