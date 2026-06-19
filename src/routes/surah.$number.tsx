@@ -137,7 +137,7 @@ function SurahPlayer() {
     [data, activeVerse],
   );
 
-  // Sequenced playback
+  // Sequenced playback + per-word highlight via linear progress
   useEffect(() => {
     if (!ayah) return;
     if (!audioRef.current) audioRef.current = new Audio();
@@ -145,13 +145,23 @@ function SurahPlayer() {
 
     let cancelled = false;
     const ttsRef: { current: HTMLAudioElement | null } = { current: null };
+    const wordCount = (ayah.text.trim().split(/\s+/).length) || 1;
+    setWordIdx(playing ? 0 : -1);
+
+    const onTime = () => {
+      if (!audio.duration || !isFinite(audio.duration)) return;
+      const p = Math.min(0.999, Math.max(0, audio.currentTime / audio.duration));
+      setWordIdx(Math.min(wordCount - 1, Math.floor(p * wordCount)));
+    };
 
     const advance = () => {
       if (cancelled || !data) return;
+      setWordIdx(-1);
       if (activeVerse < data.ayahs.length) setActiveVerse((v) => v + 1);
       else setPlaying(false);
     };
     const playTranslationThenAdvance = () => {
+      setWordIdx(-1);
       if (!voiceoverOn || !translation?.text) { advance(); return; }
       const url = translationAudioUrl(language, surahNum, activeVerse);
       if (!url) { advance(); return; }
@@ -164,12 +174,14 @@ function SurahPlayer() {
 
     audio.src = ayahAudioUrl(ayah.number, reciter);
     audio.onended = playTranslationThenAdvance;
+    audio.ontimeupdate = onTime;
     if (playing) audio.play().catch(() => setPlaying(false));
-    else audio.pause();
+    else { audio.pause(); setWordIdx(-1); }
 
     return () => {
       cancelled = true;
       audio.pause();
+      audio.ontimeupdate = null;
       if (ttsRef.current) ttsRef.current.pause();
     };
   }, [ayah, reciter, playing, data, activeVerse, translation?.text, voiceoverOn, language, surahNum]);
