@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { BookOpen, Sparkles, Heart } from "lucide-react";
+import { BookOpen, Heart } from "lucide-react";
 
 const KEY = "noor:onboarded:v1";
 
@@ -8,11 +8,6 @@ const slides = [
     icon: BookOpen,
     title: "The Quran, verse by verse",
     body: "Browse all 114 Surahs with recitation and translation — read at your own pace.",
-  },
-  {
-    icon: Sparkles,
-    title: "Animated Surahs",
-    body: "Selected chapters come alive as scenes with narration and synced subtitles.",
   },
   {
     icon: Heart,
