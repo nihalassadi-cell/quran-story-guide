@@ -1,11 +1,21 @@
-// Curated mood → verse mappings for the "How are you feeling?" experience.
-// Each verse cites why it was chosen so the listener understands the connection.
+// Curated mood → kalima + verse mappings for the "How are you feeling?" experience.
+// The kalima is a short, repeatable remembrance taught by the Prophet ﷺ for that
+// emotional state. The verses are companion ayat — context and consolation.
 
 export interface MoodVerse {
   surah: number;
   verse: number;
-  surahName: string; // English name for display
-  reason: string;    // short note: why this verse for this mood
+  surahName: string;
+  reason: string;
+}
+
+export interface Kalima {
+  arabic: string;
+  transliteration: string;
+  translation: string;
+  repeat: number;          // recommended count to recite
+  source: string;          // hadith / Quran citation
+  why: string;             // one-line reason this is the dhikr for the mood
 }
 
 export interface Mood {
@@ -13,6 +23,7 @@ export interface Mood {
   label: string;
   emoji: string;
   blurb: string;
+  kalima: Kalima;
   verses: MoodVerse[];
 }
 
@@ -22,12 +33,20 @@ export const MOODS: Mood[] = [
     label: "Stressed",
     emoji: "😣",
     blurb: "When the weight feels too much to carry.",
+    kalima: {
+      arabic: "لَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِاللَّهِ",
+      transliteration: "Lā ḥawla wa lā quwwata illā billāh",
+      translation: "There is no power and no strength except with Allah.",
+      repeat: 100,
+      source: "Bukhari 6384, Muslim 2704 — “a treasure from the treasures of Paradise.”",
+      why: "Ibn al-Qayyim called it the cure for ninety-nine ailments — the lightest of which is grief. Hand the weight back to the One who actually carries it.",
+    },
     verses: [
-      { surah: 94, verse: 5, surahName: "Ash-Sharh", reason: "“Indeed, with hardship comes ease.” A direct promise that relief always follows difficulty." },
-      { surah: 94, verse: 6, surahName: "Ash-Sharh", reason: "The promise is repeated — ease is paired with every hardship, not just some." },
-      { surah: 2, verse: 286, surahName: "Al-Baqarah", reason: "“Allah does not burden a soul beyond what it can bear.” Your capacity is known and honoured." },
-      { surah: 65, verse: 3, surahName: "At-Talaq", reason: "“Whoever relies on Allah — He is sufficient for him.” Permission to put the load down." },
-      { surah: 13, verse: 28, surahName: "Ar-Ra'd", reason: "“In the remembrance of Allah hearts find rest.” The remedy for a racing mind." },
+      { surah: 94, verse: 5, surahName: "Ash-Sharh", reason: "“Indeed, with hardship comes ease.”" },
+      { surah: 94, verse: 6, surahName: "Ash-Sharh", reason: "The promise repeated — ease is paired with every hardship." },
+      { surah: 2, verse: 286, surahName: "Al-Baqarah", reason: "“Allah does not burden a soul beyond what it can bear.”" },
+      { surah: 65, verse: 3, surahName: "At-Talaq", reason: "“Whoever relies on Allah — He is sufficient for him.”" },
+      { surah: 13, verse: 28, surahName: "Ar-Ra'd", reason: "“In the remembrance of Allah hearts find rest.”" },
     ],
   },
   {
@@ -35,12 +54,20 @@ export const MOODS: Mood[] = [
     label: "Anxious",
     emoji: "😟",
     blurb: "When tomorrow won't stop knocking.",
+    kalima: {
+      arabic: "لَا إِلَٰهَ إِلَّا أَنْتَ سُبْحَانَكَ إِنِّي كُنْتُ مِنَ الظَّالِمِينَ",
+      transliteration: "Lā ilāha illā anta, subḥānaka, innī kuntu mina-ẓ-ẓālimīn",
+      translation: "There is no god but You — glory be to You. Truly, I have been among the wrongdoers.",
+      repeat: 40,
+      source: "Qur'an 21:87 · Tirmidhī 3505 — the duʿāʾ of Yūnus ﷺ from the belly of the whale.",
+      why: "“No Muslim ever supplicates with these words for anything except Allah answers him.” The exact words that pulled a Prophet out of three layers of darkness.",
+    },
     verses: [
-      { surah: 9, verse: 51, surahName: "At-Tawbah", reason: "“Nothing will ever befall us except what Allah has decreed.” Anchors you to what you cannot lose." },
-      { surah: 3, verse: 173, surahName: "Aal-E-Imran", reason: "“Sufficient for us is Allah, and He is the best Disposer of affairs.” The phrase the Prophet ﷺ used in fear." },
-      { surah: 65, verse: 2, surahName: "At-Talaq", reason: "“Whoever fears Allah — He will make a way out for him.” A door opens you cannot yet see." },
-      { surah: 20, verse: 46, surahName: "Ta-Ha", reason: "“Do not fear — I am with you both, hearing and seeing.” Allah's reassurance to Musa ﷺ at his most afraid." },
-      { surah: 2, verse: 153, surahName: "Al-Baqarah", reason: "“Seek help through patience and prayer — Allah is with the patient.” A practical, repeatable refuge." },
+      { surah: 9, verse: 51, surahName: "At-Tawbah", reason: "“Nothing will befall us except what Allah has decreed.”" },
+      { surah: 3, verse: 173, surahName: "Aal-E-Imran", reason: "“Sufficient for us is Allah — the best Disposer of affairs.”" },
+      { surah: 65, verse: 2, surahName: "At-Talaq", reason: "“Whoever fears Allah — He will make a way out.”" },
+      { surah: 20, verse: 46, surahName: "Ta-Ha", reason: "“Do not fear — I am with you both, hearing and seeing.”" },
+      { surah: 2, verse: 153, surahName: "Al-Baqarah", reason: "“Seek help through patience and prayer — Allah is with the patient.”" },
     ],
   },
   {
@@ -48,12 +75,20 @@ export const MOODS: Mood[] = [
     label: "Sad",
     emoji: "😢",
     blurb: "When the heart is heavy.",
+    kalima: {
+      arabic: "يَا حَيُّ يَا قَيُّومُ بِرَحْمَتِكَ أَسْتَغِيثُ",
+      transliteration: "Yā Ḥayyu yā Qayyūm, bi-raḥmatika astaghīth",
+      translation: "O Ever-Living, O Sustainer — by Your mercy I seek relief.",
+      repeat: 33,
+      source: "Tirmidhī 3524 — the Prophet ﷺ would say it in moments of distress.",
+      why: "When grief is too large for sentences, return to two of His names and one need: His mercy. He is alive when nothing else feels alive.",
+    },
     verses: [
-      { surah: 93, verse: 3, surahName: "Ad-Duha", reason: "“Your Lord has not forsaken you, nor has He become displeased.” Revealed when the Prophet ﷺ felt abandoned." },
-      { surah: 93, verse: 5, surahName: "Ad-Duha", reason: "“Your Lord will give to you, and you will be satisfied.” A promise of restoration." },
-      { surah: 39, verse: 53, surahName: "Az-Zumar", reason: "“Do not despair of the mercy of Allah.” No grief is final in His sight." },
-      { surah: 12, verse: 86, surahName: "Yusuf", reason: "Yaqub ﷺ: “I only complain of my suffering and grief to Allah.” Permission to grieve openly with Him." },
-      { surah: 65, verse: 7, surahName: "At-Talaq", reason: "“Allah will bring about, after hardship, ease.” Time changes everything by His command." },
+      { surah: 93, verse: 3, surahName: "Ad-Duha", reason: "“Your Lord has not forsaken you, nor become displeased.”" },
+      { surah: 93, verse: 5, surahName: "Ad-Duha", reason: "“Your Lord will give to you, and you will be satisfied.”" },
+      { surah: 39, verse: 53, surahName: "Az-Zumar", reason: "“Do not despair of the mercy of Allah.”" },
+      { surah: 12, verse: 86, surahName: "Yusuf", reason: "Yaqub ﷺ: “I only complain of my suffering and grief to Allah.”" },
+      { surah: 65, verse: 7, surahName: "At-Talaq", reason: "“Allah will bring about, after hardship, ease.”" },
     ],
   },
   {
@@ -61,12 +96,20 @@ export const MOODS: Mood[] = [
     label: "Angry",
     emoji: "😡",
     blurb: "When the fire rises in your chest.",
+    kalima: {
+      arabic: "أَعُوذُ بِاللَّهِ مِنَ الشَّيْطَانِ الرَّجِيمِ",
+      transliteration: "Aʿūdhu billāhi mina-sh-shayṭāni-r-rajīm",
+      translation: "I seek refuge in Allah from the accursed Satan.",
+      repeat: 7,
+      source: "Bukhari 3282, Muslim 2610 — the Prophet ﷺ told an angry man this would calm him.",
+      why: "Anger is Shayṭān's heat in your chest. The Prophet ﷺ named the source and named the cure — say it, sit down, drink water.",
+    },
     verses: [
-      { surah: 3, verse: 134, surahName: "Aal-E-Imran", reason: "Praise for “those who restrain anger and pardon people” — Allah loves them." },
-      { surah: 41, verse: 34, surahName: "Fussilat", reason: "“Repel evil with what is better, and your enemy will become a devoted friend.”" },
-      { surah: 42, verse: 43, surahName: "Ash-Shura", reason: "“Whoever is patient and forgives — that is truly a matter of great resolve.”" },
-      { surah: 7, verse: 199, surahName: "Al-A'raf", reason: "“Show forgiveness, enjoin what is good, and turn away from the ignorant.”" },
-      { surah: 25, verse: 63, surahName: "Al-Furqan", reason: "“When the ignorant address them, they say words of peace.” The believer's reply." },
+      { surah: 3, verse: 134, surahName: "Aal-E-Imran", reason: "Praise for those who restrain anger and pardon people." },
+      { surah: 41, verse: 34, surahName: "Fussilat", reason: "“Repel evil with what is better.”" },
+      { surah: 42, verse: 43, surahName: "Ash-Shura", reason: "“Whoever is patient and forgives — that is great resolve.”" },
+      { surah: 7, verse: 199, surahName: "Al-A'raf", reason: "“Show forgiveness, enjoin good, turn from the ignorant.”" },
+      { surah: 25, verse: 63, surahName: "Al-Furqan", reason: "“When the ignorant address them, they say: peace.”" },
     ],
   },
   {
@@ -74,12 +117,20 @@ export const MOODS: Mood[] = [
     label: "Lonely",
     emoji: "🥺",
     blurb: "When no one seems to be there.",
+    kalima: {
+      arabic: "حَسْبِيَ اللَّهُ لَا إِلَٰهَ إِلَّا هُوَ، عَلَيْهِ تَوَكَّلْتُ وَهُوَ رَبُّ الْعَرْشِ الْعَظِيمِ",
+      transliteration: "Ḥasbiya-llāhu, lā ilāha illā huwa, ʿalayhi tawakkaltu wa huwa rabbu-l-ʿarshi-l-ʿaẓīm",
+      translation: "Allah is enough for me — there is no god but Him. In Him I trust, and He is Lord of the magnificent throne.",
+      repeat: 7,
+      source: "Abū Dāwūd 5081 — recite seven times: “Allah will suffice him in whatever worries him.”",
+      why: "Loneliness whispers no one is enough. The Prophet ﷺ taught: say it seven times — Allah is.",
+    },
     verses: [
-      { surah: 50, verse: 16, surahName: "Qaf", reason: "“We are closer to him than his jugular vein.” You are never actually alone." },
-      { surah: 2, verse: 186, surahName: "Al-Baqarah", reason: "“When My servants ask about Me — I am near. I respond to the one who calls.”" },
-      { surah: 57, verse: 4, surahName: "Al-Hadid", reason: "“He is with you wherever you are.” Companionship that no place can break." },
-      { surah: 93, verse: 7, surahName: "Ad-Duha", reason: "“He found you lost and guided you.” He has been finding you all along." },
-      { surah: 12, verse: 86, surahName: "Yusuf", reason: "Yaqub's grief carried to Allah alone — loneliness as a doorway to closeness." },
+      { surah: 50, verse: 16, surahName: "Qaf", reason: "“We are closer to him than his jugular vein.”" },
+      { surah: 2, verse: 186, surahName: "Al-Baqarah", reason: "“When My servants ask about Me — I am near.”" },
+      { surah: 57, verse: 4, surahName: "Al-Hadid", reason: "“He is with you wherever you are.”" },
+      { surah: 93, verse: 7, surahName: "Ad-Duha", reason: "“He found you lost and guided you.”" },
+      { surah: 12, verse: 86, surahName: "Yusuf", reason: "Yaqub's grief carried to Allah alone — closeness." },
     ],
   },
   {
@@ -87,12 +138,20 @@ export const MOODS: Mood[] = [
     label: "Grateful",
     emoji: "🙏",
     blurb: "When you want to thank Him.",
+    kalima: {
+      arabic: "الْحَمْدُ لِلَّهِ الَّذِي بِنِعْمَتِهِ تَتِمُّ الصَّالِحَاتُ",
+      transliteration: "Al-ḥamdu lillāhi-lladhī bi-niʿmatihi tatimmu-ṣ-ṣāliḥāt",
+      translation: "All praise is for Allah by whose favour all good things are completed.",
+      repeat: 33,
+      source: "Ibn Mājah 3803 — what the Prophet ﷺ said when something pleased him.",
+      why: "Gratitude is itself a doorway: “If you are grateful, I will surely increase you.” (Qur'an 14:7)",
+    },
     verses: [
-      { surah: 14, verse: 7, surahName: "Ibrahim", reason: "“If you are grateful, I will surely increase you.” Gratitude is itself an opening." },
-      { surah: 55, verse: 13, surahName: "Ar-Rahman", reason: "“So which of the favours of your Lord will you deny?” Repeated to keep counting." },
+      { surah: 14, verse: 7, surahName: "Ibrahim", reason: "“If you are grateful, I will increase you.”" },
+      { surah: 55, verse: 13, surahName: "Ar-Rahman", reason: "“Which of the favours of your Lord will you deny?”" },
       { surah: 16, verse: 18, surahName: "An-Nahl", reason: "“If you tried to count Allah's blessings, you could never enumerate them.”" },
-      { surah: 2, verse: 152, surahName: "Al-Baqarah", reason: "“Remember Me — I will remember you. Be thankful and do not deny Me.”" },
-      { surah: 27, verse: 19, surahName: "An-Naml", reason: "Sulayman's du'a: “My Lord, enable me to be grateful for Your favour.”" },
+      { surah: 2, verse: 152, surahName: "Al-Baqarah", reason: "“Remember Me — I will remember you.”" },
+      { surah: 27, verse: 19, surahName: "An-Naml", reason: "Sulayman: “My Lord, enable me to be grateful for Your favour.”" },
     ],
   },
   {
@@ -100,12 +159,20 @@ export const MOODS: Mood[] = [
     label: "Hopeful",
     emoji: "🌅",
     blurb: "When something better feels possible.",
+    kalima: {
+      arabic: "لَا إِلَٰهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ، وَهُوَ عَلَىٰ كُلِّ شَيْءٍ قَدِيرٌ",
+      transliteration: "Lā ilāha illā-llāhu waḥdahu lā sharīka lah, lahu-l-mulku wa lahu-l-ḥamd, wa huwa ʿalā kulli shay'in qadīr",
+      translation: "There is no god but Allah, alone, with no partner. To Him belongs the dominion and all praise — and He is over all things able.",
+      repeat: 100,
+      source: "Bukhari 3293, Muslim 2691 — equal to freeing ten slaves; a fortress until evening.",
+      why: "Begin the day with the sentence that contains everything. Hope is built on the truth of who runs the universe.",
+    },
     verses: [
-      { surah: 39, verse: 53, surahName: "Az-Zumar", reason: "“Do not despair of the mercy of Allah — He forgives all sins.” The most hope-giving verse." },
-      { surah: 65, verse: 3, surahName: "At-Talaq", reason: "“Allah will accomplish His purpose.” His plan for you is still moving." },
-      { surah: 94, verse: 5, surahName: "Ash-Sharh", reason: "“With hardship comes ease.” The exact shape of hope." },
-      { surah: 12, verse: 87, surahName: "Yusuf", reason: "“Only the disbelieving people lose hope in the mercy of Allah.”" },
-      { surah: 2, verse: 216, surahName: "Al-Baqarah", reason: "“You may dislike a thing that is good for you.” What feels closed may be a door." },
+      { surah: 39, verse: 53, surahName: "Az-Zumar", reason: "“Do not despair of the mercy of Allah.”" },
+      { surah: 65, verse: 3, surahName: "At-Talaq", reason: "“Allah will accomplish His purpose.”" },
+      { surah: 94, verse: 5, surahName: "Ash-Sharh", reason: "“With hardship comes ease.”" },
+      { surah: 12, verse: 87, surahName: "Yusuf", reason: "“Only the disbelievers lose hope in the mercy of Allah.”" },
+      { surah: 2, verse: 216, surahName: "Al-Baqarah", reason: "“You may dislike a thing that is good for you.”" },
     ],
   },
   {
@@ -113,12 +180,20 @@ export const MOODS: Mood[] = [
     label: "Seeking forgiveness",
     emoji: "🤲",
     blurb: "When you want to return.",
+    kalima: {
+      arabic: "أَسْتَغْفِرُ اللَّهَ وَأَتُوبُ إِلَيْهِ",
+      transliteration: "Astaghfiru-llāha wa atūbu ilayh",
+      translation: "I seek Allah's forgiveness and turn back to Him.",
+      repeat: 100,
+      source: "Bukhari 6307, Muslim 2702 — the Prophet ﷺ said it more than seventy times daily.",
+      why: "Abū Dāwūd 1518: “Whoever persists on istighfār — Allah makes a way out from every distress, and provides from where he does not expect.”",
+    },
     verses: [
-      { surah: 39, verse: 53, surahName: "Az-Zumar", reason: "“Do not despair of the mercy of Allah — He forgives all sins.” The door is open." },
-      { surah: 4, verse: 110, surahName: "An-Nisa", reason: "“Whoever does wrong then seeks Allah's forgiveness will find Him Forgiving, Merciful.”" },
-      { surah: 66, verse: 8, surahName: "At-Tahrim", reason: "“Turn to Allah with sincere repentance.” The clear instruction for returning." },
+      { surah: 39, verse: 53, surahName: "Az-Zumar", reason: "“Do not despair of the mercy of Allah — He forgives all sins.”" },
+      { surah: 4, verse: 110, surahName: "An-Nisa", reason: "“Whoever does wrong then seeks forgiveness will find Him Forgiving, Merciful.”" },
+      { surah: 66, verse: 8, surahName: "At-Tahrim", reason: "“Turn to Allah with sincere repentance.”" },
       { surah: 2, verse: 222, surahName: "Al-Baqarah", reason: "“Allah loves those who turn to Him in repentance.”" },
-      { surah: 20, verse: 82, surahName: "Ta-Ha", reason: "“I am the Perpetual Forgiver of whoever repents and believes.”" },
+      { surah: 20, verse: 82, surahName: "Ta-Ha", reason: "“I am the Perpetual Forgiver of whoever repents.”" },
     ],
   },
   {
@@ -126,12 +201,20 @@ export const MOODS: Mood[] = [
     label: "Fearful",
     emoji: "😨",
     blurb: "When something scares you.",
+    kalima: {
+      arabic: "حَسْبُنَا اللَّهُ وَنِعْمَ الْوَكِيلُ",
+      transliteration: "Ḥasbunā-llāhu wa niʿma-l-wakīl",
+      translation: "Allah is sufficient for us — the best Disposer of affairs.",
+      repeat: 70,
+      source: "Qur'an 3:173 · Bukhari 4563 — said by Ibrāhīm ﷺ in the fire and by the Prophet ﷺ at Uḥud.",
+      why: "These were the words spoken inside flames and on a battlefield — and they did not burn, they did not lose. Borrow them.",
+    },
     verses: [
-      { surah: 3, verse: 173, surahName: "Aal-E-Imran", reason: "“Sufficient for us is Allah, the best Disposer of affairs.” Words that turned fear into strength." },
-      { surah: 2, verse: 255, surahName: "Al-Baqarah", reason: "Ayat al-Kursi — the verse of protection and divine sovereignty." },
-      { surah: 8, verse: 9, surahName: "Al-Anfal", reason: "“I will reinforce you with a thousand angels.” Help is closer than your fear knows." },
-      { surah: 9, verse: 40, surahName: "At-Tawbah", reason: "“Do not grieve; indeed Allah is with us.” Said in the cave when capture seemed certain." },
-      { surah: 28, verse: 7, surahName: "Al-Qasas", reason: "“Do not fear, nor grieve. We will return him to you.” Allah's word to Musa's mother." },
+      { surah: 3, verse: 173, surahName: "Aal-E-Imran", reason: "“Sufficient for us is Allah, the best Disposer of affairs.”" },
+      { surah: 2, verse: 255, surahName: "Al-Baqarah", reason: "Ayat al-Kursi — divine sovereignty and protection." },
+      { surah: 8, verse: 9, surahName: "Al-Anfal", reason: "“I will reinforce you with a thousand angels.”" },
+      { surah: 9, verse: 40, surahName: "At-Tawbah", reason: "“Do not grieve; indeed Allah is with us.”" },
+      { surah: 28, verse: 7, surahName: "Al-Qasas", reason: "“Do not fear, nor grieve. We will return him to you.”" },
     ],
   },
 ];
