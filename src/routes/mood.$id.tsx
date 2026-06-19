@@ -267,23 +267,23 @@ function MoodPlayer() {
   return (
     <div className="min-h-screen bg-background relative">
       {/* Ambient backdrop */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/12 via-background to-accent/12" />
         <div className="absolute -top-32 -left-32 h-96 w-96 rounded-full bg-primary/15 blur-3xl kalima-orb-a" />
         <div className="absolute -bottom-40 -right-32 h-[28rem] w-[28rem] rounded-full bg-accent/15 blur-3xl kalima-orb-b" />
         {/* Floating positive particles */}
-        {Array.from({ length: 14 }).map((_, i) => (
+        {Array.from({ length: 18 }).map((_, i) => (
           <span
             key={i}
             className="kalima-particle"
             style={{
-              left: `${(i * 7.3) % 100}%`,
-              animationDelay: `${(i * 0.7) % 8}s`,
-              animationDuration: `${10 + (i % 5) * 2}s`,
-              fontSize: `${10 + (i % 4) * 4}px`,
+              left: `${(i * 5.7) % 100}%`,
+              animationDelay: `${(i * 0.6) % 9}s`,
+              animationDuration: `${9 + (i % 6) * 2}s`,
+              fontSize: `${12 + (i % 4) * 5}px`,
             }}
           >
-            {["✦", "✧", "❀", "✺", "✿"][i % 5]}
+            {["✦", "✧", "❀", "✺", "✿", "★"][i % 6]}
           </span>
         ))}
       </div>
