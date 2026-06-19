@@ -143,11 +143,7 @@ function MoodPlayer() {
   const [versesOpen, setVersesOpen] = useState(false);
   const [playerIdx, setPlayerIdx] = useState<number | null>(null);
   const [playing, setPlaying] = useState(false);
-  const [reciter, setReciter] = useState<string>("ar.alafasy");
-  const [language] = useState<LanguageCode>("en");
-  const [cache, setCache] = useState<AyahCache>({});
   const [scenes, setScenes] = useState<Record<string, string>>({});
-  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const playerVerse = playerIdx != null ? mood.verses[playerIdx] : null;
   const surahData = playerVerse ? cache[playerVerse.surah] : undefined;
