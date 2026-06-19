@@ -16,6 +16,14 @@ export function createAmbientPad(): AmbientPad {
   let chimeTimer: number | null = null;
   let playing = false;
   let targetVol = 0.28; // audible but gentle
+  let silentEl: HTMLAudioElement | null = null;
+
+  // Tiny silent looping WAV — when played via <audio> on a user gesture,
+  // iOS switches the page's audio session to "playback", which routes
+  // WebAudio through the media volume and ignores the silent switch.
+  const SILENT_WAV =
+    "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA";
+
 
   // Soft, consonant chord — A minor 9 voicing
   // A2, E3, A3, C4, E4, G4
