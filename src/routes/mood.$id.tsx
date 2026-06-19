@@ -322,7 +322,7 @@ function MoodPlayer() {
                   }`}
                   title={k.translation}
                 >
-                  Option {i + 1} · {k.repeat}×
+                  Kalima {i + 1} · {k.repeat}×
                 </button>
               ))}
             </div>
