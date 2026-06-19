@@ -17,24 +17,26 @@ export function ThemeSwitch() {
   };
 
   return (
-    <div className="fixed top-3 right-3 z-50 flex items-center gap-2 rounded-full bg-card/80 backdrop-blur-md border border-border px-2 py-1.5 shadow-md">
+    <div className="fixed top-3 right-3 z-50 flex items-center gap-2 rounded-full bg-card/80 backdrop-blur-md border border-border px-2 py-1 shadow-md">
       <span className="text-xs font-medium text-muted-foreground">Theme</span>
+      <span className={`text-[10px] font-medium uppercase tracking-wider transition-colors ${!isLight ? "text-primary" : "text-muted-foreground"}`}>
+        Dark
+      </span>
       <button
         type="button"
         role="switch"
         aria-checked={isLight}
-        aria-label="Toggle light theme"
+        aria-label="Toggle light/dark theme"
         onClick={toggle}
-        className="relative flex h-7 w-14 items-center rounded-full bg-muted p-0.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+        className={`relative h-5 w-9 rounded-full transition-colors ${isLight ? "bg-primary" : "bg-muted"}`}
       >
         <span
-          className={`absolute h-6 w-6 rounded-full bg-primary shadow-sm transition-transform duration-200 ease-out ${isLight ? "translate-x-7" : "translate-x-0"}`}
+          className={`absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-background shadow transition-transform ${isLight ? "translate-x-4" : "translate-x-0"}`}
         />
-        <span className="relative z-10 flex w-full items-center justify-between px-1.5 text-[10px] font-semibold uppercase tracking-wide">
-          <span className={isLight ? "text-muted-foreground" : "text-primary-foreground"}>Dark</span>
-          <span className={isLight ? "text-primary-foreground" : "text-muted-foreground"}>Light</span>
-        </span>
       </button>
+      <span className={`text-[10px] font-medium uppercase tracking-wider transition-colors ${isLight ? "text-primary" : "text-muted-foreground"}`}>
+        Light
+      </span>
     </div>
   );
 }
