@@ -26,9 +26,12 @@ interface Surah {
   is_animated: boolean;
 }
 
+type LastPage = { surah: number; page: number; verse: number; surahName?: string; ts: number };
+
 function HomePage() {
   const [surahs, setSurahs] = useState<Surah[] | null>(null);
   const [filter, setFilter] = useState("");
+  const [lastPage, setLastPage] = useState<LastPage | null>(null);
 
   useEffect(() => {
     supabase
@@ -36,6 +39,10 @@ function HomePage() {
       .select("*")
       .order("number")
       .then(({ data }) => setSurahs((data as Surah[]) ?? []));
+    try {
+      const raw = localStorage.getItem("noor:lastPage");
+      if (raw) setLastPage(JSON.parse(raw));
+    } catch {}
   }, []);
 
   const filtered = surahs?.filter((s) => {
