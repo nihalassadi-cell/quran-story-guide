@@ -17,6 +17,9 @@ export interface Kalima {
   repeat: number;          // recommended count
   source: string;          // hadith / Qur'an citation
   why: string;             // one-line reason this dhikr fits the mood
+  /** When this kalima is taken from a Qur'anic verse, the (surah, verse)
+   *  reference so we can play the same studio recital used in surah pages. */
+  ayah?: { surah: number; verse: number };
 }
 
 export interface Mood {
