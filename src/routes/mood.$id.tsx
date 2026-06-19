@@ -252,7 +252,7 @@ function MoodPlayer() {
           <div className="absolute inset-0 bg-gradient-to-b from-background/70 via-transparent to-background/95" />
         </div>
 
-        <header className="relative z-10 flex items-center justify-between p-4">
+        <header className="relative z-10 flex items-center justify-between px-4 pb-4 pt-[calc(env(safe-area-inset-top)+1rem)]">
           <button onClick={() => { setPlayerIdx(null); setPlaying(false); }} className="rounded-full bg-card/60 backdrop-blur p-2 border border-border">
             <ChevronLeft className="h-5 w-5" />
           </button>
@@ -343,7 +343,7 @@ function MoodPlayer() {
         ))}
       </div>
 
-      <div className="relative max-w-2xl mx-auto px-4 pt-6 pb-28">
+      <div className="relative max-w-2xl mx-auto px-4 pt-[calc(env(safe-area-inset-top)+3.5rem)] pb-28">
         {/* Header */}
         <div className="flex items-center justify-between mb-5">
           <Link to="/animate" className="rounded-full bg-card/60 backdrop-blur p-2 border border-border hover:border-primary/60">
