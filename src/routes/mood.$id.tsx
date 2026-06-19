@@ -26,11 +26,15 @@ function MoodPlayer() {
   const mood = getMood(id);
   if (!mood) throw notFound();
 
+  // Selected kalima (user can switch between options)
+  const [kalimaIdx, setKalimaIdx] = useState(0);
+  const kalima = mood.kalimas[kalimaIdx] ?? mood.kalima;
+
   // Tasbih state
   const [count, setCount] = useState(0);
   const [auto, setAuto] = useState(false);
   const [pulse, setPulse] = useState(false);
-  const target = mood.kalima.repeat;
+  const target = kalima.repeat;
   const progress = Math.min(1, count / target);
 
   // Recite the kalima in Arabic via SpeechSynthesis.
@@ -40,7 +44,7 @@ function MoodPlayer() {
     try {
       const synth = window.speechSynthesis;
       if (!synth) return;
-      const u = new SpeechSynthesisUtterance(mood.kalima.arabic);
+      const u = new SpeechSynthesisUtterance(kalima.arabic);
       u.lang = "ar-SA";
       u.rate = 0.85;
       u.pitch = 1;
