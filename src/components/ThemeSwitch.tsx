@@ -18,7 +18,7 @@ export function ThemeSwitch() {
 
   return (
     <div className="fixed top-[calc(env(safe-area-inset-top)+0.75rem)] right-3 z-50 flex items-center gap-2 rounded-full bg-card/90 backdrop-blur-md border border-border px-2.5 py-1.5 shadow-md">
-      <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Theme</span>
+      <span className="text-[10px] font-bold uppercase tracking-wider text-primary">Theme</span>
       <span className={`text-[10px] font-medium uppercase tracking-wider transition-colors ${!isLight ? "text-primary" : "text-muted-foreground"}`}>
         Dark
       </span>
