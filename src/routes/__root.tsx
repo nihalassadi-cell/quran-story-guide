@@ -60,11 +60,14 @@ export const Route = createRootRoute({
   notFoundComponent: NotFoundComponent,
 });
 
+const THEME_INIT = `(function(){try{var t=localStorage.getItem('noor:theme');if(t==='sage'||t==='forest'){document.documentElement.setAttribute('data-theme',t);}}catch(e){}})();`;
+
 function RootShell({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <head>
         <HeadContent />
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT }} />
       </head>
       <body>
         {children}
