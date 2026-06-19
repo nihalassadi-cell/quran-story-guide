@@ -89,6 +89,27 @@ function HomePage() {
           <span className="text-xs text-muted-foreground">→</span>
         </Link>
 
+        {lastPage && !filter && (
+          <Link
+            to="/surah/$number"
+            params={{ number: String(lastPage.surah) }}
+            search={{ verse: lastPage.verse, page: lastPage.page }}
+            className="fade-in mb-3 flex items-center gap-3 rounded-xl border border-primary/40 bg-gradient-to-br from-primary/15 via-card/70 to-accent/10 px-4 py-3 hover:border-primary/70 transition-colors"
+          >
+            <div className="h-11 w-11 shrink-0 rounded-lg bg-gradient-to-br from-primary to-primary-glow grid place-items-center text-primary-foreground glow-shadow">
+              <BookMarked className="h-5 w-5" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[10px] uppercase tracking-widest text-primary/90">Continue reading</p>
+              <p className="text-sm font-semibold truncate">
+                {lastPage.surahName ?? `Surah ${lastPage.surah}`} · Page {lastPage.page}
+              </p>
+              <p className="text-[11px] text-muted-foreground truncate">Verse {lastPage.verse} · pick up where you left off</p>
+            </div>
+            <span className="text-xs text-muted-foreground shrink-0">→</span>
+          </Link>
+        )}
+
         <ul className="space-y-2">
           {!surahs &&
             Array.from({ length: 8 }).map((_, i) => (
