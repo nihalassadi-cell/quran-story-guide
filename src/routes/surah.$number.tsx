@@ -77,26 +77,16 @@ function SurahPlayer() {
   const [wordIdx, setWordIdx] = useState<number>(-1);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Auth + saved settings
+  // Load saved settings from localStorage (no sign-in required)
   useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (cancelled) return;
-        const user = session?.user ?? null;
-        setUserId(user?.id ?? null);
-        if (user) {
-          const { data: s } = await supabase.from("user_settings").select("*").eq("user_id", user.id).maybeSingle();
-          if (cancelled || !s) return;
-          setReciter(s.reciter);
-          setLanguage(s.translation_language as LanguageCode);
-        }
-      } catch (e) {
-        console.warn("auth/settings load failed", e);
+    try {
+      const raw = localStorage.getItem("noor:settings");
+      if (raw) {
+        const s = JSON.parse(raw);
+        if (s.reciter) setReciter(s.reciter);
+        if (s.translation_language) setLanguage(s.translation_language as LanguageCode);
       }
-    })();
-    return () => { cancelled = true; };
+    } catch {}
   }, []);
 
   // Load Surah text + translation
