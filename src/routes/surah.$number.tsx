@@ -69,7 +69,7 @@ function SurahPlayer() {
   const [reciter, setReciter] = useState<string>("ar.alafasy");
   const [language, setLanguage] = useState<LanguageCode>("ur");
   const [bookmarked, setBookmarked] = useState(false);
-  const [userId, setUserId] = useState<string | null>(null);
+  
   const [voiceoverOn, setVoiceoverOn] = useState(true);
   const [ytOpen, setYtOpen] = useState(false);
   const [flipDir, setFlipDir] = useState<"next" | "prev" | null>(null);
