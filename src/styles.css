@@ -219,6 +219,17 @@
     box-shadow: 0 0 0 1px color-mix(in oklab, var(--primary) 60%, transparent), 0 2px 6px rgba(0,0,0,0.2);
   }
   .mushaf-page .ayah-translation { color: oklch(0.32 0.04 60); }
+
+  /* Per-word recital highlight */
+  .mushaf-page .word { transition: color 0.15s ease, background-color 0.15s ease; }
+  .mushaf-page .word-active {
+    color: oklch(0.32 0.18 30);
+    background: linear-gradient(180deg, transparent 55%, color-mix(in oklab, var(--primary) 55%, transparent) 55%);
+    border-radius: 4px;
+    padding: 0 2px;
+    box-shadow: 0 0 0 1px color-mix(in oklab, var(--primary) 35%, transparent);
+    transition: color 0.15s ease, background-color 0.15s ease;
+  }
   .mushaf-page .page-divider {
     background: linear-gradient(90deg, transparent, color-mix(in oklab, var(--primary) 60%, transparent), transparent);
   }
