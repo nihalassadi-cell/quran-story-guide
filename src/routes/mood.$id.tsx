@@ -26,11 +26,15 @@ function MoodPlayer() {
   const mood = getMood(id);
   if (!mood) throw notFound();
 
+  // Selected kalima (user can switch between options)
+  const [kalimaIdx, setKalimaIdx] = useState(0);
+  const kalima = mood.kalimas[kalimaIdx] ?? mood.kalima;
+
   // Tasbih state
   const [count, setCount] = useState(0);
   const [auto, setAuto] = useState(false);
   const [pulse, setPulse] = useState(false);
-  const target = mood.kalima.repeat;
+  const target = kalima.repeat;
   const progress = Math.min(1, count / target);
 
   // Recite the kalima in Arabic via SpeechSynthesis.
@@ -40,7 +44,7 @@ function MoodPlayer() {
     try {
       const synth = window.speechSynthesis;
       if (!synth) return;
-      const u = new SpeechSynthesisUtterance(mood.kalima.arabic);
+      const u = new SpeechSynthesisUtterance(kalima.arabic);
       u.lang = "ar-SA";
       u.rate = 0.85;
       u.pitch = 1;
@@ -267,6 +271,21 @@ function MoodPlayer() {
         <div className="absolute inset-0 bg-gradient-to-br from-primary/12 via-background to-accent/12" />
         <div className="absolute -top-32 -left-32 h-96 w-96 rounded-full bg-primary/15 blur-3xl kalima-orb-a" />
         <div className="absolute -bottom-40 -right-32 h-[28rem] w-[28rem] rounded-full bg-accent/15 blur-3xl kalima-orb-b" />
+        {/* Floating positive particles */}
+        {Array.from({ length: 14 }).map((_, i) => (
+          <span
+            key={i}
+            className="kalima-particle"
+            style={{
+              left: `${(i * 7.3) % 100}%`,
+              animationDelay: `${(i * 0.7) % 8}s`,
+              animationDuration: `${10 + (i % 5) * 2}s`,
+              fontSize: `${10 + (i % 4) * 4}px`,
+            }}
+          >
+            {["✦", "✧", "❀", "✺", "✿"][i % 5]}
+          </span>
+        ))}
       </div>
 
       <div className="relative max-w-2xl mx-auto px-4 pt-6 pb-28">
@@ -282,19 +301,47 @@ function MoodPlayer() {
           <div className="w-9 shrink-0" />
         </div>
 
+        {/* Kalima picker */}
+        {mood.kalimas.length > 1 && (
+          <div className="mb-4">
+            <p className="text-[10px] uppercase tracking-widest text-primary/70 text-center mb-2">Choose a kalima</p>
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              {mood.kalimas.map((k, i) => (
+                <button
+                  key={i}
+                  onClick={() => {
+                    setKalimaIdx(i);
+                    setCount(0);
+                    setAuto(false);
+                    try { window.speechSynthesis?.cancel(); } catch {}
+                  }}
+                  className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
+                    i === kalimaIdx
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-card/70 backdrop-blur border-border hover:border-primary/60"
+                  }`}
+                  title={k.translation}
+                >
+                  Option {i + 1} · {k.repeat}×
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Why this kalima */}
         <p className="text-xs sm:text-sm text-muted-foreground text-center italic mb-5 leading-relaxed">
-          {mood.kalima.why}
+          {kalima.why}
         </p>
 
         {/* Kalima card */}
-        <div className="rounded-2xl border border-primary/30 bg-card/70 backdrop-blur px-5 py-6 text-center shadow-lg fade-in">
+        <div key={kalimaIdx} className="rounded-2xl border border-primary/30 bg-card/70 backdrop-blur px-5 py-6 text-center shadow-lg fade-in">
           <p className={`arabic text-[clamp(1.65rem,5.5vw,2.5rem)] leading-[1.7] gold-text break-words ${pulse ? "kalima-glow" : ""}`} dir="rtl">
-            {mood.kalima.arabic}
+            {kalima.arabic}
           </p>
-          <p className="mt-3 text-xs sm:text-sm text-foreground/90 italic">{mood.kalima.transliteration}</p>
-          <p className="mt-1 text-xs sm:text-sm text-muted-foreground">“{mood.kalima.translation}”</p>
-          <p className="mt-3 text-[10px] uppercase tracking-widest text-primary/70">{mood.kalima.source}</p>
+          <p className="mt-3 text-xs sm:text-sm text-foreground/90 italic">{kalima.transliteration}</p>
+          <p className="mt-1 text-xs sm:text-sm text-muted-foreground">“{kalima.translation}”</p>
+          <p className="mt-3 text-[10px] uppercase tracking-widest text-primary/70">{kalima.source}</p>
         </div>
 
         {/* Tasbih counter */}
