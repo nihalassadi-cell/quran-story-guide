@@ -145,18 +145,14 @@ function SurahPlayer() {
     setActiveVerse(verseToPlay ?? pages[nextIdx][0].numberInSurah);
   }, [flipDir, pageIdx, pages]);
 
-  // Bookmark check
+  // Bookmark check (local-only, no sign-in)
   useEffect(() => {
-    if (!userId) { setBookmarked(false); return; }
-    supabase
-      .from("bookmarks")
-      .select("id")
-      .eq("user_id", userId)
-      .eq("surah_number", surahNum)
-      .eq("verse_number", activeVerse)
-      .maybeSingle()
-      .then(({ data }) => setBookmarked(!!data));
-  }, [userId, surahNum, activeVerse]);
+    try {
+      const raw = localStorage.getItem("noor:bookmarks");
+      const list: Array<{ surah: number; verse: number }> = raw ? JSON.parse(raw) : [];
+      setBookmarked(list.some((b) => b.surah === surahNum && b.verse === activeVerse));
+    } catch { setBookmarked(false); }
+  }, [surahNum, activeVerse]);
 
   const ayah = useMemo(() => data?.ayahs.find((a) => a.numberInSurah === activeVerse), [data, activeVerse]);
   const translation = useMemo(
