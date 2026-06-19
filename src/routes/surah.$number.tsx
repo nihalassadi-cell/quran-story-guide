@@ -361,14 +361,14 @@ function SurahPlayer() {
         )}
       </div>
 
-      {/* Page-turn controls */}
+      {/* Page-turn controls — RTL Quran: Next page is on the left, Previous on the right */}
       <div className="relative z-20 flex items-center justify-between gap-2 px-3 py-2 bg-background/80 backdrop-blur border-t border-border/50">
         <button
-          onClick={() => goPage(-1)}
-          disabled={pageIdx <= 0}
+          onClick={() => goPage(1)}
+          disabled={pageIdx >= totalPages - 1}
           className="flex items-center gap-1.5 rounded-full bg-card/80 backdrop-blur px-3 py-2 border border-border disabled:opacity-30 text-sm"
         >
-          <ChevLeft className="h-4 w-4" /> Prev page
+          <ChevronLeft className="h-4 w-4" /> Next page
         </button>
 
         <div className="flex items-center gap-3">
@@ -382,13 +382,14 @@ function SurahPlayer() {
         </div>
 
         <button
-          onClick={() => goPage(1)}
-          disabled={pageIdx >= totalPages - 1}
+          onClick={() => goPage(-1)}
+          disabled={pageIdx <= 0}
           className="flex items-center gap-1.5 rounded-full bg-card/80 backdrop-blur px-3 py-2 border border-border disabled:opacity-30 text-sm"
         >
-          Next page <ChevronRight className="h-4 w-4" />
+          Prev page <ChevronRight className="h-4 w-4" />
         </button>
       </div>
+
 
       {/* Secondary controls */}
       <div className="relative z-20 flex items-center gap-2 px-3 pb-3 pt-1 bg-background/80 backdrop-blur">
