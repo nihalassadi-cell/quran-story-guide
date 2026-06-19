@@ -290,11 +290,11 @@ function MoodPlayer() {
         >
           <ChevronLeft className="h-5 w-5" />
         </button>
-        <div className="text-center">
-          <p className="text-xs uppercase tracking-widest text-primary/80">For when you feel</p>
-          <p className="text-lg font-semibold gold-text">{mood.emoji} {mood.label}</p>
+        <div className="text-center min-w-0 flex-1 px-2">
+          <p className="text-[10px] sm:text-xs uppercase tracking-widest text-primary/80 truncate">For when you feel</p>
+          <p className="text-base sm:text-lg font-semibold gold-text truncate">{mood.emoji} {mood.label}</p>
         </div>
-        <div className="w-9" />
+        <div className="w-9 shrink-0" />
       </header>
 
       <div className="relative z-10 flex-1 flex items-center justify-center px-4">
