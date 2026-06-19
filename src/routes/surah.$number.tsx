@@ -56,6 +56,7 @@ function SurahPlayer() {
   const [voiceoverOn, setVoiceoverOn] = useState(true);
   const [ytOpen, setYtOpen] = useState(false);
   const [flipDir, setFlipDir] = useState<"next" | "prev" | null>(null);
+  const [prevPageIdx, setPrevPageIdx] = useState<number | null>(null);
   const [wordIdx, setWordIdx] = useState<number>(-1);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -192,6 +193,7 @@ function SurahPlayer() {
     if (!pageAyahs || !pageAyahs.length) return;
     const last = pageAyahs[pageAyahs.length - 1].numberInSurah;
     if (activeVerse > last && pageIdx < totalPages - 1) {
+      setPrevPageIdx(pageIdx);
       setFlipDir("next");
       setPageIdx((p) => p + 1);
     }
@@ -220,6 +222,7 @@ function SurahPlayer() {
   const goPage = (delta: number) => {
     const next = Math.max(0, Math.min(totalPages - 1, pageIdx + delta));
     if (next === pageIdx) return;
+    setPrevPageIdx(pageIdx);
     setFlipDir(delta > 0 ? "next" : "prev");
     setPageIdx(next);
   };
@@ -248,6 +251,67 @@ function SurahPlayer() {
   };
 
   const currentPageAyahs = pages[pageIdx] ?? [];
+  const prevPageAyahs = prevPageIdx != null ? (pages[prevPageIdx] ?? []) : [];
+
+  const renderPageContent = (idx: number, ayahs: typeof currentPageAyahs) => (
+    <>
+      <div className="px-5 sm:px-8 pt-5 pb-3 text-center">
+        {idx === 0 && surahNum !== 1 && surahNum !== 9 && (
+          <p className="arabic text-xl sm:text-2xl mb-2" style={{ color: "oklch(0.35 0.10 60)" }}>
+            بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
+          </p>
+        )}
+        <div className="flex items-center justify-center gap-3 text-[11px] uppercase tracking-[0.25em] opacity-70">
+          <span className="page-divider h-px flex-1" />
+          <span>Page {idx + 1} of {totalPages}</span>
+          <span className="page-divider h-px flex-1" />
+        </div>
+      </div>
+      <div className="px-5 sm:px-8 pb-24 space-y-5">
+        {ayahs.map((a) => {
+          const tr = data!.translations.find((t) => t.numberInSurah === a.numberInSurah);
+          const isActive = a.numberInSurah === activeVerse && idx === pageIdx;
+          const words = a.text.split(/\s+/).filter(Boolean);
+          return (
+            <div
+              key={a.numberInSurah}
+              onClick={() => { if (idx !== pageIdx) return; setActiveVerse(a.numberInSurah); setPlaying(true); }}
+              className={`group cursor-pointer rounded-lg px-2 py-2 transition-colors ${isActive ? "bg-amber-500/15 ring-1 ring-amber-600/30" : "hover:bg-amber-500/10"}`}
+            >
+              <p className="arabic text-right text-2xl sm:text-3xl leading-[2.4] tracking-wide" dir="rtl">
+                <span className="inline-flex items-center justify-center align-middle h-7 w-7 sm:h-8 sm:w-8 mx-1 rounded-full text-[11px] sm:text-xs font-bold verse-num">
+                  {a.numberInSurah}
+                </span>
+                {words.map((w, i) => {
+                  const highlight = isActive && playing && i === wordIdx;
+                  return (
+                    <span key={i} className={highlight ? "word-active" : "word"}>
+                      {w}{i < words.length - 1 ? " " : ""}
+                    </span>
+                  );
+                })}
+              </p>
+              {tr?.text && (
+                <p className="ayah-translation text-xs sm:text-sm leading-relaxed mt-1.5 italic">
+                  {tr.text}
+                </p>
+              )}
+            </div>
+          );
+        })}
+      </div>
+      {/* Per-page bookmark button — visible inside the page */}
+      <button
+        onClick={(e) => { e.stopPropagation(); if (idx === pageIdx) toggleBookmark(); }}
+        className="absolute bottom-3 right-3 flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium border shadow-sm bg-white/70 backdrop-blur border-amber-700/30 text-amber-900 hover:bg-amber-100 transition-colors"
+        aria-label="Save this page"
+      >
+        {bookmarked && idx === pageIdx
+          ? <><BookmarkCheck className="h-4 w-4 text-amber-700" /> Saved</>
+          : <><Bookmark className="h-4 w-4" /> Save page</>}
+      </button>
+    </>
+  );
 
   return (
     <div className="fixed inset-0 overflow-hidden flex flex-col bg-gradient-to-br from-background via-background to-accent/10">
@@ -274,62 +338,25 @@ function SurahPlayer() {
         )}
 
         {data && (
-          <div
-            key={`${surahNum}-${pageIdx}`}
-            className={`mushaf-page parchment relative w-full max-w-2xl rounded-xl overflow-y-auto ${flipDir === "next" ? "page-turn-next" : flipDir === "prev" ? "page-turn-prev" : "fade-in"}`}
-            onAnimationEnd={() => setFlipDir(null)}
-          >
-            {/* Page header — show Bismillah only on page 1 (and only if not Surah 1 or 9) */}
-            <div className="px-5 sm:px-8 pt-5 pb-3 text-center">
-              {pageIdx === 0 && surahNum !== 1 && surahNum !== 9 && (
-                <p className="arabic text-xl sm:text-2xl mb-2" style={{ color: "oklch(0.35 0.10 60)" }}>
-                  بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
-                </p>
-              )}
-              <div className="flex items-center justify-center gap-3 text-[11px] uppercase tracking-[0.25em] opacity-70">
-                <span className="page-divider h-px flex-1" />
-                <span>Page {pageIdx + 1} of {totalPages}</span>
-                <span className="page-divider h-px flex-1" />
-              </div>
+          <div className="relative w-full max-w-2xl">
+            {/* Incoming page (always rendered) */}
+            <div
+              key={`page-${surahNum}-${pageIdx}`}
+              className={`mushaf-page parchment relative w-full rounded-xl overflow-y-auto h-full ${flipDir ? "page-rise" : "fade-in"}`}
+            >
+              {renderPageContent(pageIdx, currentPageAyahs)}
             </div>
 
-            {/* Verses */}
-            <div className="px-5 sm:px-8 pb-24 space-y-5">
-              {currentPageAyahs.map((a) => {
-                const tr = data.translations.find((t) => t.numberInSurah === a.numberInSurah);
-                const isActive = a.numberInSurah === activeVerse;
-                const words = a.text.split(/\s+/).filter(Boolean);
-                return (
-                  <div
-                    key={a.numberInSurah}
-                    onClick={() => { setActiveVerse(a.numberInSurah); setPlaying(true); }}
-                    className={`group cursor-pointer rounded-lg px-2 py-2 transition-colors ${isActive ? "bg-amber-500/15 ring-1 ring-amber-600/30" : "hover:bg-amber-500/10"}`}
-                  >
-                    <p className="arabic text-right text-2xl sm:text-3xl leading-[2.4] tracking-wide" dir="rtl">
-                      <span className="inline-flex items-center justify-center align-middle h-7 w-7 sm:h-8 sm:w-8 mx-1 rounded-full text-[11px] sm:text-xs font-bold verse-num">
-                        {a.numberInSurah}
-                      </span>
-                      {words.map((w, i) => {
-                        const highlight = isActive && playing && i === wordIdx;
-                        return (
-                          <span
-                            key={i}
-                            className={highlight ? "word-active" : "word"}
-                          >
-                            {w}{i < words.length - 1 ? " " : ""}
-                          </span>
-                        );
-                      })}
-                    </p>
-                    {tr?.text && (
-                      <p className="ayah-translation text-xs sm:text-sm leading-relaxed mt-1.5 italic">
-                        {tr.text}
-                      </p>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+            {/* Outgoing page overlay during flip */}
+            {flipDir && prevPageIdx != null && (
+              <div
+                key={`flip-${prevPageIdx}-${flipDir}`}
+                className={`mushaf-page parchment page-flip-layer rounded-xl overflow-hidden ${flipDir === "next" ? "page-flip-next" : "page-flip-prev"}`}
+                onAnimationEnd={() => { setFlipDir(null); setPrevPageIdx(null); }}
+              >
+                {renderPageContent(prevPageIdx, prevPageAyahs)}
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -341,7 +368,7 @@ function SurahPlayer() {
           disabled={pageIdx <= 0}
           className="flex items-center gap-1.5 rounded-full bg-card/80 backdrop-blur px-3 py-2 border border-border disabled:opacity-30 text-sm"
         >
-          <ChevLeft className="h-4 w-4" /> Prev
+          <ChevLeft className="h-4 w-4" /> Prev page
         </button>
 
         <div className="flex items-center gap-3">
@@ -359,7 +386,7 @@ function SurahPlayer() {
           disabled={pageIdx >= totalPages - 1}
           className="flex items-center gap-1.5 rounded-full bg-card/80 backdrop-blur px-3 py-2 border border-border disabled:opacity-30 text-sm"
         >
-          Next <ChevronRight className="h-4 w-4" />
+          Next page <ChevronRight className="h-4 w-4" />
         </button>
       </div>
 
