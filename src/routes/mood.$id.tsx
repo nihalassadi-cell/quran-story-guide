@@ -140,6 +140,42 @@ function MoodPlayer() {
     } catch { /* ignore */ }
   }, []);
 
+  // Calming ambient background music — auto-starts on first user interaction,
+  // can be toggled, and stops on unmount. Persisted preference.
+  const padRef = useRef<ReturnType<typeof createAmbientPad> | null>(null);
+  const [ambientOn, setAmbientOn] = useState<boolean>(() => {
+    try { return localStorage.getItem("noor:ambient") !== "0"; } catch { return true; }
+  });
+  useEffect(() => {
+    if (!padRef.current) padRef.current = createAmbientPad();
+    return () => { padRef.current?.stop(); };
+  }, []);
+  useEffect(() => {
+    try { localStorage.setItem("noor:ambient", ambientOn ? "1" : "0"); } catch {}
+    if (!padRef.current) return;
+    if (ambientOn) {
+      // Browsers require a user gesture; if blocked, we'll start on next tap.
+      padRef.current.start().catch(() => {});
+    } else {
+      padRef.current.stop();
+    }
+  }, [ambientOn]);
+  // Ensure ambient starts on the user's first interaction (autoplay policy).
+  useEffect(() => {
+    if (!ambientOn) return;
+    const kick = () => {
+      padRef.current?.start().catch(() => {});
+      window.removeEventListener("pointerdown", kick);
+      window.removeEventListener("keydown", kick);
+    };
+    window.addEventListener("pointerdown", kick, { once: true });
+    window.addEventListener("keydown", kick, { once: true });
+    return () => {
+      window.removeEventListener("pointerdown", kick);
+      window.removeEventListener("keydown", kick);
+    };
+  }, [ambientOn]);
+
   // Optional verse player (opens when user expands a verse)
   const [versesOpen, setVersesOpen] = useState(false);
   const [playerIdx, setPlayerIdx] = useState<number | null>(null);
