@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchSurahWithTranslation, ayahAudioUrl, RECITERS, TRANSLATION_LANGUAGES, type LanguageCode } from "@/lib/quran-api";
 import { ChevronLeft, Play, Pause, ChevronRight, ChevronLeft as ChevLeft, Bookmark, BookmarkCheck, Loader2, Volume2, VolumeX, Youtube } from "lucide-react";
@@ -19,7 +19,7 @@ function translationAudioUrl(language: string, surah: number, verse: number): st
   return `https://everyayah.com/data/${folder}/${s}${v}.mp3`;
 }
 
-const VERSES_PER_PAGE = 8;
+const VERSES_PER_PAGE = 3;
 
 export const Route = createFileRoute("/surah/$number")({
   validateSearch: (search: Record<string, unknown>): SurahSearch => {
@@ -114,10 +114,19 @@ function SurahPlayer() {
   useEffect(() => {
     const pageAyahs = pages[pageIdx];
     if (!pageAyahs || pageAyahs.length === 0) return;
+    if (playing) return;
     if (!pageAyahs.find((a) => a.numberInSurah === activeVerse)) {
       setActiveVerse(pageAyahs[0].numberInSurah);
     }
-  }, [pageIdx, pages]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [activeVerse, pageIdx, pages, playing]);
+
+  const turnToPage = useCallback((nextIdx: number, dir: "next" | "prev", verseToPlay?: number) => {
+    if (!pages[nextIdx] || nextIdx === pageIdx || flipDir) return;
+    setPrevPageIdx(pageIdx);
+    setFlipDir(dir);
+    setPageIdx(nextIdx);
+    setActiveVerse(verseToPlay ?? pages[nextIdx][0].numberInSurah);
+  }, [flipDir, pageIdx, pages]);
 
   // Bookmark check
   useEffect(() => {
@@ -158,8 +167,12 @@ function SurahPlayer() {
     const advance = () => {
       if (cancelled || !data) return;
       setWordIdx(-1);
-      if (activeVerse < data.ayahs.length) setActiveVerse((v) => v + 1);
-      else setPlaying(false);
+      if (activeVerse >= data.ayahs.length) { setPlaying(false); return; }
+
+      const nextVerse = activeVerse + 1;
+      const nextPageIdx = pages.findIndex((pageAyahs) => pageAyahs.some((a) => a.numberInSurah === nextVerse));
+      if (nextPageIdx >= 0 && nextPageIdx !== pageIdx) turnToPage(nextPageIdx, "next", nextVerse);
+      else setActiveVerse(nextVerse);
     };
     const playTranslationThenAdvance = () => {
       setWordIdx(-1);
@@ -185,19 +198,7 @@ function SurahPlayer() {
       audio.ontimeupdate = null;
       if (ttsRef.current) ttsRef.current.pause();
     };
-  }, [ayah, reciter, playing, data, activeVerse, translation?.text, voiceoverOn, language, surahNum]);
-
-  // Auto-advance page when active verse moves out of current page during playback
-  useEffect(() => {
-    const pageAyahs = pages[pageIdx];
-    if (!pageAyahs || !pageAyahs.length) return;
-    const last = pageAyahs[pageAyahs.length - 1].numberInSurah;
-    if (activeVerse > last && pageIdx < totalPages - 1) {
-      setPrevPageIdx(pageIdx);
-      setFlipDir("next");
-      setPageIdx((p) => p + 1);
-    }
-  }, [activeVerse, pageIdx, pages, totalPages]);
+  }, [ayah, reciter, playing, data, activeVerse, translation?.text, voiceoverOn, language, surahNum, pages, pageIdx, turnToPage]);
 
   // Persist last page to localStorage so the home tab can offer "Continue reading"
   useEffect(() => {
@@ -222,9 +223,8 @@ function SurahPlayer() {
   const goPage = (delta: number) => {
     const next = Math.max(0, Math.min(totalPages - 1, pageIdx + delta));
     if (next === pageIdx) return;
-    setPrevPageIdx(pageIdx);
-    setFlipDir(delta > 0 ? "next" : "prev");
-    setPageIdx(next);
+    setPlaying(false);
+    turnToPage(next, delta > 0 ? "next" : "prev");
   };
 
   const toggleBookmark = async () => {
@@ -255,7 +255,7 @@ function SurahPlayer() {
 
   const renderPageContent = (idx: number, ayahs: typeof currentPageAyahs) => (
     <>
-      <div className="px-5 sm:px-8 pt-5 pb-3 text-center">
+      <div className="px-4 sm:px-7 pt-4 pb-2 text-center shrink-0">
         {idx === 0 && surahNum !== 1 && surahNum !== 9 && (
           <p className="arabic text-xl sm:text-2xl mb-2" style={{ color: "oklch(0.35 0.10 60)" }}>
             بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
@@ -267,7 +267,7 @@ function SurahPlayer() {
           <span className="page-divider h-px flex-1" />
         </div>
       </div>
-      <div className="px-5 sm:px-8 pb-24 space-y-5">
+      <div className="px-4 sm:px-7 pb-12 flex-1 min-h-0 grid content-start gap-2 sm:gap-3">
         {ayahs.map((a) => {
           const tr = data!.translations.find((t) => t.numberInSurah === a.numberInSurah);
           const isActive = a.numberInSurah === activeVerse && idx === pageIdx;
@@ -276,9 +276,9 @@ function SurahPlayer() {
             <div
               key={a.numberInSurah}
               onClick={() => { if (idx !== pageIdx) return; setActiveVerse(a.numberInSurah); setPlaying(true); }}
-              className={`group cursor-pointer rounded-lg px-2 py-2 transition-colors ${isActive ? "bg-amber-500/15 ring-1 ring-amber-600/30" : "hover:bg-amber-500/10"}`}
+              className={`group cursor-pointer rounded-lg px-2 py-1.5 min-h-0 transition-colors ${isActive ? "bg-amber-500/15 ring-1 ring-amber-600/30" : "hover:bg-amber-500/10"}`}
             >
-              <p className="arabic text-right text-2xl sm:text-3xl leading-[2.4] tracking-wide" dir="rtl">
+              <p className="arabic text-right text-[clamp(1.1rem,2.9vh,1.85rem)] leading-[1.95]" dir="rtl">
                 <span className="inline-flex items-center justify-center align-middle h-7 w-7 sm:h-8 sm:w-8 mx-1 rounded-full text-[11px] sm:text-xs font-bold verse-num">
                   {a.numberInSurah}
                 </span>
@@ -292,7 +292,7 @@ function SurahPlayer() {
                 })}
               </p>
               {tr?.text && (
-                <p className="ayah-translation text-xs sm:text-sm leading-relaxed mt-1.5 italic">
+                <p className="ayah-translation text-[clamp(0.68rem,1.45vh,0.9rem)] leading-snug mt-1 italic line-clamp-2">
                   {tr.text}
                 </p>
               )}
@@ -338,11 +338,11 @@ function SurahPlayer() {
         )}
 
         {data && (
-          <div className="relative w-full max-w-2xl">
+          <div className="relative w-full max-w-2xl h-full">
             {/* Incoming page (always rendered) */}
             <div
               key={`page-${surahNum}-${pageIdx}`}
-              className={`mushaf-page parchment relative w-full rounded-xl overflow-y-auto h-full ${flipDir ? "page-rise" : "fade-in"}`}
+              className={`mushaf-page parchment relative w-full rounded-xl overflow-hidden h-full flex flex-col ${flipDir ? "page-rise" : "fade-in"}`}
             >
               {renderPageContent(pageIdx, currentPageAyahs)}
             </div>
