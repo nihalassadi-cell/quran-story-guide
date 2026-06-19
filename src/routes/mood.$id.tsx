@@ -150,31 +150,40 @@ function MoodPlayer() {
     if (!padRef.current) padRef.current = createAmbientPad();
     return () => { padRef.current?.stop(); };
   }, []);
+  // Persist toggle. Do NOT call start() here — on iOS, AudioContext must be
+  // created inside a real user gesture or it stays suspended forever.
   useEffect(() => {
     try { localStorage.setItem("noor:ambient", ambientOn ? "1" : "0"); } catch {}
     if (!padRef.current) return;
-    if (ambientOn) {
-      // Browsers require a user gesture; if blocked, we'll start on next tap.
-      padRef.current.start().catch(() => {});
-    } else {
-      padRef.current.stop();
-    }
+    if (!ambientOn) padRef.current.stop();
   }, [ambientOn]);
-  // Ensure ambient starts on the user's first interaction (autoplay policy).
+  // Start ambient on the user's first interaction (autoplay policy / iOS).
   useEffect(() => {
     if (!ambientOn) return;
+    let started = false;
     const kick = () => {
-      padRef.current?.start().catch(() => {});
-      window.removeEventListener("pointerdown", kick);
-      window.removeEventListener("keydown", kick);
+      if (started) return;
+      const pad = padRef.current;
+      if (!pad) return;
+      pad.start()
+        .then(() => {
+          if (pad.isPlaying()) {
+            started = true;
+            cleanup();
+          }
+        })
+        .catch(() => {});
     };
-    window.addEventListener("pointerdown", kick, { once: true });
-    window.addEventListener("keydown", kick, { once: true });
-    return () => {
-      window.removeEventListener("pointerdown", kick);
-      window.removeEventListener("keydown", kick);
+    const events: (keyof WindowEventMap)[] = [
+      "pointerdown", "touchend", "click", "keydown",
+    ];
+    const cleanup = () => {
+      events.forEach((e) => window.removeEventListener(e, kick as any));
     };
+    events.forEach((e) => window.addEventListener(e, kick as any, { passive: true }));
+    return cleanup;
   }, [ambientOn]);
+
 
   // Optional verse player (opens when user expands a verse)
   const [versesOpen, setVersesOpen] = useState(false);

@@ -28,10 +28,20 @@ export function createAmbientPad(): AmbientPad {
     if (playing) return;
     const AC = (window.AudioContext || (window as any).webkitAudioContext);
     if (!AC) return;
+    // IMPORTANT: AudioContext must be CREATED inside a user gesture on iOS,
+    // otherwise it is born in "suspended" state and resume() won't unlock it.
     if (!ctx) ctx = new AC();
-    if (ctx.state === "suspended") {
+    if (ctx.state !== "running") {
       try { await ctx.resume(); } catch {}
     }
+    // iOS: if still not running, the call wasn't from a user gesture — bail
+    // and let the next gesture try again with a fresh context.
+    if (ctx.state !== "running") {
+      try { await ctx.close(); } catch {}
+      ctx = null;
+      return;
+    }
+
 
     master = ctx.createGain();
     master.gain.value = 0;
