@@ -362,7 +362,8 @@ function SurahPlayer() {
           : <><Bookmark className="h-4 w-4" /> Save page</>}
       </button>
     </>
-  );
+    );
+  };
 
   return (
     <div className="fixed inset-0 overflow-hidden flex flex-col bg-gradient-to-br from-background via-background to-accent/10">
