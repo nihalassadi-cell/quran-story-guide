@@ -45,14 +45,34 @@ After `npx cap add android`:
    ```bash
    cp google-services.json android/app/google-services.json
    ```
-2. In `android/build.gradle` add to the top-level `dependencies` block:
-   ```gradle
-   classpath 'com.google.gms:google-services:4.4.2'
+
+2. In `android/build.gradle.kts` add the Google services Gradle plugin:
+   ```kotlin
+   plugins {
+       id("com.android.application") version "8.2.2" apply false
+       // ...
+       id("com.google.gms.google-services") version "4.5.0" apply false
+   }
    ```
-3. At the bottom of `android/app/build.gradle` add:
-   ```gradle
-   apply plugin: 'com.google.gms.google-services'
+
+3. In `android/app/build.gradle.kts` apply the plugin and add Firebase Analytics:
+   ```kotlin
+   plugins {
+       id("com.android.application")
+       id("com.google.gms.google-services")
+       // ...
+   }
+
+   dependencies {
+       // Import the Firebase BoM
+       implementation(platform("com.google.firebase:firebase-bom:34.15.0"))
+
+       // Firebase Analytics
+       implementation("com.google.firebase:firebase-analytics")
+       // ...
+   }
    ```
+
 4. `npx cap sync android` and rebuild. Events (`mood_selected`,
    `story_opened`, `bookmark_added`, `bookmark_removed`, `screen_view`)
    will start showing up in Firebase Analytics → DebugView within minutes
@@ -62,6 +82,7 @@ To enable DebugView on a connected device:
 ```bash
 adb shell setprop debug.firebase.analytics.app app.lovable.quranstoryguide
 ```
+
 
 
 ## 4. Open in native IDEs and build
