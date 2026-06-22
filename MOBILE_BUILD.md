@@ -23,7 +23,8 @@ npm install
 npm i @capacitor/core @capacitor/cli @capacitor/ios @capacitor/android
 ```
 
-(`capacitor.config.ts` is already in this repo.)
+(`capacitor.config.ts` is already in this repo. `@capacitor/core` and
+`@capacitor-firebase/analytics` are already in `package.json`.)
 
 ## 3. Add native platforms
 
@@ -32,6 +33,36 @@ npx cap add ios
 npx cap add android
 npx cap sync
 ```
+
+## 3a. Wire Firebase Analytics (Android only)
+
+The repo includes `google-services.json` at the project root for the
+Firebase project **noor-2ea16** (Android package `app.lovable.quranstoryguide`).
+
+After `npx cap add android`:
+
+1. Copy the file into the Android app module:
+   ```bash
+   cp google-services.json android/app/google-services.json
+   ```
+2. In `android/build.gradle` add to the top-level `dependencies` block:
+   ```gradle
+   classpath 'com.google.gms:google-services:4.4.2'
+   ```
+3. At the bottom of `android/app/build.gradle` add:
+   ```gradle
+   apply plugin: 'com.google.gms.google-services'
+   ```
+4. `npx cap sync android` and rebuild. Events (`mood_selected`,
+   `story_opened`, `bookmark_added`, `bookmark_removed`, `screen_view`)
+   will start showing up in Firebase Analytics → DebugView within minutes
+   on a debug build, and in the standard reports within ~24h.
+
+To enable DebugView on a connected device:
+```bash
+adb shell setprop debug.firebase.analytics.app app.lovable.quranstoryguide
+```
+
 
 ## 4. Open in native IDEs and build
 

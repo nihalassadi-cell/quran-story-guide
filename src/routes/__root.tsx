@@ -1,6 +1,8 @@
-import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
+import { Outlet, Link, createRootRoute, HeadContent, Scripts, useRouter } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { Onboarding } from "@/components/Onboarding";
 import { ThemeSwitch } from "@/components/ThemeSwitch";
+import { setScreen } from "@/lib/analytics";
 import { Toaster } from "sonner";
 
 
@@ -82,6 +84,16 @@ function RootShell({ children }: { children: React.ReactNode }) {
 }
 
 function RootComponent() {
+  const router = useRouter();
+  useEffect(() => {
+    // Track initial screen
+    setScreen(router.state.location.pathname);
+    const unsub = router.subscribe("onResolved", ({ toLocation }) => {
+      setScreen(toLocation.pathname);
+    });
+    return () => unsub();
+  }, [router]);
+
   return (
     <>
       <ThemeSwitch />
@@ -89,7 +101,5 @@ function RootComponent() {
       <Onboarding />
       <Toaster position="top-center" richColors theme="dark" />
     </>
-
-
   );
 }
