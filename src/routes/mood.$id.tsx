@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { fetchSurahWithTranslation, ayahAudioUrl, RECITERS, type LanguageCode } from "@/lib/quran-api";
 import { getMood } from "@/lib/moods";
 import { createAmbientPad } from "@/lib/ambient-pad";
+import { track } from "@/lib/analytics";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/mood/$id")({
@@ -26,6 +27,11 @@ function MoodPlayer() {
   const { id } = Route.useParams();
   const mood = getMood(id);
   if (!mood) throw notFound();
+
+  // Track mood selection once per mount
+  useEffect(() => {
+    track.moodSelected(mood.id, mood.label);
+  }, [mood.id, mood.label]);
 
   // Selected kalima (user can switch between options)
   const [kalimaIdx, setKalimaIdx] = useState(0);
