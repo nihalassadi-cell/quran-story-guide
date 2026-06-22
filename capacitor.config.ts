@@ -1,20 +1,25 @@
 import type { CapacitorConfig } from "@capacitor/cli";
 
-// The native shell loads the bundled web build from `dist/` so the app
-// works offline and is independent of any remote host (including Lovable).
+// TanStack Start is an SSR framework and does not emit a static `dist/index.html`
+// suitable for Capacitor's bundled web assets. Instead, the native shell loads
+// the published Lovable site directly via `server.url`. This keeps the app in
+// sync with your latest publish — no rebuild/resync needed for content updates.
 //
 // Workflow for native builds:
-//   1. npm run build           → produces dist/
-//   2. npx cap sync            → copies dist/ into the native projects
-//   3. npx cap open ios|android
+//   1. (one-time) mkdir -p dist && touch dist/index.html  // satisfy `cap sync`
+//   2. npx cap sync
+//   3. npx cap open android
 //
-// To temporarily point the shell at a live URL again (e.g. for hot-reload
-// during development), add a `server: { url: "...", cleartext: false }`
-// block back in. Do not ship that to the Play Store.
+// To ship offline, you'd need a static export of the app — not supported by
+// TanStack Start out of the box.
 const config: CapacitorConfig = {
   appId: "app.lovable.quranstoryguide",
   appName: "Noor",
   webDir: "dist",
+  server: {
+    url: "https://quran-story-guide.lovable.app",
+    cleartext: false,
+  },
   ios: {
     contentInset: "always",
   },
