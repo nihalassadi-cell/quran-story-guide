@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { fetchSurahWithTranslation, ayahAudioUrl, RECITERS, TRANSLATION_LANGUAGES, type LanguageCode } from "@/lib/quran-api";
 import { ChevronLeft, Play, Pause, ChevronRight, Bookmark, BookmarkCheck, Loader2, Volume2, VolumeX, Youtube } from "lucide-react";
+import { track } from "@/lib/analytics";
 import { toast } from "sonner";
 
 type SurahSearch = { verse?: number; page?: number };
@@ -95,6 +96,7 @@ function SurahPlayer() {
     fetchSurahWithTranslation(surahNum, language)
       .then((d) => {
         setData(d);
+        track.storyOpened(surahNum, d?.name_en);
         try {
           if (localStorage.getItem("noor:autoplay") === "1") {
             localStorage.removeItem("noor:autoplay");
@@ -266,6 +268,8 @@ function SurahPlayer() {
           ];
       localStorage.setItem("noor:bookmarks", JSON.stringify(next));
       setBookmarked(!exists);
+      if (exists) track.bookmarkRemoved(surahNum, activeVerse);
+      else track.bookmarkAdded(surahNum, activeVerse);
       toast.success(exists ? "Page bookmark removed" : "Page saved");
       // Saving a page also updates "Continue reading" anchor
       if (!exists && data) {
