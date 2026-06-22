@@ -7,12 +7,14 @@ import { Capacitor } from "@capacitor/core";
 
 type Params = Record<string, string | number | boolean | undefined>;
 
-let nativeReady: Promise<typeof import("@capacitor-firebase/analytics").FirebaseAnalytics> | null = null;
+let nativeReady: Promise<any> | null = null;
 
 function getNative() {
   if (!Capacitor.isNativePlatform() || Capacitor.getPlatform() !== "android") return null;
   if (!nativeReady) {
-    nativeReady = import("@capacitor-firebase/analytics").then((m) => m.FirebaseAnalytics);
+    // Hide from Vite's bundler — this package only loads on the native shell.
+    const mod = "@capacitor-firebase/analytics";
+    nativeReady = import(/* @vite-ignore */ mod).then((m: any) => m.FirebaseAnalytics);
   }
   return nativeReady;
 }
