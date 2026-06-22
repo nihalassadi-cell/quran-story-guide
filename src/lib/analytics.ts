@@ -1,49 +1,35 @@
 // Thin wrapper around Firebase Analytics for the Capacitor Android shell.
 // On web (and iOS, until we add it) this is a no-op so the same call sites
-// work everywhere. Native Android calls go through @capacitor-firebase/analytics
-// which reads google-services.json at native build time.
+// work everywhere. Native Android calls go through the registered Capacitor
+// plugin, which reads google-services.json at native build time.
 
-import { Capacitor } from "@capacitor/core";
+import { Capacitor, registerPlugin } from "@capacitor/core";
 
 type Params = Record<string, string | number | boolean | undefined>;
 
-let nativeReady: Promise<any> | null = null;
-
-function getNative() {
-  if (!Capacitor.isNativePlatform() || Capacitor.getPlatform() !== "android") return null;
-  if (!nativeReady) {
-    // Hide from Vite's bundler — this package only loads on the native shell.
-    const mod = "@capacitor-firebase/analytics";
-    nativeReady = import(/* @vite-ignore */ mod).then((m: any) => m.FirebaseAnalytics);
-  }
-  return nativeReady;
-}
+// Register the native plugin proxy without importing the optional Firebase web SDK.
+const FirebaseAnalytics = registerPlugin("FirebaseAnalytics") as any;
 
 export async function logEvent(name: string, params: Params = {}) {
-  const native = getNative();
-  if (!native) {
+  if (!Capacitor.isNativePlatform() || Capacitor.getPlatform() !== "android") {
     if (typeof window !== "undefined" && (window as any).__NOOR_DEBUG_ANALYTICS) {
       console.log("[analytics]", name, params);
     }
     return;
   }
   try {
-    const FA = await native;
-    // Strip undefined values
     const clean: Record<string, string | number | boolean> = {};
     for (const [k, v] of Object.entries(params)) if (v !== undefined) clean[k] = v;
-    await FA.logEvent({ name, params: clean });
+    await FirebaseAnalytics.logEvent({ name, params: clean });
   } catch (e) {
     console.warn("[analytics] logEvent failed", name, e);
   }
 }
 
 export async function setScreen(screenName: string, screenClass?: string) {
-  const native = getNative();
-  if (!native) return;
+  if (!Capacitor.isNativePlatform() || Capacitor.getPlatform() !== "android") return;
   try {
-    const FA = await native;
-    await FA.setCurrentScreen({ screenName, screenClassOverride: screenClass });
+    await FirebaseAnalytics.setCurrentScreen({ screenName, screenClassOverride: screenClass });
   } catch (e) {
     console.warn("[analytics] setScreen failed", screenName, e);
   }
@@ -60,3 +46,4 @@ export const track = {
   bookmarkRemoved: (surah: number, verse: number) =>
     logEvent("bookmark_removed", { surah, verse }),
 };
+
