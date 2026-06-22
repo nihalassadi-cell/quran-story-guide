@@ -14,7 +14,7 @@ import type { CapacitorConfig } from "@capacitor/cli";
 // TanStack Start out of the box.
 const config: CapacitorConfig = {
   appId: "app.lovable.quranstoryguide",
-  appName: "Noor",
+  appName: "Noor-The Quran",
   webDir: "dist",
   server: {
     url: "https://quran-story-guide.lovable.app",
