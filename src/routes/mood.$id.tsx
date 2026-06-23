@@ -177,8 +177,8 @@ function MoodPlayer() {
     padRef.current?.start().catch(() => {});
   };
 
-  // Share current mood + kalima to WhatsApp. Navigate the top page rather than
-  // opening a popup/new tab so desktop browsers and embedded previews do not block it.
+  // Share current mood + kalima to WhatsApp. On desktop, go directly to
+  // WhatsApp Web so the browser does not block WhatsApp's native-app handoff.
   const whatsAppShareUrl = useMemo(() => {
     const url = typeof window !== "undefined"
       ? `${window.location.origin}/mood/${mood.id}`
@@ -194,7 +194,9 @@ function MoodPlayer() {
       url,
     ].join("\n");
 
-    return `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
+    const isMobile = typeof navigator !== "undefined" && /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+    const baseUrl = isMobile ? "https://api.whatsapp.com/send" : "https://web.whatsapp.com/send";
+    return `${baseUrl}?text=${encodeURIComponent(text)}`;
   }, [kalima.arabic, kalima.repeat, kalima.source, kalima.translation, kalima.transliteration, mood.id, mood.label]);
 
 
@@ -390,7 +392,8 @@ function MoodPlayer() {
           <div className="flex items-center gap-2 shrink-0">
             <a
               href={whatsAppShareUrl}
-              target="_top"
+              target="_blank"
+              rel="noopener noreferrer"
               onClick={() => { try { (track as any).shareMood?.(mood.id, "whatsapp"); } catch {} }}
               title="Share on WhatsApp"
               aria-label="Share on WhatsApp"
