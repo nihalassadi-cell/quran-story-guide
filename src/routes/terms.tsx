@@ -5,9 +5,9 @@ export const Route = createFileRoute("/terms")({
   head: () => ({
     meta: [
       { title: "Terms and Conditions — Noor" },
-      { name: "description", content: "Terms and conditions for using Noor — The Quran." },
+      { name: "description", content: "Terms and Conditions for Noor — The Quran." },
       { property: "og:title", content: "Terms and Conditions — Noor" },
-      { property: "og:description", content: "Terms and conditions for using Noor — The Quran." },
+      { property: "og:description", content: "Terms and Conditions for Noor — The Quran." },
       { property: "og:type", content: "website" },
       { property: "og:url", content: "https://quran-story-guide.lovable.app/terms" },
     ],
@@ -27,72 +27,118 @@ function TermsPage() {
             ← Back to Settings
           </Link>
         </div>
-        <h1 className="text-3xl font-bold gold-text mb-6">Terms and Conditions</h1>
+
+        <h1 className="text-3xl font-bold gold-text mb-2">Terms and Conditions</h1>
         <p className="text-sm text-muted-foreground mb-8">
           Last updated: {new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}
         </p>
 
-        <div className="prose prose-invert max-w-none space-y-8 text-muted-foreground">
+        <div className="space-y-8 text-muted-foreground">
           <section>
-            <h2 className="text-xl font-semibold text-foreground mb-2">1. Acceptance of Terms</h2>
             <p>
-              By accessing or using Noor — The Quran ("the App"), you agree to be bound by these Terms and Conditions. If you do not agree to these terms, please do not use the App.
+              Welcome to Noor-The Quran, hereafter referred to as "Noor". By downloading, accessing, or using the Noor mobile application ("App"), you agree to these Terms and Conditions. If you do not agree with these terms, please do not use the App.
             </p>
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-foreground mb-2">2. Use of the App</h2>
+            <h2 className="text-xl font-semibold text-foreground mb-2">1. About Noor</h2>
             <p>
-              The App is provided for personal, non-commercial use. You agree to use the App only for lawful purposes and in a way that does not infringe the rights of others or restrict or inhibit anyone else's use of the App.
+              Noor is an educational and informational application designed to help users explore and learn about stories from the Quran. The content provided is intended for educational, spiritual, and personal enrichment purposes only.
             </p>
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-foreground mb-2">3. Content and Intellectual Property</h2>
+            <h2 className="text-xl font-semibold text-foreground mb-2">2. Acceptance of Terms</h2>
             <p>
-              The App includes Quranic text, translations, audio recitations, and other materials that may be sourced from third-party providers. Where applicable, original content and features of the App are the property of the App owner. You may not reproduce, distribute, modify, or create derivative works from the App's original materials without prior written permission.
+              By using Noor, you confirm that you are at least 13 years of age or have the permission of a parent or guardian to use the App.
             </p>
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-foreground mb-2">4. Third-Party Services</h2>
+            <h2 className="text-xl font-semibold text-foreground mb-2">3. Use of the App</h2>
+            <p className="mb-2">
+              You agree to use Noor only for lawful purposes and in a manner that does not harm, disrupt, or interfere with the App or other users.
+            </p>
+            <p className="mb-2">You must not:</p>
+            <ul className="list-disc pl-5 space-y-1">
+              <li>Attempt to gain unauthorized access to the App or its systems.</li>
+              <li>Reverse engineer, copy, modify, or distribute the App without permission.</li>
+              <li>Use the App for any unlawful or harmful activity.</li>
+            </ul>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-semibold text-foreground mb-2">4. Content Disclaimer</h2>
+            <p className="mb-2">
+              Noor aims to provide accurate and respectful Islamic educational content. However:
+            </p>
+            <ul className="list-disc pl-5 space-y-1">
+              <li>The content is provided for informational and educational purposes only.</li>
+              <li>Interpretations, explanations, and summaries may vary among scholars and traditions.</li>
+              <li>Users are encouraged to consult qualified scholars and trusted Islamic sources for religious guidance and rulings.</li>
+              <li>Noor does not provide religious verdicts (fatwas), legal advice, or professional counseling.</li>
+            </ul>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-semibold text-foreground mb-2">5. Intellectual Property</h2>
             <p>
-              The App may rely on third-party services and content providers. We are not responsible for the availability, accuracy, or practices of these third parties. Your use of third-party materials is subject to their respective terms and policies.
+              All content, design elements, logos, graphics, text, and software within Noor are owned by or licensed to Noor and are protected by applicable intellectual property laws.
+            </p>
+            <p>
+              You may not reproduce, distribute, or commercially exploit any content from the App without prior written permission.
             </p>
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-foreground mb-2">5. Disclaimer of Warranties</h2>
+            <h2 className="text-xl font-semibold text-foreground mb-2">6. User-Generated Sharing</h2>
             <p>
-              The App is provided "as is" and "as available" without any warranties of any kind, either express or implied. We do not guarantee that the App will be uninterrupted, secure, or error-free.
+              Where sharing features are available, users are responsible for the content they choose to share. Noor is not responsible for how shared content is used or interpreted by third parties.
             </p>
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-foreground mb-2">6. Limitation of Liability</h2>
+            <h2 className="text-xl font-semibold text-foreground mb-2">7. Third-Party Services</h2>
             <p>
-              To the fullest extent permitted by law, the App owner shall not be liable for any indirect, incidental, special, consequential, or punitive damages arising out of or related to your use of the App.
+              The App may use third-party services such as analytics providers to improve performance and user experience. These services may collect limited technical information in accordance with their own privacy policies.
             </p>
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-foreground mb-2">7. Changes to These Terms</h2>
+            <h2 className="text-xl font-semibold text-foreground mb-2">8. Availability</h2>
             <p>
-              We may update these Terms and Conditions from time to time. Continued use of the App after any changes means you accept the revised terms.
+              We strive to keep Noor available and functioning properly, but we do not guarantee uninterrupted access. Features may be modified, suspended, or discontinued at any time without prior notice.
             </p>
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-foreground mb-2">8. Contact</h2>
+            <h2 className="text-xl font-semibold text-foreground mb-2">9. Limitation of Liability</h2>
             <p>
-              If you have any questions about these Terms and Conditions, please contact us through the App or at the support email provided in the App store listing.
+              To the fullest extent permitted by law, Noor and its creators shall not be liable for any direct, indirect, incidental, or consequential damages arising from the use of, or inability to use, the App.
+            </p>
+            <p>Use of the App is at your own risk.</p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-semibold text-foreground mb-2">10. Changes to These Terms</h2>
+            <p>
+              We may update these Terms and Conditions from time to time. Updated versions will be posted within the App or on our website. Continued use of the App after changes are published constitutes acceptance of the revised terms.
             </p>
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-foreground mb-2">9. Legal Notice</h2>
+            <h2 className="text-xl font-semibold text-foreground mb-2">11. Contact Us</h2>
             <p>
-              This is a generic terms and conditions draft provided as a starting point. It does not constitute legal advice. You should review these terms with a qualified legal professional before publishing them as binding terms for your app.
+              If you have any questions regarding these Terms and Conditions, please contact us at{" "}
+              <a href="mailto:nihal.assadi@gmail.com" className="text-primary hover:underline">
+                nihal.assadi@gmail.com
+              </a>.
+            </p>
+          </section>
+
+          <section>
+            <p>
+              By using Noor, you acknowledge that you have read, understood, and agreed to these Terms and Conditions.
             </p>
           </section>
         </div>
