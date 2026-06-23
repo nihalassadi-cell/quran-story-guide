@@ -169,8 +169,9 @@ function MoodPlayer() {
     padRef.current?.start().catch(() => {});
   };
 
-  // Share current mood + kalima to WhatsApp
-  const shareWhatsApp = async () => {
+  // Share current mood + kalima to WhatsApp. Keep this as a normal link so
+  // browsers do not treat it as a blocked popup.
+  const whatsAppShareUrl = useMemo(() => {
     const url = typeof window !== "undefined"
       ? `${window.location.origin}/mood/${mood.id}`
       : `https://quran-story-guide.lovable.app/mood/${mood.id}`;
@@ -185,33 +186,8 @@ function MoodPlayer() {
       url,
     ].join("\n");
 
-    try { (track as any).shareMood?.(mood.id, "whatsapp"); } catch {}
-
-    // 1) Native share sheet (mobile) — lets user pick WhatsApp
-    try {
-      if (typeof navigator !== "undefined" && (navigator as any).share) {
-        await (navigator as any).share({ title: `Noor · ${mood.label}`, text });
-        return;
-      }
-    } catch (e) {
-      // user cancelled or share failed — fall through
-    }
-
-    // 2) wa.me deep link in a new tab
-    try {
-      const waUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
-      const win = window.open(waUrl, "_blank", "noopener,noreferrer");
-      if (win) return;
-    } catch {}
-
-    // 3) Clipboard fallback (e.g. blocked popups in preview iframes)
-    try {
-      await navigator.clipboard.writeText(text);
-      toast.success("Copied — paste into WhatsApp 💬");
-    } catch {
-      toast.error("Couldn't open WhatsApp");
-    }
-  };
+    return `https://wa.me/?text=${encodeURIComponent(text)}`;
+  }, [kalima.arabic, kalima.repeat, kalima.source, kalima.translation, kalima.transliteration, mood.emoji, mood.id, mood.label]);
 
 
 
@@ -404,14 +380,17 @@ function MoodPlayer() {
             <p className="text-base sm:text-lg font-semibold gold-text truncate">{mood.emoji} {mood.label}</p>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            <button
-              onClick={shareWhatsApp}
+            <a
+              href={whatsAppShareUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => { try { (track as any).shareMood?.(mood.id, "whatsapp"); } catch {} }}
               title="Share on WhatsApp"
               aria-label="Share on WhatsApp"
               className="rounded-full bg-card/60 backdrop-blur p-2 border border-border hover:border-primary/60"
             >
               <Share2 className="h-5 w-5 text-primary" />
-            </button>
+            </a>
             <button
               onClick={() => setAmbientOn((v) => !v)}
               title={ambientOn ? "Mute ambient music" : "Play ambient music"}
