@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { TRANSLATION_LANGUAGES, RECITERS, type LanguageCode } from "@/lib/quran-api";
@@ -67,6 +67,12 @@ function SettingsPage() {
         </Field>
 
         <button onClick={save} className="w-full rounded-md bg-primary text-primary-foreground py-2 font-medium transition-transform duration-150 active:scale-[0.97] hover:bg-primary/90">Save preferences</button>
+
+        <div className="pt-4 border-t border-border text-center">
+          <Link to="/terms" className="text-sm text-muted-foreground hover:text-foreground transition-colors underline underline-offset-4">
+            Terms and Conditions
+          </Link>
+        </div>
       </div>
     </AppShell>
   );
