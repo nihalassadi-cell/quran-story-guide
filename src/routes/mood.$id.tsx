@@ -177,8 +177,8 @@ function MoodPlayer() {
     padRef.current?.start().catch(() => {});
   };
 
-  // Share current mood + kalima to WhatsApp. Keep this as a normal link so
-  // browsers do not treat it as a blocked popup.
+  // Share current mood + kalima to WhatsApp. Navigate the top page rather than
+  // opening a popup/new tab so desktop browsers and embedded previews do not block it.
   const whatsAppShareUrl = useMemo(() => {
     const url = typeof window !== "undefined"
       ? `${window.location.origin}/mood/${mood.id}`
@@ -194,7 +194,7 @@ function MoodPlayer() {
       url,
     ].join("\n");
 
-    return `https://wa.me/?text=${encodeURIComponent(text)}`;
+    return `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
   }, [kalima.arabic, kalima.repeat, kalima.source, kalima.translation, kalima.transliteration, mood.id, mood.label]);
 
 
@@ -390,8 +390,7 @@ function MoodPlayer() {
           <div className="flex items-center gap-2 shrink-0">
             <a
               href={whatsAppShareUrl}
-              target="_blank"
-              rel="noopener noreferrer"
+              target="_top"
               onClick={() => { try { (track as any).shareMood?.(mood.id, "whatsapp"); } catch {} }}
               title="Share on WhatsApp"
               aria-label="Share on WhatsApp"
