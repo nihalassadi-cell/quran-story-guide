@@ -1,6 +1,6 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ChevronLeft, Play, Pause, RotateCcw, BookOpen, Sparkles, ChevronDown, ChevronUp, Loader2, SkipBack, SkipForward, Music, VolumeX, Share2 } from "lucide-react";
+import { ChevronLeft, Play, Pause, RotateCcw, BookOpen, Sparkles, ChevronDown, ChevronUp, Loader2, SkipBack, SkipForward, Music, VolumeX } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchSurahWithTranslation, ayahAudioUrl, RECITERS, type LanguageCode } from "@/lib/quran-api";
 import { getMood } from "@/lib/moods";
@@ -11,19 +11,11 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/mood/$id")({
   head: ({ params }) => {
     const m = getMood(params.id);
-    const label = m?.label ?? "Mood";
-    const blurb = m?.blurb ?? "A short remembrance for how you're feeling.";
-    const url = `https://quran-story-guide.lovable.app/mood/${params.id}`;
     return {
       meta: [
-        { title: `${label} — Noor` },
-        { name: "description", content: blurb },
-        { property: "og:title", content: `${label} — Noor` },
-        { property: "og:description", content: blurb },
-        { property: "og:type", content: "website" },
-        { property: "og:url", content: url },
+        { title: `${m?.label ?? "Mood"} — Noor` },
+        { name: "description", content: m?.blurb ?? "A short remembrance for how you're feeling." },
       ],
-      links: [{ rel: "canonical", href: url }],
     };
   },
   component: MoodPlayer,
@@ -175,33 +167,6 @@ function MoodPlayer() {
   const startAmbient = () => {
     if (!ambientOn) return;
     padRef.current?.start().catch(() => {});
-  };
-
-  // Share current mood + kalima to WhatsApp. Open from the click gesture only;
-  // do not fall back to current-frame navigation because previews are iframes.
-  const whatsAppShareUrl = useMemo(() => {
-    const url = `https://quran-story-guide.lovable.app/mood/${mood.id}`;
-    const text = [
-      `${mood.label} — a remembrance from Noor`,
-      ``,
-      kalima.arabic,
-      kalima.transliteration,
-      `"${kalima.translation}"`,
-      `— ${kalima.source} · ${kalima.repeat}×`,
-      ``,
-      url,
-    ].join("\n");
-
-    return `https://api.whatsapp.com/send/?text=${encodeURIComponent(text)}&type=custom_url&app_absent=0`;
-  }, [kalima.arabic, kalima.repeat, kalima.source, kalima.translation, kalima.transliteration, mood.id, mood.label]);
-
-  const openWhatsAppShare = () => {
-    try { (track as any).shareMood?.(mood.id, "whatsapp"); } catch {}
-    const opened = window.open(whatsAppShareUrl, "_blank");
-    if (!opened) {
-      navigator.clipboard?.writeText(whatsAppShareUrl).catch(() => {});
-      toast.info("WhatsApp was blocked by the preview. The share link was copied.");
-    }
   };
 
 
@@ -394,24 +359,13 @@ function MoodPlayer() {
             <p className="text-[10px] sm:text-[11px] uppercase tracking-widest text-primary/80 truncate">For when you feel</p>
             <p className="text-base sm:text-lg font-semibold gold-text truncate">{mood.emoji} {mood.label}</p>
           </div>
-          <div className="flex items-center gap-2 shrink-0">
-            <button
-              type="button"
-              onClick={openWhatsAppShare}
-              title="Share on WhatsApp"
-              aria-label="Share on WhatsApp"
-              className="rounded-full bg-card/60 backdrop-blur p-2 border border-border hover:border-primary/60"
-            >
-              <Share2 className="h-5 w-5 text-primary" />
-            </button>
-            <button
-              onClick={() => setAmbientOn((v) => !v)}
-              title={ambientOn ? "Mute ambient music" : "Play ambient music"}
-              className="rounded-full bg-card/60 backdrop-blur p-2 border border-border hover:border-primary/60"
-            >
-              {ambientOn ? <Music className="h-5 w-5 text-primary" /> : <VolumeX className="h-5 w-5 text-muted-foreground" />}
-            </button>
-          </div>
+          <button
+            onClick={() => setAmbientOn((v) => !v)}
+            title={ambientOn ? "Mute ambient music" : "Play ambient music"}
+            className="rounded-full bg-card/60 backdrop-blur p-2 border border-border hover:border-primary/60 shrink-0"
+          >
+            {ambientOn ? <Music className="h-5 w-5 text-primary" /> : <VolumeX className="h-5 w-5 text-muted-foreground" />}
+          </button>
         </div>
 
         {/* Kalima picker */}
