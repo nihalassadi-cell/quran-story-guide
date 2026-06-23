@@ -1,11 +1,12 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ChevronLeft, Play, Pause, RotateCcw, BookOpen, Sparkles, ChevronDown, ChevronUp, Loader2, SkipBack, SkipForward, Music, VolumeX } from "lucide-react";
+import { ChevronLeft, Play, Pause, RotateCcw, BookOpen, Sparkles, ChevronDown, ChevronUp, Loader2, SkipBack, SkipForward, Music, VolumeX, Share2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchSurahWithTranslation, ayahAudioUrl, RECITERS, type LanguageCode } from "@/lib/quran-api";
 import { getMood } from "@/lib/moods";
 import { createAmbientPad } from "@/lib/ambient-pad";
 import { track } from "@/lib/analytics";
+import { shareContent } from "@/lib/share";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/mood/$id")({
@@ -359,13 +360,29 @@ function MoodPlayer() {
             <p className="text-[10px] sm:text-[11px] uppercase tracking-widest text-primary/80 truncate">For when you feel</p>
             <p className="text-base sm:text-lg font-semibold gold-text truncate">{mood.emoji} {mood.label}</p>
           </div>
-          <button
-            onClick={() => setAmbientOn((v) => !v)}
-            title={ambientOn ? "Mute ambient music" : "Play ambient music"}
-            className="rounded-full bg-card/60 backdrop-blur p-2 border border-border hover:border-primary/60 shrink-0"
-          >
-            {ambientOn ? <Music className="h-5 w-5 text-primary" /> : <VolumeX className="h-5 w-5 text-muted-foreground" />}
-          </button>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={() => {
+                const shareUrl = typeof window !== "undefined" ? window.location.href : undefined;
+                shareContent({
+                  title: `Noor — ${mood.label}`,
+                  text: `${mood.emoji} ${mood.label}\n\n${kalima.arabic}\n${kalima.transliteration}\n"${kalima.translation}"\n\nRepeat ${kalima.repeat}× — from Noor`,
+                  url: shareUrl,
+                });
+              }}
+              title="Share this kalima"
+              className="rounded-full bg-card/60 backdrop-blur p-2 border border-border hover:border-primary/60"
+            >
+              <Share2 className="h-5 w-5 text-primary" />
+            </button>
+            <button
+              onClick={() => setAmbientOn((v) => !v)}
+              title={ambientOn ? "Mute ambient music" : "Play ambient music"}
+              className="rounded-full bg-card/60 backdrop-blur p-2 border border-border hover:border-primary/60"
+            >
+              {ambientOn ? <Music className="h-5 w-5 text-primary" /> : <VolumeX className="h-5 w-5 text-muted-foreground" />}
+            </button>
+          </div>
         </div>
 
         {/* Kalima picker */}
