@@ -11,11 +11,19 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/mood/$id")({
   head: ({ params }) => {
     const m = getMood(params.id);
+    const label = m?.label ?? "Mood";
+    const blurb = m?.blurb ?? "A short remembrance for how you're feeling.";
+    const url = `https://quran-story-guide.lovable.app/mood/${params.id}`;
     return {
       meta: [
-        { title: `${m?.label ?? "Mood"} — Noor` },
-        { name: "description", content: m?.blurb ?? "A short remembrance for how you're feeling." },
+        { title: `${label} — Noor` },
+        { name: "description", content: blurb },
+        { property: "og:title", content: `${label} — Noor` },
+        { property: "og:description", content: blurb },
+        { property: "og:type", content: "website" },
+        { property: "og:url", content: url },
       ],
+      links: [{ rel: "canonical", href: url }],
     };
   },
   component: MoodPlayer,
@@ -176,7 +184,7 @@ function MoodPlayer() {
       ? `${window.location.origin}/mood/${mood.id}`
       : `https://quran-story-guide.lovable.app/mood/${mood.id}`;
     const text = [
-      `${mood.emoji} ${mood.label} — a remembrance from Noor`,
+      `${mood.label} — a remembrance from Noor`,
       ``,
       kalima.arabic,
       kalima.transliteration,
@@ -187,7 +195,7 @@ function MoodPlayer() {
     ].join("\n");
 
     return `https://wa.me/?text=${encodeURIComponent(text)}`;
-  }, [kalima.arabic, kalima.repeat, kalima.source, kalima.translation, kalima.transliteration, mood.emoji, mood.id, mood.label]);
+  }, [kalima.arabic, kalima.repeat, kalima.source, kalima.translation, kalima.transliteration, mood.id, mood.label]);
 
 
 
