@@ -169,6 +169,32 @@ function MoodPlayer() {
     padRef.current?.start().catch(() => {});
   };
 
+  // Share current mood + kalima to WhatsApp
+  const shareWhatsApp = () => {
+    try {
+      const url = typeof window !== "undefined"
+        ? `${window.location.origin}/mood/${mood.id}`
+        : `https://quran-story-guide.lovable.app/mood/${mood.id}`;
+      const lines = [
+        `${mood.emoji} ${mood.label} — a remembrance from Noor`,
+        ``,
+        kalima.arabic,
+        kalima.transliteration,
+        `"${kalima.translation}"`,
+        `— ${kalima.source} · ${kalima.repeat}×`,
+        ``,
+        url,
+      ];
+      const text = encodeURIComponent(lines.join("\n"));
+      const waUrl = `https://wa.me/?text=${text}`;
+      window.open(waUrl, "_blank", "noopener,noreferrer");
+      try { track.shareMood?.(mood.id, "whatsapp"); } catch {}
+    } catch (e) {
+      console.warn("[mood] share failed", e);
+      toast.error("Couldn't open WhatsApp");
+    }
+  };
+
 
 
   // Optional verse player (opens when user expands a verse)
