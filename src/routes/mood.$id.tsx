@@ -188,7 +188,7 @@ function MoodPlayer() {
       const text = encodeURIComponent(lines.join("\n"));
       const waUrl = `https://wa.me/?text=${text}`;
       window.open(waUrl, "_blank", "noopener,noreferrer");
-      try { track.shareMood?.(mood.id, "whatsapp"); } catch {}
+      try { (track as any).shareMood?.(mood.id, "whatsapp"); } catch {}
     } catch (e) {
       console.warn("[mood] share failed", e);
       toast.error("Couldn't open WhatsApp");
