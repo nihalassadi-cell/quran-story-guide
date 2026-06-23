@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TermsRouteImport } from './routes/terms'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AnimateRouteImport } from './routes/animate'
@@ -16,6 +17,11 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as SurahNumberRouteImport } from './routes/surah.$number'
 import { Route as MoodIdRouteImport } from './routes/mood.$id'
 
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -52,6 +58,7 @@ export interface FileRoutesByFullPath {
   '/animate': typeof AnimateRoute
   '/auth': typeof AuthRoute
   '/settings': typeof SettingsRoute
+  '/terms': typeof TermsRoute
   '/mood/$id': typeof MoodIdRoute
   '/surah/$number': typeof SurahNumberRoute
 }
@@ -60,6 +67,7 @@ export interface FileRoutesByTo {
   '/animate': typeof AnimateRoute
   '/auth': typeof AuthRoute
   '/settings': typeof SettingsRoute
+  '/terms': typeof TermsRoute
   '/mood/$id': typeof MoodIdRoute
   '/surah/$number': typeof SurahNumberRoute
 }
@@ -69,6 +77,7 @@ export interface FileRoutesById {
   '/animate': typeof AnimateRoute
   '/auth': typeof AuthRoute
   '/settings': typeof SettingsRoute
+  '/terms': typeof TermsRoute
   '/mood/$id': typeof MoodIdRoute
   '/surah/$number': typeof SurahNumberRoute
 }
@@ -79,16 +88,25 @@ export interface FileRouteTypes {
     | '/animate'
     | '/auth'
     | '/settings'
+    | '/terms'
     | '/mood/$id'
     | '/surah/$number'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/animate' | '/auth' | '/settings' | '/mood/$id' | '/surah/$number'
+  to:
+    | '/'
+    | '/animate'
+    | '/auth'
+    | '/settings'
+    | '/terms'
+    | '/mood/$id'
+    | '/surah/$number'
   id:
     | '__root__'
     | '/'
     | '/animate'
     | '/auth'
     | '/settings'
+    | '/terms'
     | '/mood/$id'
     | '/surah/$number'
   fileRoutesById: FileRoutesById
@@ -98,12 +116,20 @@ export interface RootRouteChildren {
   AnimateRoute: typeof AnimateRoute
   AuthRoute: typeof AuthRoute
   SettingsRoute: typeof SettingsRoute
+  TermsRoute: typeof TermsRoute
   MoodIdRoute: typeof MoodIdRoute
   SurahNumberRoute: typeof SurahNumberRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/settings': {
       id: '/settings'
       path: '/settings'
@@ -154,6 +180,7 @@ const rootRouteChildren: RootRouteChildren = {
   AnimateRoute: AnimateRoute,
   AuthRoute: AuthRoute,
   SettingsRoute: SettingsRoute,
+  TermsRoute: TermsRoute,
   MoodIdRoute: MoodIdRoute,
   SurahNumberRoute: SurahNumberRoute,
 }
