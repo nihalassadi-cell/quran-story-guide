@@ -177,12 +177,10 @@ function MoodPlayer() {
     padRef.current?.start().catch(() => {});
   };
 
-  // Share current mood + kalima to WhatsApp. On desktop, go directly to
-  // WhatsApp Web so the browser does not block WhatsApp's native-app handoff.
+  // Share current mood + kalima to WhatsApp. Open from the click gesture only;
+  // do not fall back to current-frame navigation because previews are iframes.
   const whatsAppShareUrl = useMemo(() => {
-    const url = typeof window !== "undefined"
-      ? `${window.location.origin}/mood/${mood.id}`
-      : `https://quran-story-guide.lovable.app/mood/${mood.id}`;
+    const url = `https://quran-story-guide.lovable.app/mood/${mood.id}`;
     const text = [
       `${mood.label} — a remembrance from Noor`,
       ``,
@@ -194,15 +192,16 @@ function MoodPlayer() {
       url,
     ].join("\n");
 
-    const isMobile = typeof navigator !== "undefined" && /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
-    const baseUrl = isMobile ? "https://api.whatsapp.com/send" : "https://web.whatsapp.com/send";
-    return `${baseUrl}?text=${encodeURIComponent(text)}`;
+    return `https://api.whatsapp.com/send/?text=${encodeURIComponent(text)}&type=custom_url&app_absent=0`;
   }, [kalima.arabic, kalima.repeat, kalima.source, kalima.translation, kalima.transliteration, mood.id, mood.label]);
 
   const openWhatsAppShare = () => {
     try { (track as any).shareMood?.(mood.id, "whatsapp"); } catch {}
-    const opened = window.open(whatsAppShareUrl, "_blank", "noopener,noreferrer");
-    if (!opened) window.location.href = whatsAppShareUrl;
+    const opened = window.open(whatsAppShareUrl, "_blank");
+    if (!opened) {
+      navigator.clipboard?.writeText(whatsAppShareUrl).catch(() => {});
+      toast.info("WhatsApp was blocked by the preview. The share link was copied.");
+    }
   };
 
 
