@@ -1,6 +1,6 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ChevronLeft, Play, Pause, RotateCcw, BookOpen, Sparkles, ChevronDown, ChevronUp, Loader2, SkipBack, SkipForward, Music, VolumeX } from "lucide-react";
+import { ChevronLeft, Play, Pause, RotateCcw, BookOpen, Sparkles, ChevronDown, ChevronUp, Loader2, SkipBack, SkipForward, Music, VolumeX, Share2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchSurahWithTranslation, ayahAudioUrl, RECITERS, type LanguageCode } from "@/lib/quran-api";
 import { getMood } from "@/lib/moods";
@@ -167,6 +167,32 @@ function MoodPlayer() {
   const startAmbient = () => {
     if (!ambientOn) return;
     padRef.current?.start().catch(() => {});
+  };
+
+  // Share current mood + kalima to WhatsApp
+  const shareWhatsApp = () => {
+    try {
+      const url = typeof window !== "undefined"
+        ? `${window.location.origin}/mood/${mood.id}`
+        : `https://quran-story-guide.lovable.app/mood/${mood.id}`;
+      const lines = [
+        `${mood.emoji} ${mood.label} — a remembrance from Noor`,
+        ``,
+        kalima.arabic,
+        kalima.transliteration,
+        `"${kalima.translation}"`,
+        `— ${kalima.source} · ${kalima.repeat}×`,
+        ``,
+        url,
+      ];
+      const text = encodeURIComponent(lines.join("\n"));
+      const waUrl = `https://wa.me/?text=${text}`;
+      window.open(waUrl, "_blank", "noopener,noreferrer");
+      try { (track as any).shareMood?.(mood.id, "whatsapp"); } catch {}
+    } catch (e) {
+      console.warn("[mood] share failed", e);
+      toast.error("Couldn't open WhatsApp");
+    }
   };
 
 
@@ -359,13 +385,23 @@ function MoodPlayer() {
             <p className="text-[10px] sm:text-[11px] uppercase tracking-widest text-primary/80 truncate">For when you feel</p>
             <p className="text-base sm:text-lg font-semibold gold-text truncate">{mood.emoji} {mood.label}</p>
           </div>
-          <button
-            onClick={() => setAmbientOn((v) => !v)}
-            title={ambientOn ? "Mute ambient music" : "Play ambient music"}
-            className="rounded-full bg-card/60 backdrop-blur p-2 border border-border hover:border-primary/60 shrink-0"
-          >
-            {ambientOn ? <Music className="h-5 w-5 text-primary" /> : <VolumeX className="h-5 w-5 text-muted-foreground" />}
-          </button>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={shareWhatsApp}
+              title="Share on WhatsApp"
+              aria-label="Share on WhatsApp"
+              className="rounded-full bg-card/60 backdrop-blur p-2 border border-border hover:border-primary/60"
+            >
+              <Share2 className="h-5 w-5 text-primary" />
+            </button>
+            <button
+              onClick={() => setAmbientOn((v) => !v)}
+              title={ambientOn ? "Mute ambient music" : "Play ambient music"}
+              className="rounded-full bg-card/60 backdrop-blur p-2 border border-border hover:border-primary/60"
+            >
+              {ambientOn ? <Music className="h-5 w-5 text-primary" /> : <VolumeX className="h-5 w-5 text-muted-foreground" />}
+            </button>
+          </div>
         </div>
 
         {/* Kalima picker */}
