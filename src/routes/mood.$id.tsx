@@ -199,6 +199,12 @@ function MoodPlayer() {
     return `${baseUrl}?text=${encodeURIComponent(text)}`;
   }, [kalima.arabic, kalima.repeat, kalima.source, kalima.translation, kalima.transliteration, mood.id, mood.label]);
 
+  const openWhatsAppShare = () => {
+    try { (track as any).shareMood?.(mood.id, "whatsapp"); } catch {}
+    const opened = window.open(whatsAppShareUrl, "_blank", "noopener,noreferrer");
+    if (!opened) window.location.href = whatsAppShareUrl;
+  };
+
 
 
   // Optional verse player (opens when user expands a verse)
@@ -390,17 +396,15 @@ function MoodPlayer() {
             <p className="text-base sm:text-lg font-semibold gold-text truncate">{mood.emoji} {mood.label}</p>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            <a
-              href={whatsAppShareUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => { try { (track as any).shareMood?.(mood.id, "whatsapp"); } catch {} }}
+            <button
+              type="button"
+              onClick={openWhatsAppShare}
               title="Share on WhatsApp"
               aria-label="Share on WhatsApp"
               className="rounded-full bg-card/60 backdrop-blur p-2 border border-border hover:border-primary/60"
             >
               <Share2 className="h-5 w-5 text-primary" />
-            </a>
+            </button>
             <button
               onClick={() => setAmbientOn((v) => !v)}
               title={ambientOn ? "Mute ambient music" : "Play ambient music"}
