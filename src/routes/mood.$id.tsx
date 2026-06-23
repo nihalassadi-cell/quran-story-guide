@@ -1,7 +1,6 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ChevronLeft, Play, Pause, RotateCcw, BookOpen, Sparkles, ChevronDown, ChevronUp, Loader2, SkipBack, SkipForward, Music, VolumeX } from "lucide-react";
-import { FaWhatsapp } from "react-icons/fa";
+import { ChevronLeft, Play, Pause, RotateCcw, BookOpen, Sparkles, ChevronDown, ChevronUp, Loader2, SkipBack, SkipForward, Music, VolumeX, Share2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchSurahWithTranslation, ayahAudioUrl, RECITERS, type LanguageCode } from "@/lib/quran-api";
 import { getMood } from "@/lib/moods";
