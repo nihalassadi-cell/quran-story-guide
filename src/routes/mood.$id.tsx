@@ -170,27 +170,45 @@ function MoodPlayer() {
   };
 
   // Share current mood + kalima to WhatsApp
-  const shareWhatsApp = () => {
+  const shareWhatsApp = async () => {
+    const url = typeof window !== "undefined"
+      ? `${window.location.origin}/mood/${mood.id}`
+      : `https://quran-story-guide.lovable.app/mood/${mood.id}`;
+    const text = [
+      `${mood.emoji} ${mood.label} — a remembrance from Noor`,
+      ``,
+      kalima.arabic,
+      kalima.transliteration,
+      `"${kalima.translation}"`,
+      `— ${kalima.source} · ${kalima.repeat}×`,
+      ``,
+      url,
+    ].join("\n");
+
+    try { (track as any).shareMood?.(mood.id, "whatsapp"); } catch {}
+
+    // 1) Native share sheet (mobile) — lets user pick WhatsApp
     try {
-      const url = typeof window !== "undefined"
-        ? `${window.location.origin}/mood/${mood.id}`
-        : `https://quran-story-guide.lovable.app/mood/${mood.id}`;
-      const lines = [
-        `${mood.emoji} ${mood.label} — a remembrance from Noor`,
-        ``,
-        kalima.arabic,
-        kalima.transliteration,
-        `"${kalima.translation}"`,
-        `— ${kalima.source} · ${kalima.repeat}×`,
-        ``,
-        url,
-      ];
-      const text = encodeURIComponent(lines.join("\n"));
-      const waUrl = `https://wa.me/?text=${text}`;
-      window.open(waUrl, "_blank", "noopener,noreferrer");
-      try { (track as any).shareMood?.(mood.id, "whatsapp"); } catch {}
+      if (typeof navigator !== "undefined" && (navigator as any).share) {
+        await (navigator as any).share({ title: `Noor · ${mood.label}`, text });
+        return;
+      }
     } catch (e) {
-      console.warn("[mood] share failed", e);
+      // user cancelled or share failed — fall through
+    }
+
+    // 2) wa.me deep link in a new tab
+    try {
+      const waUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
+      const win = window.open(waUrl, "_blank", "noopener,noreferrer");
+      if (win) return;
+    } catch {}
+
+    // 3) Clipboard fallback (e.g. blocked popups in preview iframes)
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success("Copied — paste into WhatsApp 💬");
+    } catch {
       toast.error("Couldn't open WhatsApp");
     }
   };
