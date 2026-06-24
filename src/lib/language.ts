@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 export const SUPPORTED_LANGUAGES = [
   { code: "en", label: "English", native: "English" },
   { code: "ur", label: "Urdu", native: "اردو", rtl: true },
-  { code: "hi", label: "Hindi", native: "हिन्दी" },
+  { code: "ru", label: "Russian", native: "Русский" },
   { code: "bn", label: "Bengali", native: "বাংলা" },
   { code: "fa", label: "Persian", native: "فارسی", rtl: true },
   { code: "id", label: "Indonesian", native: "Bahasa Indonesia" },
