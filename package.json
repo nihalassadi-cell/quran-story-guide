@@ -10,7 +10,7 @@
     "preview": "vite preview",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "cap:prepare": "mkdir -p dist && cp public/icon-*.png public/manifest.webmanifest public/favicon.png public/splash.png dist/ && echo '<!DOCTYPE html><html><head></head><body></body></html>' > dist/index.html",
+    "cap:prepare": "mkdir -p dist && cp public/icon-*.png public/manifest.webmanifest public/favicon.png public/splash.png dist/ && printf '%s\\n' '<html><head></head><body></body></html>' > dist/index.html",
     "cap:sync": "npm run cap:prepare && npx cap sync"
   },
   "dependencies": {
