@@ -7,6 +7,7 @@ import { getMood } from "@/lib/moods";
 import { createAmbientPad } from "@/lib/ambient-pad";
 import { track } from "@/lib/analytics";
 import { shareContent } from "@/lib/share";
+import { useLanguage, tr, isRtl } from "@/lib/language";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/mood/$id")({
