@@ -6,12 +6,13 @@ import type { CapacitorConfig } from "@capacitor/cli";
 // sync with your latest publish — no rebuild/resync needed for content updates.
 //
 // Workflow for native builds:
-//   1. (one-time) mkdir -p dist && touch dist/index.html  // satisfy `cap sync`
-//   2. npx cap sync
+//   1. npm run cap:prepare   // copies icons/manifest into dist so cap sync can find them
+//   2. npm run cap:sync      // (or `npx cap sync`) regenerates Android/iOS resources
 //   3. npx cap open android
 //
-// To ship offline, you'd need a static export of the app — not supported by
-// TanStack Start out of the box.
+// Important: do not skip `cap:prepare`. `webDir` is `dist`, but TanStack Start
+// does not emit a static `dist/index.html` on its own. Capacitor's sync step
+// needs the icon files in `dist` to generate native mipmap icons.
 const config: CapacitorConfig = {
   appId: "app.lovable.quranstoryguide",
   appName: "Noor-The Quran",

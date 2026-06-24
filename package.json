@@ -9,7 +9,9 @@
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
     "lint": "eslint .",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "cap:prepare": "mkdir -p dist && cp public/icon-*.png public/manifest.webmanifest public/favicon.png public/splash.png dist/ && echo '<!DOCTYPE html><html><head></head><body></body></html>' > dist/index.html",
+    "cap:sync": "npm run cap:prepare && npx cap sync"
   },
   "dependencies": {
     "@capacitor-firebase/analytics": "^8.3.0",
