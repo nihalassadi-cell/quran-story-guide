@@ -81,14 +81,13 @@ function SurahPlayer() {
   const [wordIdx, setWordIdx] = useState<number>(-1);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Load saved settings from localStorage (no sign-in required)
+  // Load saved reciter from localStorage (language is global via useLanguage)
   useEffect(() => {
     try {
       const raw = localStorage.getItem("noor:settings");
       if (raw) {
         const s = JSON.parse(raw);
         if (s.reciter) setReciter(s.reciter);
-        if (s.translation_language) setLanguage(s.translation_language as LanguageCode);
       }
     } catch {}
   }, []);
@@ -458,13 +457,22 @@ function SurahPlayer() {
         >
           {TRANSLATION_LANGUAGES.map((l) => <option key={l.code} value={l.code}>{l.name}</option>)}
         </select>
-        <button
-          onClick={() => setVoiceoverOn((v) => !v)}
-          title={voiceoverOn ? "Mute voiceover" : "Enable voiceover"}
-          className="rounded bg-card/70 backdrop-blur border border-border p-1.5 shrink-0"
-        >
-          {voiceoverOn ? <Volume2 className="h-4 w-4 text-primary" /> : <VolumeX className="h-4 w-4 text-muted-foreground" />}
-        </button>
+        {hasTranslationAudio(language) ? (
+          <button
+            onClick={() => setVoiceoverOn((v) => !v)}
+            title={voiceoverOn ? "Mute translation voiceover" : "Enable translation voiceover"}
+            className="rounded bg-card/70 backdrop-blur border border-border p-1.5 shrink-0"
+          >
+            {voiceoverOn ? <Volume2 className="h-4 w-4 text-primary" /> : <VolumeX className="h-4 w-4 text-muted-foreground" />}
+          </button>
+        ) : (
+          <span
+            className="rounded border border-border/60 p-1.5 shrink-0 opacity-40"
+            title="Translation audio not available in this language"
+          >
+            <VolumeX className="h-4 w-4" />
+          </span>
+        )}
         <button
           onClick={() => setYtOpen(true)}
           title="Watch full surah"
