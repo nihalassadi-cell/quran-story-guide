@@ -1,7 +1,8 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { fetchSurahWithTranslation, ayahAudioUrl, RECITERS, TRANSLATION_LANGUAGES, type LanguageCode } from "@/lib/quran-api";
+import { fetchSurahWithTranslation, ayahAudioUrl, RECITERS, TRANSLATION_LANGUAGES, hasTranslationAudio, type LanguageCode } from "@/lib/quran-api";
+import { useLanguage, type LangCode } from "@/lib/language";
 import { ChevronLeft, Play, Pause, ChevronRight, Bookmark, BookmarkCheck, Loader2, Volume2, VolumeX, Youtube } from "lucide-react";
 import { track } from "@/lib/analytics";
 import { toast } from "sonner";
@@ -68,7 +69,9 @@ function SurahPlayer() {
   const [activeVerse, setActiveVerse] = useState<number>(verse ?? 1);
   const [playing, setPlaying] = useState(false);
   const [reciter, setReciter] = useState<string>("ar.alafasy");
-  const [language, setLanguage] = useState<LanguageCode>("ur");
+  const [globalLang, setGlobalLang] = useLanguage();
+  const language: LanguageCode = globalLang as LanguageCode;
+  const setLanguage = (l: LanguageCode) => setGlobalLang(l as LangCode);
   const [bookmarked, setBookmarked] = useState(false);
   
   const [voiceoverOn, setVoiceoverOn] = useState(true);
@@ -78,14 +81,13 @@ function SurahPlayer() {
   const [wordIdx, setWordIdx] = useState<number>(-1);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Load saved settings from localStorage (no sign-in required)
+  // Load saved reciter from localStorage (language is global via useLanguage)
   useEffect(() => {
     try {
       const raw = localStorage.getItem("noor:settings");
       if (raw) {
         const s = JSON.parse(raw);
         if (s.reciter) setReciter(s.reciter);
-        if (s.translation_language) setLanguage(s.translation_language as LanguageCode);
       }
     } catch {}
   }, []);
@@ -455,13 +457,22 @@ function SurahPlayer() {
         >
           {TRANSLATION_LANGUAGES.map((l) => <option key={l.code} value={l.code}>{l.name}</option>)}
         </select>
-        <button
-          onClick={() => setVoiceoverOn((v) => !v)}
-          title={voiceoverOn ? "Mute voiceover" : "Enable voiceover"}
-          className="rounded bg-card/70 backdrop-blur border border-border p-1.5 shrink-0"
-        >
-          {voiceoverOn ? <Volume2 className="h-4 w-4 text-primary" /> : <VolumeX className="h-4 w-4 text-muted-foreground" />}
-        </button>
+        {hasTranslationAudio(language) ? (
+          <button
+            onClick={() => setVoiceoverOn((v) => !v)}
+            title={voiceoverOn ? "Mute translation voiceover" : "Enable translation voiceover"}
+            className="rounded bg-card/70 backdrop-blur border border-border p-1.5 shrink-0"
+          >
+            {voiceoverOn ? <Volume2 className="h-4 w-4 text-primary" /> : <VolumeX className="h-4 w-4 text-muted-foreground" />}
+          </button>
+        ) : (
+          <span
+            className="rounded border border-border/60 p-1.5 shrink-0 opacity-40"
+            title="Translation audio not available in this language"
+          >
+            <VolumeX className="h-4 w-4" />
+          </span>
+        )}
         <button
           onClick={() => setYtOpen(true)}
           title="Watch full surah"

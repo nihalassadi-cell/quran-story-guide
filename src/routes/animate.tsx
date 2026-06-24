@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { Heart, Repeat } from "lucide-react";
 import { MOODS } from "@/lib/moods";
+import { useLanguage, tr } from "@/lib/language";
 
 export const Route = createFileRoute("/animate")({
   head: () => ({
@@ -14,6 +15,7 @@ export const Route = createFileRoute("/animate")({
 });
 
 function AnimatePage() {
+  const [lang] = useLanguage();
   return (
     <AppShell>
       <div className="max-w-2xl mx-auto px-4 pt-8 pb-24">
@@ -43,7 +45,7 @@ function AnimatePage() {
               <p className="arabic text-right text-base sm:text-lg leading-snug text-primary/90 line-clamp-2" dir="rtl">
                 {m.kalima.arabic}
               </p>
-              <p className="text-[11px] text-muted-foreground italic line-clamp-2">“{m.kalima.translation}”</p>
+              <p className="text-[11px] text-muted-foreground italic line-clamp-2">“{tr(m.kalima.translation, lang)}”</p>
             </Link>
           ))}
         </div>

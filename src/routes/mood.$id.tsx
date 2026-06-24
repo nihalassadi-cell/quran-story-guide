@@ -7,6 +7,7 @@ import { getMood } from "@/lib/moods";
 import { createAmbientPad } from "@/lib/ambient-pad";
 import { track } from "@/lib/analytics";
 import { shareContent } from "@/lib/share";
+import { useLanguage, tr, isRtl } from "@/lib/language";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/mood/$id")({
@@ -15,7 +16,7 @@ export const Route = createFileRoute("/mood/$id")({
     return {
       meta: [
         { title: `${m?.label ?? "Mood"} — Noor` },
-        { name: "description", content: m?.blurb ?? "A short remembrance for how you're feeling." },
+        { name: "description", content: tr(m?.blurb, "en") || "A short remembrance for how you're feeling." },
       ],
     };
   },
@@ -28,6 +29,8 @@ function MoodPlayer() {
   const { id } = Route.useParams();
   const mood = getMood(id);
   if (!mood) throw notFound();
+  const [lang] = useLanguage();
+  const rtl = isRtl(lang);
 
   // Track mood selection once per mount
   useEffect(() => {
@@ -287,10 +290,10 @@ function MoodPlayer() {
             </div>
             <div key={`${playerVerse.surah}:${playerVerse.verse}`} className="fade-in mx-auto max-w-2xl text-center space-y-1 rounded-lg bg-background/55 backdrop-blur-sm px-3 py-2 border border-border/40">
               <p className="arabic text-lg sm:text-xl md:text-2xl leading-relaxed text-foreground line-clamp-3">{ayah.text}</p>
-              <p className="text-[11px] sm:text-xs text-foreground/85 leading-snug line-clamp-4">{translation?.text}</p>
-              <p className="text-[10px] text-primary/80 italic mt-1">
+              <p className="text-[11px] sm:text-xs text-foreground/85 leading-snug line-clamp-4" dir={rtl ? "rtl" : "ltr"}>{translation?.text}</p>
+              <p className="text-[10px] text-primary/80 italic mt-1" dir={rtl ? "rtl" : "ltr"}>
                 <Sparkles className="inline h-3 w-3 mr-1" />
-                {playerVerse.reason}
+                {tr(playerVerse.reason, lang)}
               </p>
             </div>
           </div>
@@ -366,7 +369,7 @@ function MoodPlayer() {
                 const shareUrl = typeof window !== "undefined" ? window.location.href : undefined;
                 shareContent({
                   title: `Noor — ${mood.label}`,
-                  text: `${mood.emoji} ${mood.label}\n\n${kalima.arabic}\n${kalima.transliteration}\n"${kalima.translation}"\n\nRepeat ${kalima.repeat}× — from Noor`,
+                  text: `${mood.emoji} ${mood.label}\n\n${kalima.arabic}\n${kalima.transliteration}\n"${tr(kalima.translation, lang)}"\n\nRepeat ${kalima.repeat}× — from Noor`,
                   url: shareUrl,
                 });
               }}
@@ -404,7 +407,7 @@ function MoodPlayer() {
                       ? "bg-primary text-primary-foreground border-primary"
                       : "bg-card/70 backdrop-blur border-border hover:border-primary/60"
                   }`}
-                  title={k.translation}
+                  title={tr(k.translation, lang)}
                 >
                   Kalima {i + 1} · {k.repeat}×
                 </button>
@@ -414,8 +417,8 @@ function MoodPlayer() {
         )}
 
         {/* Why this kalima */}
-        <p className="text-xs sm:text-sm text-muted-foreground text-center italic mb-5 leading-relaxed">
-          {kalima.why}
+        <p className="text-xs sm:text-sm text-muted-foreground text-center italic mb-5 leading-relaxed" dir={rtl ? "rtl" : "ltr"}>
+          {tr(kalima.why, lang)}
         </p>
 
         {/* Kalima card */}
@@ -424,7 +427,7 @@ function MoodPlayer() {
             {kalima.arabic}
           </p>
           <p className="mt-3 text-xs sm:text-sm text-foreground/90 italic">{kalima.transliteration}</p>
-          <p className="mt-1 text-xs sm:text-sm text-muted-foreground">“{kalima.translation}”</p>
+          <p className="mt-1 text-xs sm:text-sm text-muted-foreground" dir={rtl ? "rtl" : "ltr"}>“{tr(kalima.translation, lang)}”</p>
           <p className="mt-3 text-[10px] uppercase tracking-widest text-primary/70">{kalima.source}</p>
           {kalima.ayah ? (
             <div className="mt-3 flex items-center justify-center gap-2 text-[11px]">
@@ -542,7 +545,7 @@ function MoodPlayer() {
                         ) : (
                           <p className="text-[11px] text-muted-foreground italic">Loading…</p>
                         )}
-                        <p className="text-[11px] text-muted-foreground line-clamp-2">{v.reason}</p>
+                        <p className="text-[11px] text-muted-foreground line-clamp-2" dir={rtl ? "rtl" : "ltr"}>{tr(v.reason, lang)}</p>
                       </div>
                     </button>
                   </li>
