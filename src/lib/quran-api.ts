@@ -14,7 +14,7 @@ export const RECITERS = [
 export const TRANSLATION_LANGUAGES = [
   { code: "en", name: "English", edition: "en.sahih" },
   { code: "ur", name: "اردو (Urdu)", edition: "ur.jalandhry" },
-  { code: "hi", name: "हिन्दी (Hindi)", edition: "hi.hindi" },
+  { code: "ru", name: "Русский (Russian)", edition: "ru.kuliev" },
   { code: "bn", name: "বাংলা (Bengali)", edition: "bn.bengali" },
   { code: "fa", name: "فارسی (Persian)", edition: "fa.makarem" },
   { code: "id", name: "Bahasa Indonesia", edition: "id.indonesian" },
