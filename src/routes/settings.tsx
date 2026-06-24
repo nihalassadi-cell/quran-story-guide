@@ -1,18 +1,19 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
-import { TRANSLATION_LANGUAGES, RECITERS, type LanguageCode } from "@/lib/quran-api";
+import { RECITERS } from "@/lib/quran-api";
+import { SUPPORTED_LANGUAGES, useLanguage, type LangCode } from "@/lib/language";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/settings")({
-  head: () => ({ meta: [{ title: "Settings — Noor" }, { name: "description", content: "Choose translation language, reciter, and playback options." }] }),
+  head: () => ({ meta: [{ title: "Settings — Noor" }, { name: "description", content: "Choose your translation language, reciter, and playback options." }] }),
   component: SettingsPage,
 });
 
 const STORAGE_KEY = "noor:settings";
 
 function SettingsPage() {
-  const [language, setLanguage] = useState<LanguageCode>("en");
+  const [lang, setLang] = useLanguage();
   const [reciter, setReciter] = useState("ar.alafasy");
   const [autoplay, setAutoplay] = useState(true);
 
@@ -21,18 +22,15 @@ function SettingsPage() {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
         const s = JSON.parse(raw);
-        if (s.translation_language) setLanguage(s.translation_language);
         if (s.reciter) setReciter(s.reciter);
         if (typeof s.autoplay === "boolean") setAutoplay(s.autoplay);
       }
     } catch {}
   }, []);
 
-
-
   const save = () => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ translation_language: language, reciter, autoplay }));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ reciter, autoplay }));
       toast.success("Preferences saved");
     } catch {
       toast.error("Could not save preferences");
@@ -44,13 +42,20 @@ function SettingsPage() {
       <div className="max-w-md mx-auto px-4 pt-8 space-y-5">
         <h1 className="text-2xl font-bold gold-text">Settings</h1>
 
-
-
-
-        <Field label="Translation language">
-          <select value={language} onChange={(e) => setLanguage(e.target.value as LanguageCode)} className="w-full bg-card border border-border rounded-md px-3 py-2">
-            {TRANSLATION_LANGUAGES.map((l) => <option key={l.code} value={l.code}>{l.name}</option>)}
+        <Field label="Preferred language">
+          <select
+            value={lang}
+            onChange={(e) => setLang(e.target.value as LangCode)}
+            className="w-full bg-card border border-border rounded-md px-3 py-2"
+          >
+            {SUPPORTED_LANGUAGES.map((l) => (
+              <option key={l.code} value={l.code}>{l.label} — {l.native}</option>
+            ))}
           </select>
+          <p className="text-[11px] text-muted-foreground mt-1.5 leading-snug">
+            Translations of verses and kalimas appear in this language. The Quran recitation is always in Arabic.
+            Translation audio is currently available only for English and Urdu.
+          </p>
         </Field>
 
         <Field label="Reciter">
