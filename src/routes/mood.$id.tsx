@@ -74,9 +74,17 @@ function MoodPlayer() {
     if (!audioRef.current) audioRef.current = new Audio();
     const a = audioRef.current;
     a.onended = null;
-    a.src = url;
+    // Only reload when the URL actually changed — otherwise just rewind.
+    // This eliminates the network-fetch lag between taps on the same kalima.
+    if (a.src !== url) {
+      a.src = url;
+      a.preload = "auto";
+    } else {
+      try { a.currentTime = 0; } catch {}
+    }
     a.play().catch((e) => console.warn("[mood] audio play failed", e));
   };
+
 
   // Recite the kalima. Three cases:
   //  - kalima maps to a Qur'an ayah → use the studio recital CDN
@@ -156,6 +164,46 @@ function MoodPlayer() {
   useEffect(() => {
     pendingPlayRef.current = false;
   }, [kalimaIdx]);
+
+  // Preload the current kalima's audio so the first tap is instant.
+  // For ayah-based kalimas we know the URL once the surah is cached.
+  // For hadith dhikrs we kick off the TTS request (cached server-side).
+  useEffect(() => {
+    if (!audioRef.current) audioRef.current = new Audio();
+    const a = audioRef.current;
+    if (kalima.ayah) {
+      if (kalimaAudioUrl && a.src !== kalimaAudioUrl) {
+        a.src = kalimaAudioUrl;
+        a.preload = "auto";
+        try { a.load(); } catch {}
+      }
+      return;
+    }
+    const text = kalima.arabic;
+    const cached = kalimaUrlCacheRef.current.get(text);
+    if (cached) {
+      if (a.src !== cached) {
+        a.src = cached;
+        a.preload = "auto";
+        try { a.load(); } catch {}
+      }
+      return;
+    }
+    let cancelled = false;
+    fetchKalimaAudio({ data: { text } })
+      .then((res) => {
+        if (cancelled || !res?.url) return;
+        kalimaUrlCacheRef.current.set(text, res.url);
+        if (a.src !== res.url) {
+          a.src = res.url;
+          a.preload = "auto";
+          try { a.load(); } catch {}
+        }
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [kalimaIdx, kalimaAudioUrl, kalima.ayah, kalima.arabic, fetchKalimaAudio]);
+
 
 
   // Auto loop — pulse + recite every 3s
@@ -454,7 +502,8 @@ function MoodPlayer() {
                 <button
                   key={i}
                   onClick={() => {
-                    // Stop the in-flight kalima so the new one wins
+                    // Stop any in-flight playback; don't auto-play the new
+                    // kalima — wait for the user to tap "Tap to count" or "Auto-recite".
                     playTokenRef.current++;
                     pendingPlayRef.current = false;
                     try { window.speechSynthesis?.cancel(); } catch {}
@@ -463,38 +512,6 @@ function MoodPlayer() {
                     setKalimaIdx(i);
                     setCount(0);
                     setAuto(false);
-
-                    // Play the newly-selected kalima inline with the gesture
-                    // so mobile browsers allow audio playback.
-                    const newKalima = mood.kalimas[i] ?? mood.kalima;
-                    if (!audioRef.current) audioRef.current = new Audio();
-                    const token = ++playTokenRef.current;
-
-                    if (newKalima.ayah) {
-                      const sd = cache[newKalima.ayah.surah];
-                      const a = sd?.ayahs.find((x) => x.numberInSurah === newKalima.ayah!.verse);
-                      if (a) {
-                        playKalimaAudio(ayahAudioUrl(a.number, reciter));
-                      } else {
-                        pendingPlayRef.current = true;
-                      }
-                    } else {
-                      const text = newKalima.arabic;
-                      const cached = kalimaUrlCacheRef.current.get(text);
-                      if (cached) {
-                        playKalimaAudio(cached);
-                      } else {
-                        fetchKalimaAudio({ data: { text } })
-                          .then((res) => {
-                            if (token !== playTokenRef.current) return;
-                            if (res?.url) {
-                              kalimaUrlCacheRef.current.set(text, res.url);
-                              playKalimaAudio(res.url);
-                            }
-                          })
-                          .catch((e) => console.warn("[mood] kalima tts failed", e));
-                      }
-                    }
                   }}
                   className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
                     i === kalimaIdx
