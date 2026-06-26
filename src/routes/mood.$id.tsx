@@ -204,6 +204,21 @@ function MoodPlayer() {
     return () => { cancelled = true; };
   }, [kalimaIdx, kalimaAudioUrl, kalima.ayah, kalima.arabic, fetchKalimaAudio]);
 
+  // Stop any kalima audio when leaving the mood page so it doesn't overlap
+  // with playback on the next mood.
+  useEffect(() => {
+    return () => {
+      try { window.speechSynthesis?.cancel(); } catch {}
+      if (audioRef.current) {
+        try { audioRef.current.pause(); } catch {}
+        try { audioRef.current.src = ""; } catch {}
+        audioRef.current = null;
+      }
+    };
+  }, []);
+
+
+
 
 
   // Auto loop — pulse + recite every 3s
