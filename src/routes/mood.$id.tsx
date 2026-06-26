@@ -74,9 +74,17 @@ function MoodPlayer() {
     if (!audioRef.current) audioRef.current = new Audio();
     const a = audioRef.current;
     a.onended = null;
-    a.src = url;
+    // Only reload when the URL actually changed — otherwise just rewind.
+    // This eliminates the network-fetch lag between taps on the same kalima.
+    if (a.src !== url) {
+      a.src = url;
+      a.preload = "auto";
+    } else {
+      try { a.currentTime = 0; } catch {}
+    }
     a.play().catch((e) => console.warn("[mood] audio play failed", e));
   };
+
 
   // Recite the kalima. Three cases:
   //  - kalima maps to a Qur'an ayah → use the studio recital CDN
