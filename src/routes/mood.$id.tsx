@@ -165,6 +165,46 @@ function MoodPlayer() {
     pendingPlayRef.current = false;
   }, [kalimaIdx]);
 
+  // Preload the current kalima's audio so the first tap is instant.
+  // For ayah-based kalimas we know the URL once the surah is cached.
+  // For hadith dhikrs we kick off the TTS request (cached server-side).
+  useEffect(() => {
+    if (!audioRef.current) audioRef.current = new Audio();
+    const a = audioRef.current;
+    if (kalima.ayah) {
+      if (kalimaAudioUrl && a.src !== kalimaAudioUrl) {
+        a.src = kalimaAudioUrl;
+        a.preload = "auto";
+        try { a.load(); } catch {}
+      }
+      return;
+    }
+    const text = kalima.arabic;
+    const cached = kalimaUrlCacheRef.current.get(text);
+    if (cached) {
+      if (a.src !== cached) {
+        a.src = cached;
+        a.preload = "auto";
+        try { a.load(); } catch {}
+      }
+      return;
+    }
+    let cancelled = false;
+    fetchKalimaAudio({ data: { text } })
+      .then((res) => {
+        if (cancelled || !res?.url) return;
+        kalimaUrlCacheRef.current.set(text, res.url);
+        if (a.src !== res.url) {
+          a.src = res.url;
+          a.preload = "auto";
+          try { a.load(); } catch {}
+        }
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [kalimaIdx, kalimaAudioUrl, kalima.ayah, kalima.arabic, fetchKalimaAudio]);
+
+
 
   // Auto loop — pulse + recite every 3s
   useEffect(() => {
