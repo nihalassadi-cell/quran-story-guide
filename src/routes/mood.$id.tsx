@@ -502,7 +502,8 @@ function MoodPlayer() {
                 <button
                   key={i}
                   onClick={() => {
-                    // Stop the in-flight kalima so the new one wins
+                    // Stop any in-flight playback; don't auto-play the new
+                    // kalima — wait for the user to tap "Tap to count" or "Auto-recite".
                     playTokenRef.current++;
                     pendingPlayRef.current = false;
                     try { window.speechSynthesis?.cancel(); } catch {}
@@ -511,38 +512,6 @@ function MoodPlayer() {
                     setKalimaIdx(i);
                     setCount(0);
                     setAuto(false);
-
-                    // Play the newly-selected kalima inline with the gesture
-                    // so mobile browsers allow audio playback.
-                    const newKalima = mood.kalimas[i] ?? mood.kalima;
-                    if (!audioRef.current) audioRef.current = new Audio();
-                    const token = ++playTokenRef.current;
-
-                    if (newKalima.ayah) {
-                      const sd = cache[newKalima.ayah.surah];
-                      const a = sd?.ayahs.find((x) => x.numberInSurah === newKalima.ayah!.verse);
-                      if (a) {
-                        playKalimaAudio(ayahAudioUrl(a.number, reciter));
-                      } else {
-                        pendingPlayRef.current = true;
-                      }
-                    } else {
-                      const text = newKalima.arabic;
-                      const cached = kalimaUrlCacheRef.current.get(text);
-                      if (cached) {
-                        playKalimaAudio(cached);
-                      } else {
-                        fetchKalimaAudio({ data: { text } })
-                          .then((res) => {
-                            if (token !== playTokenRef.current) return;
-                            if (res?.url) {
-                              kalimaUrlCacheRef.current.set(text, res.url);
-                              playKalimaAudio(res.url);
-                            }
-                          })
-                          .catch((e) => console.warn("[mood] kalima tts failed", e));
-                      }
-                    }
                   }}
                   className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
                     i === kalimaIdx
