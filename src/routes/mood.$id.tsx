@@ -54,25 +54,41 @@ function MoodPlayer() {
   const [reciter, setReciter] = useState<string>("ar.alafasy");
   const [language] = useState<LanguageCode>("en");
   const [cache, setCache] = useState<AyahCache>({});
+  // When the user taps recite before the surah audio URL is ready, queue it.
+  const pendingPlayRef = useRef(false);
 
   // Resolve the global ayah number for the current kalima (when it's a verse).
   const kalimaSurah = kalima.ayah ? cache[kalima.ayah.surah] : undefined;
   const kalimaAyah = kalima.ayah && kalimaSurah?.ayahs.find((a) => a.numberInSurah === kalima.ayah!.verse);
   const kalimaAudioUrl = kalimaAyah ? ayahAudioUrl(kalimaAyah.number, reciter) : null;
 
+  const playKalimaAudio = (url: string) => {
+    if (!audioRef.current) audioRef.current = new Audio();
+    const a = audioRef.current;
+    a.onended = null;
+    a.src = url;
+    a.play().catch((e) => console.warn("[mood] audio play failed", e));
+  };
+
   // Recite the kalima. If we have a Qur'anic ayah for it, play the same
-  // studio recital used in the surah pages. Otherwise (hadith-only dhikr)
-  // fall back to the browser's Arabic speech synthesis.
+  // studio recital used in the surah pages. If the surah hasn't loaded yet,
+  // queue the play. Only fall back to speech-synthesis for hadith-only dhikr
+  // (no ayah configured).
   const reciteKalima = () => {
     try {
-      // Stop any previous playback so taps feel responsive
       try { window.speechSynthesis?.cancel(); } catch {}
       if (audioRef.current) { audioRef.current.pause(); audioRef.current.currentTime = 0; }
 
-      if (kalimaAudioUrl) {
-        if (!audioRef.current) audioRef.current = new Audio();
-        audioRef.current.src = kalimaAudioUrl;
-        audioRef.current.play().catch((e) => console.warn("[mood] audio play failed", e));
+      // Create the Audio element synchronously inside the user gesture so
+      // mobile browsers allow later play() once the URL resolves.
+      if (!audioRef.current) audioRef.current = new Audio();
+
+      if (kalima.ayah) {
+        if (kalimaAudioUrl) {
+          playKalimaAudio(kalimaAudioUrl);
+        } else {
+          pendingPlayRef.current = true;
+        }
         return;
       }
 
@@ -100,6 +116,19 @@ function MoodPlayer() {
       .then((d) => setCache((c) => ({ ...c, [s]: d })))
       .catch((e) => console.error("[mood] kalima surah fetch failed", e));
   }, [kalima.ayah, language, cache]);
+
+  // When the surah audio URL becomes available after a tap, fulfill the queued play.
+  useEffect(() => {
+    if (pendingPlayRef.current && kalimaAudioUrl) {
+      pendingPlayRef.current = false;
+      playKalimaAudio(kalimaAudioUrl);
+    }
+  }, [kalimaAudioUrl]);
+
+  // Clear any queued play when switching kalima
+  useEffect(() => {
+    pendingPlayRef.current = false;
+  }, [kalimaIdx]);
 
   // Auto loop — pulse + recite every 3s
   useEffect(() => {
