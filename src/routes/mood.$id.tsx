@@ -58,6 +58,12 @@ function MoodPlayer() {
   const [cache, setCache] = useState<AyahCache>({});
   // When the user taps recite before the surah audio URL is ready, queue it.
   const pendingPlayRef = useRef(false);
+  // Generation token — increments on every new tap so a slow TTS response from
+  // a previous kalima can't clobber the currently-requested one.
+  const playTokenRef = useRef(0);
+  // Cache of generated kalima-TTS URLs keyed by Arabic text.
+  const kalimaUrlCacheRef = useRef<Map<string, string>>(new Map());
+  const fetchKalimaAudio = useServerFn(getKalimaAudio);
 
   // Resolve the global ayah number for the current kalima (when it's a verse).
   const kalimaSurah = kalima.ayah ? cache[kalima.ayah.surah] : undefined;
@@ -72,10 +78,10 @@ function MoodPlayer() {
     a.play().catch((e) => console.warn("[mood] audio play failed", e));
   };
 
-  // Recite the kalima. If we have a Qur'anic ayah for it, play the same
-  // studio recital used in the surah pages. If the surah hasn't loaded yet,
-  // queue the play. Only fall back to speech-synthesis for hadith-only dhikr
-  // (no ayah configured).
+  // Recite the kalima. Three cases:
+  //  - kalima maps to a Qur'an ayah → use the studio recital CDN
+  //  - hadith-only dhikr → use the cached server-side ElevenLabs TTS
+  //  - last-resort fallback → browser speech synthesis (often silent on mobile)
   const reciteKalima = () => {
     try {
       try { window.speechSynthesis?.cancel(); } catch {}
@@ -84,6 +90,9 @@ function MoodPlayer() {
       // Create the Audio element synchronously inside the user gesture so
       // mobile browsers allow later play() once the URL resolves.
       if (!audioRef.current) audioRef.current = new Audio();
+
+      const token = ++playTokenRef.current;
+      pendingPlayRef.current = false;
 
       if (kalima.ayah) {
         if (kalimaAudioUrl) {
@@ -94,15 +103,31 @@ function MoodPlayer() {
         return;
       }
 
-      const synth = window.speechSynthesis;
-      if (!synth) return;
-      const u = new SpeechSynthesisUtterance(kalima.arabic);
-      u.lang = "ar-SA";
-      u.rate = 0.85;
-      const voices = synth.getVoices();
-      const arVoice = voices.find((v) => v.lang?.toLowerCase().startsWith("ar"));
-      if (arVoice) u.voice = arVoice;
-      synth.speak(u);
+      // Hadith dhikr — fetch (or reuse cached) Arabic TTS from the server.
+      const text = kalima.arabic;
+      const cached = kalimaUrlCacheRef.current.get(text);
+      if (cached) {
+        playKalimaAudio(cached);
+        return;
+      }
+      fetchKalimaAudio({ data: { text } })
+        .then((res) => {
+          if (token !== playTokenRef.current) return; // a newer tap took over
+          if (res?.url) {
+            kalimaUrlCacheRef.current.set(text, res.url);
+            playKalimaAudio(res.url);
+          } else {
+            console.warn("[mood] kalima tts failed", res?.error);
+            // Last-resort: device voice (may be silent on some browsers)
+            const synth = window.speechSynthesis;
+            if (!synth) return;
+            const u = new SpeechSynthesisUtterance(text);
+            u.lang = "ar-SA";
+            u.rate = 0.85;
+            synth.speak(u);
+          }
+        })
+        .catch((e) => console.warn("[mood] kalima tts request failed", e));
     } catch (e) {
       console.warn("[mood] recite failed", e);
     }
@@ -131,6 +156,7 @@ function MoodPlayer() {
   useEffect(() => {
     pendingPlayRef.current = false;
   }, [kalimaIdx]);
+
 
   // Auto loop — pulse + recite every 3s
   useEffect(() => {
