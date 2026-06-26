@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "209582139760",
+    "project_id": "noor-2ea16",
+    "storage_bucket": "noor-2ea16.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:209582139760:android:1cf8e5ad1ab9966d4847b5",
+        "android_client_info": {
+          "package_name": "app.lovable.quranstoryguide"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAkCzH-Naq9ZrSsApl4BEXLPHJ5mESyi5Y"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
