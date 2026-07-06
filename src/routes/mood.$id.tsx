@@ -315,9 +315,7 @@ function MoodPlayer() {
     mood.kalimas.forEach((k) => {
       if (k.ayah) {
         const url = ayahAudioUrl(ayahGlobalNumber(k.ayah.surah, k.ayah.verse), reciter);
-        const preload = new Audio(url);
-        preload.preload = "auto";
-        try { preload.load(); } catch {}
+        preloadKalimaAudioElement(url);
         warmKalimaBuffer(url).catch(() => {});
         return;
       }
@@ -325,7 +323,6 @@ function MoodPlayer() {
       ensureKalimaAudio(k.arabic, true).then((url) => {
         if (!url) return;
         preloadKalimaAudioElement(url);
-        warmKalimaBuffer(url).catch(() => {});
       });
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps

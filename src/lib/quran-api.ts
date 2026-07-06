@@ -33,8 +33,12 @@ export function hasTranslationAudio(language: string): boolean {
   return TRANSLATION_AUDIO_LANGS.has(language);
 }
 
-export function ayahAudioUrl(globalNumber: number, reciter: string) {
+export function quranCdnAudioUrl(globalNumber: number, reciter: string) {
   return `https://cdn.islamic.network/quran/audio/128/${reciter}/${globalNumber}.mp3`;
+}
+
+export function ayahAudioUrl(globalNumber: number, reciter: string) {
+  return `/api/public/quran-audio/${encodeURIComponent(reciter)}/${globalNumber}`;
 }
 
 const AYAH_COUNTS_BY_SURAH = [
