@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { ChevronLeft, Play, Pause, RotateCcw, BookOpen, Sparkles, ChevronDown, ChevronUp, Loader2, SkipBack, SkipForward, Music, VolumeX, Share2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { fetchSurahWithTranslation, ayahAudioUrl, RECITERS, type LanguageCode } from "@/lib/quran-api";
+import { fetchSurahWithTranslation, ayahAudioUrl, ayahGlobalNumber, RECITERS, type LanguageCode } from "@/lib/quran-api";
 import { getMood } from "@/lib/moods";
 import { getKalimaAudio } from "@/lib/kalima-tts.functions";
 import { createAmbientPad } from "@/lib/ambient-pad";
@@ -73,12 +73,11 @@ function MoodPlayer() {
   const kalimaBufferPendingRef = useRef<Map<string, Promise<AudioBuffer | null>>>(new Map());
   const kalimaAudioContextRef = useRef<AudioContext | null>(null);
   const kalimaSourceRef = useRef<AudioBufferSourceNode | null>(null);
+  const kalimaPreloadAudioRef = useRef<Map<string, HTMLAudioElement>>(new Map());
   const fetchKalimaAudio = useServerFn(getKalimaAudio);
 
   // Resolve the global ayah number for the current kalima (when it's a verse).
-  const kalimaSurah = kalima.ayah ? cache[kalima.ayah.surah] : undefined;
-  const kalimaAyah = kalima.ayah && kalimaSurah?.ayahs.find((a) => a.numberInSurah === kalima.ayah!.verse);
-  const kalimaAudioUrl = kalimaAyah ? ayahAudioUrl(kalimaAyah.number, reciter) : null;
+  const kalimaAudioUrl = kalima.ayah ? ayahAudioUrl(ayahGlobalNumber(kalima.ayah.surah, kalima.ayah.verse), reciter) : null;
 
   const getKalimaAudioContext = () => {
     const AC = window.AudioContext || (window as any).webkitAudioContext;
@@ -144,8 +143,9 @@ function MoodPlayer() {
 
   const playKalimaAudio = (url: string) => {
     if (playBufferedKalimaAudio(url)) return;
-    if (!audioRef.current) audioRef.current = new Audio();
-    const a = audioRef.current;
+    const preloaded = kalimaPreloadAudioRef.current.get(url);
+    const a = preloaded ?? audioRef.current ?? new Audio();
+    audioRef.current = a;
     a.onended = null;
     if (a.src !== url) {
       a.src = url;
@@ -159,19 +159,28 @@ function MoodPlayer() {
     warmKalimaBuffer(url).catch(() => {});
   };
 
+  const preloadKalimaAudioElement = (url: string) => {
+    if (kalimaPreloadAudioRef.current.has(url)) return kalimaPreloadAudioRef.current.get(url)!;
+    const audio = new Audio(url);
+    audio.preload = "auto";
+    kalimaPreloadAudioRef.current.set(url, audio);
+    try { audio.load(); } catch {}
+    return audio;
+  };
+
   // Shared TTS fetch — reuses an in-flight request if one already exists
   // (e.g. the preload effect kicked off the fetch and the user tapped before
   // it resolved). Prevents duplicate roundtrips on the first tap.
-  const ensureKalimaAudio = (text: string): Promise<string | null> => {
+  const ensureKalimaAudio = (text: string, warmOnly = false): Promise<string | null> => {
     const cached = kalimaUrlCacheRef.current.get(text);
     if (cached) return Promise.resolve(cached);
     const pending = kalimaPendingFetchRef.current.get(text);
     if (pending) return pending;
-    const p = fetchKalimaAudio({ data: { text } })
+    const p = fetchKalimaAudio({ data: { text, warmOnly } })
       .then((res) => {
         if (res?.url) {
           kalimaUrlCacheRef.current.set(text, res.url);
-          warmKalimaBuffer(res.url).catch(() => {});
+          if (!res.warming) warmKalimaBuffer(res.url).catch(() => {});
           return res.url;
         }
         console.warn("[mood] kalima tts failed", res?.error);
@@ -287,17 +296,37 @@ function MoodPlayer() {
       return;
     }
     let cancelled = false;
-    ensureKalimaAudio(text).then((url) => {
+      ensureKalimaAudio(text, true).then((url) => {
       if (cancelled || !url) return;
       if (a.src !== url) {
         a.src = url;
         a.preload = "auto";
         try { a.load(); } catch {}
       }
+        preloadKalimaAudioElement(url);
       warmKalimaBuffer(url).catch(() => {});
     });
     return () => { cancelled = true; };
   }, [kalimaIdx, kalimaAudioUrl, kalima.ayah, kalima.arabic, fetchKalimaAudio]);
+
+  // Warm every selectable kalima for this mood, not only the active one, so
+  // switching kalimas and immediately tapping still starts audio from cache.
+  useEffect(() => {
+    mood.kalimas.forEach((k) => {
+      if (k.ayah) {
+        const url = ayahAudioUrl(ayahGlobalNumber(k.ayah.surah, k.ayah.verse), reciter);
+        preloadKalimaAudioElement(url);
+        warmKalimaBuffer(url).catch(() => {});
+        return;
+      }
+
+      ensureKalimaAudio(k.arabic, true).then((url) => {
+        if (!url) return;
+        preloadKalimaAudioElement(url);
+      });
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mood.id, reciter, fetchKalimaAudio]);
 
   // Stop any kalima audio when leaving the mood page so it doesn't overlap
   // with playback on the next mood.
