@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { quranCdnAudioUrl, RECITERS } from "@/lib/quran-api";
 
-const RECITER_IDS = new Set(RECITERS.map((reciter) => reciter.id));
+const RECITER_IDS: ReadonlySet<string> = new Set(RECITERS.map((reciter) => reciter.id));
 
 export const Route = createFileRoute("/api/public/quran-audio/$reciter/$ayah")({
   server: {
