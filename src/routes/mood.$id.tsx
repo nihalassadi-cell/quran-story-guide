@@ -221,27 +221,106 @@ function MoodPlayer() {
 
 
 
-  // Auto loop — pulse + recite every 3s
+  // Auto loop — chain each recitation to the audio's `ended` event so a
+  // long recital (5–10s ayah or ElevenLabs TTS) isn't cut off by a fixed
+  // interval, and so an in-flight TTS fetch is never invalidated by the
+  // next tick (which used to make hadith kalimas go silent in Auto mode).
   useEffect(() => {
     if (!auto) return;
-    const tick = () => {
+    let cancelled = false;
+    let timeoutId: number | null = null;
+
+    const playAndWait = () =>
+      new Promise<void>((resolve) => {
+        try {
+          if (!audioRef.current) audioRef.current = new Audio();
+          const a = audioRef.current;
+
+          const start = (url: string) => {
+            if (cancelled) return resolve();
+            a.onended = null;
+            if (a.src !== url) {
+              a.src = url;
+              a.preload = "auto";
+            }
+            try { a.currentTime = 0; } catch {}
+            const onEnd = () => {
+              a.removeEventListener("ended", onEnd);
+              window.clearTimeout(safety);
+              resolve();
+            };
+            const safety = window.setTimeout(() => {
+              a.removeEventListener("ended", onEnd);
+              resolve();
+            }, 20000);
+            a.addEventListener("ended", onEnd);
+            a.play().catch((e) => {
+              console.warn("[mood] auto play failed", e);
+              a.removeEventListener("ended", onEnd);
+              window.clearTimeout(safety);
+              resolve();
+            });
+          };
+
+          if (kalima.ayah) {
+            if (kalimaAudioUrl) start(kalimaAudioUrl);
+            else window.setTimeout(resolve, 800); // surah not fetched yet
+            return;
+          }
+
+          const text = kalima.arabic;
+          const cached = kalimaUrlCacheRef.current.get(text);
+          if (cached) { start(cached); return; }
+          fetchKalimaAudio({ data: { text } })
+            .then((res) => {
+              if (cancelled) return resolve();
+              if (res?.url) {
+                kalimaUrlCacheRef.current.set(text, res.url);
+                start(res.url);
+              } else {
+                console.warn("[mood] kalima tts failed", res?.error);
+                resolve();
+              }
+            })
+            .catch((e) => {
+              console.warn("[mood] kalima tts request failed", e);
+              resolve();
+            });
+        } catch (e) {
+          console.warn("[mood] auto tick failed", e);
+          resolve();
+        }
+      });
+
+    const tick = async () => {
+      if (cancelled || !auto) return;
       setPulse(true);
-      speakKalima();
+      window.setTimeout(() => { if (!cancelled) setPulse(false); }, 600);
+
+      let done = false;
       setCount((c) => {
         const next = c + 1;
         if (next >= target) {
-          setAuto(false);
+          done = true;
           toast.success(`Completed ${target}× — barakAllāhu fīk 🌙`);
         }
         return next;
       });
-      window.setTimeout(() => setPulse(false), 600);
+
+      await playAndWait();
+      if (cancelled) return;
+      if (done) { setAuto(false); return; }
+      // Small breath between recitations
+      timeoutId = window.setTimeout(tick, 400);
     };
+
     tick();
-    const iv = window.setInterval(tick, 3000);
-    return () => window.clearInterval(iv);
+    return () => {
+      cancelled = true;
+      if (timeoutId) window.clearTimeout(timeoutId);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [auto, target]);
+  }, [auto, target, kalimaAudioUrl, kalima.arabic, kalima.ayah]);
 
   const tap = () => {
     speakKalima();
