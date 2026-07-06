@@ -63,6 +63,10 @@ function MoodPlayer() {
   const playTokenRef = useRef(0);
   // Cache of generated kalima-TTS URLs keyed by Arabic text.
   const kalimaUrlCacheRef = useRef<Map<string, string>>(new Map());
+  // In-flight TTS fetches keyed by text — so a tap that arrives while the
+  // preload fetch is still pending awaits the same request instead of firing
+  // a duplicate one (which was doubling the wait on the very first tap).
+  const kalimaPendingFetchRef = useRef<Map<string, Promise<string | null>>>(new Map());
   const fetchKalimaAudio = useServerFn(getKalimaAudio);
 
   // Resolve the global ayah number for the current kalima (when it's a verse).
