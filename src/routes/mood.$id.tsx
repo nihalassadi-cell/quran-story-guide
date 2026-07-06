@@ -63,6 +63,10 @@ function MoodPlayer() {
   const playTokenRef = useRef(0);
   // Cache of generated kalima-TTS URLs keyed by Arabic text.
   const kalimaUrlCacheRef = useRef<Map<string, string>>(new Map());
+  // In-flight TTS fetches keyed by text — so a tap that arrives while the
+  // preload fetch is still pending awaits the same request instead of firing
+  // a duplicate one (which was doubling the wait on the very first tap).
+  const kalimaPendingFetchRef = useRef<Map<string, Promise<string | null>>>(new Map());
   const fetchKalimaAudio = useServerFn(getKalimaAudio);
 
   // Resolve the global ayah number for the current kalima (when it's a verse).
@@ -74,17 +78,44 @@ function MoodPlayer() {
     if (!audioRef.current) audioRef.current = new Audio();
     const a = audioRef.current;
     a.onended = null;
-    // Only reload when the URL actually changed — otherwise just rewind.
-    // This eliminates the network-fetch lag between taps on the same kalima.
     if (a.src !== url) {
       a.src = url;
       a.preload = "auto";
-    } else {
-      try { a.currentTime = 0; } catch {}
     }
+    // Rewind so repeat taps restart the recital from the top, but do NOT
+    // pause first — a pause+play round-trip adds a noticeable stutter on
+    // mobile browsers and is what caused the perceived tap-to-audio lag.
+    try { a.currentTime = 0; } catch {}
     a.play().catch((e) => console.warn("[mood] audio play failed", e));
   };
 
+  // Shared TTS fetch — reuses an in-flight request if one already exists
+  // (e.g. the preload effect kicked off the fetch and the user tapped before
+  // it resolved). Prevents duplicate roundtrips on the first tap.
+  const ensureKalimaAudio = (text: string): Promise<string | null> => {
+    const cached = kalimaUrlCacheRef.current.get(text);
+    if (cached) return Promise.resolve(cached);
+    const pending = kalimaPendingFetchRef.current.get(text);
+    if (pending) return pending;
+    const p = fetchKalimaAudio({ data: { text } })
+      .then((res) => {
+        if (res?.url) {
+          kalimaUrlCacheRef.current.set(text, res.url);
+          return res.url;
+        }
+        console.warn("[mood] kalima tts failed", res?.error);
+        return null;
+      })
+      .catch((e) => {
+        console.warn("[mood] kalima tts request failed", e);
+        return null;
+      })
+      .finally(() => {
+        kalimaPendingFetchRef.current.delete(text);
+      });
+    kalimaPendingFetchRef.current.set(text, p);
+    return p;
+  };
 
   // Recite the kalima. Three cases:
   //  - kalima maps to a Qur'an ayah → use the studio recital CDN
@@ -93,7 +124,6 @@ function MoodPlayer() {
   const reciteKalima = () => {
     try {
       try { window.speechSynthesis?.cancel(); } catch {}
-      if (audioRef.current) { audioRef.current.pause(); audioRef.current.currentTime = 0; }
 
       // Create the Audio element synchronously inside the user gesture so
       // mobile browsers allow later play() once the URL resolves.
@@ -111,31 +141,25 @@ function MoodPlayer() {
         return;
       }
 
-      // Hadith dhikr — fetch (or reuse cached) Arabic TTS from the server.
       const text = kalima.arabic;
       const cached = kalimaUrlCacheRef.current.get(text);
       if (cached) {
         playKalimaAudio(cached);
         return;
       }
-      fetchKalimaAudio({ data: { text } })
-        .then((res) => {
-          if (token !== playTokenRef.current) return; // a newer tap took over
-          if (res?.url) {
-            kalimaUrlCacheRef.current.set(text, res.url);
-            playKalimaAudio(res.url);
-          } else {
-            console.warn("[mood] kalima tts failed", res?.error);
-            // Last-resort: device voice (may be silent on some browsers)
-            const synth = window.speechSynthesis;
-            if (!synth) return;
-            const u = new SpeechSynthesisUtterance(text);
-            u.lang = "ar-SA";
-            u.rate = 0.85;
-            synth.speak(u);
-          }
-        })
-        .catch((e) => console.warn("[mood] kalima tts request failed", e));
+      ensureKalimaAudio(text).then((url) => {
+        if (token !== playTokenRef.current) return; // a newer tap took over
+        if (url) {
+          playKalimaAudio(url);
+        } else {
+          const synth = window.speechSynthesis;
+          if (!synth) return;
+          const u = new SpeechSynthesisUtterance(text);
+          u.lang = "ar-SA";
+          u.rate = 0.85;
+          synth.speak(u);
+        }
+      });
     } catch (e) {
       console.warn("[mood] recite failed", e);
     }
@@ -190,17 +214,14 @@ function MoodPlayer() {
       return;
     }
     let cancelled = false;
-    fetchKalimaAudio({ data: { text } })
-      .then((res) => {
-        if (cancelled || !res?.url) return;
-        kalimaUrlCacheRef.current.set(text, res.url);
-        if (a.src !== res.url) {
-          a.src = res.url;
-          a.preload = "auto";
-          try { a.load(); } catch {}
-        }
-      })
-      .catch(() => {});
+    ensureKalimaAudio(text).then((url) => {
+      if (cancelled || !url) return;
+      if (a.src !== url) {
+        a.src = url;
+        a.preload = "auto";
+        try { a.load(); } catch {}
+      }
+    });
     return () => { cancelled = true; };
   }, [kalimaIdx, kalimaAudioUrl, kalima.ayah, kalima.arabic, fetchKalimaAudio]);
 
