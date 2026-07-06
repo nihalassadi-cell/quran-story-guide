@@ -57,11 +57,11 @@ export const getKalimaAudio = createServerFn({ method: "POST" })
             text: data.text,
             model_id: "eleven_multilingual_v2",
             voice_settings: {
-              stability: 0.6,
-              similarity_boost: 0.8,
-              style: 0.2,
+              stability: 0.75,        // higher = smoother, less variable
+              similarity_boost: 0.85,
+              style: 0.35,            // gentle expressive lilt
               use_speaker_boost: true,
-              speed: 0.9,
+              speed: 0.85,            // slightly slower — more meditative
             },
           }),
         },
