@@ -214,17 +214,14 @@ function MoodPlayer() {
       return;
     }
     let cancelled = false;
-    fetchKalimaAudio({ data: { text } })
-      .then((res) => {
-        if (cancelled || !res?.url) return;
-        kalimaUrlCacheRef.current.set(text, res.url);
-        if (a.src !== res.url) {
-          a.src = res.url;
-          a.preload = "auto";
-          try { a.load(); } catch {}
-        }
-      })
-      .catch(() => {});
+    ensureKalimaAudio(text).then((url) => {
+      if (cancelled || !url) return;
+      if (a.src !== url) {
+        a.src = url;
+        a.preload = "auto";
+        try { a.load(); } catch {}
+      }
+    });
     return () => { cancelled = true; };
   }, [kalimaIdx, kalimaAudioUrl, kalima.ayah, kalima.arabic, fetchKalimaAudio]);
 
