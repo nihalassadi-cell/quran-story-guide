@@ -74,6 +74,7 @@ function MoodPlayer() {
   const kalimaAudioContextRef = useRef<AudioContext | null>(null);
   const kalimaSourceRef = useRef<AudioBufferSourceNode | null>(null);
   const kalimaPreloadAudioRef = useRef<Map<string, HTMLAudioElement>>(new Map());
+  const lastPointerTapRef = useRef(0);
   const fetchKalimaAudio = useServerFn(getKalimaAudio);
 
   const stopCurrentPlayback = (resetSrc = false) => {
@@ -789,6 +790,11 @@ function MoodPlayer() {
               onPointerDown={(e) => {
                 if (e.button !== 0) return;
                 e.preventDefault();
+                lastPointerTapRef.current = Date.now();
+                tapWithBuzz();
+              }}
+              onClick={() => {
+                if (Date.now() - lastPointerTapRef.current < 250) return;
                 tapWithBuzz();
               }}
               onKeyDown={(e) => {
