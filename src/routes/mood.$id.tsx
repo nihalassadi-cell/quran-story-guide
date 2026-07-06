@@ -800,6 +800,7 @@ function MoodPlayer() {
               onKeyDown={(e) => {
                 if (e.key !== "Enter" && e.key !== " ") return;
                 e.preventDefault();
+                lastPointerTapRef.current = Date.now();
                 tapWithBuzz();
               }}
               aria-label="Count one"
