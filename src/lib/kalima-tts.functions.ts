@@ -33,7 +33,7 @@ export const getKalimaAudio = createServerFn({ method: "POST" })
     try {
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-      const key = await sha256Hex(data.text);
+      const key = await sha256Hex(`${KALIMA_VOICE_REV}:${data.text}`);
       const path = `kalimas/${key}.mp3`;
 
       const { data: existing } = await supabaseAdmin.storage.from(BUCKET).list("kalimas", {
