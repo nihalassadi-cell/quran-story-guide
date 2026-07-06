@@ -16,6 +16,7 @@ import { Route as AnimateRouteImport } from './routes/animate'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SurahNumberRouteImport } from './routes/surah.$number'
 import { Route as MoodIdRouteImport } from './routes/mood.$id'
+import { Route as ApiPublicKalimaTtsHashRouteImport } from './routes/api/public/kalima-tts.$hash'
 
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
@@ -52,6 +53,11 @@ const MoodIdRoute = MoodIdRouteImport.update({
   path: '/mood/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicKalimaTtsHashRoute = ApiPublicKalimaTtsHashRouteImport.update({
+  id: '/api/public/kalima-tts/$hash',
+  path: '/api/public/kalima-tts/$hash',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -61,6 +67,7 @@ export interface FileRoutesByFullPath {
   '/terms': typeof TermsRoute
   '/mood/$id': typeof MoodIdRoute
   '/surah/$number': typeof SurahNumberRoute
+  '/api/public/kalima-tts/$hash': typeof ApiPublicKalimaTtsHashRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -70,6 +77,7 @@ export interface FileRoutesByTo {
   '/terms': typeof TermsRoute
   '/mood/$id': typeof MoodIdRoute
   '/surah/$number': typeof SurahNumberRoute
+  '/api/public/kalima-tts/$hash': typeof ApiPublicKalimaTtsHashRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -80,6 +88,7 @@ export interface FileRoutesById {
   '/terms': typeof TermsRoute
   '/mood/$id': typeof MoodIdRoute
   '/surah/$number': typeof SurahNumberRoute
+  '/api/public/kalima-tts/$hash': typeof ApiPublicKalimaTtsHashRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -91,6 +100,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/mood/$id'
     | '/surah/$number'
+    | '/api/public/kalima-tts/$hash'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -100,6 +110,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/mood/$id'
     | '/surah/$number'
+    | '/api/public/kalima-tts/$hash'
   id:
     | '__root__'
     | '/'
@@ -109,6 +120,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/mood/$id'
     | '/surah/$number'
+    | '/api/public/kalima-tts/$hash'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -119,6 +131,7 @@ export interface RootRouteChildren {
   TermsRoute: typeof TermsRoute
   MoodIdRoute: typeof MoodIdRoute
   SurahNumberRoute: typeof SurahNumberRoute
+  ApiPublicKalimaTtsHashRoute: typeof ApiPublicKalimaTtsHashRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -172,6 +185,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MoodIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/kalima-tts/$hash': {
+      id: '/api/public/kalima-tts/$hash'
+      path: '/api/public/kalima-tts/$hash'
+      fullPath: '/api/public/kalima-tts/$hash'
+      preLoaderRoute: typeof ApiPublicKalimaTtsHashRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -183,16 +203,8 @@ const rootRouteChildren: RootRouteChildren = {
   TermsRoute: TermsRoute,
   MoodIdRoute: MoodIdRoute,
   SurahNumberRoute: SurahNumberRoute,
+  ApiPublicKalimaTtsHashRoute: ApiPublicKalimaTtsHashRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-  }
-}
