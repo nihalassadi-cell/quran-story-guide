@@ -67,6 +67,12 @@ function MoodPlayer() {
   // preload fetch is still pending awaits the same request instead of firing
   // a duplicate one (which was doubling the wait on the very first tap).
   const kalimaPendingFetchRef = useRef<Map<string, Promise<string | null>>>(new Map());
+  // Low-latency playback cache. Once a kalima MP3 is decoded into Web Audio,
+  // repeat taps start from memory instead of asking <audio> to seek/rebuffer.
+  const kalimaBufferCacheRef = useRef<Map<string, AudioBuffer>>(new Map());
+  const kalimaBufferPendingRef = useRef<Map<string, Promise<AudioBuffer | null>>>(new Map());
+  const kalimaAudioContextRef = useRef<AudioContext | null>(null);
+  const kalimaSourceRef = useRef<AudioBufferSourceNode | null>(null);
   const fetchKalimaAudio = useServerFn(getKalimaAudio);
 
   // Resolve the global ayah number for the current kalima (when it's a verse).
@@ -74,7 +80,70 @@ function MoodPlayer() {
   const kalimaAyah = kalima.ayah && kalimaSurah?.ayahs.find((a) => a.numberInSurah === kalima.ayah!.verse);
   const kalimaAudioUrl = kalimaAyah ? ayahAudioUrl(kalimaAyah.number, reciter) : null;
 
+  const getKalimaAudioContext = () => {
+    const AC = window.AudioContext || (window as any).webkitAudioContext;
+    if (!AC) return null;
+    if (!kalimaAudioContextRef.current) kalimaAudioContextRef.current = new AC();
+    const ctx = kalimaAudioContextRef.current;
+    if (ctx.state !== "running") ctx.resume().catch(() => {});
+    return ctx;
+  };
+
+  const warmKalimaBuffer = (url: string): Promise<AudioBuffer | null> => {
+    const cached = kalimaBufferCacheRef.current.get(url);
+    if (cached) return Promise.resolve(cached);
+    const pending = kalimaBufferPendingRef.current.get(url);
+    if (pending) return pending;
+
+    const p = fetch(url)
+      .then((res) => {
+        if (!res.ok) throw new Error(`audio_${res.status}`);
+        return res.arrayBuffer();
+      })
+      .then((arrayBuffer) => {
+        const playbackCtx = kalimaAudioContextRef.current;
+        if (playbackCtx) return playbackCtx.decodeAudioData(arrayBuffer.slice(0));
+        // Decode during preload without creating the real playback context.
+        // On iOS, the playback AudioContext must be created by the tap itself.
+        const OfflineAC = window.OfflineAudioContext || (window as any).webkitOfflineAudioContext;
+        if (!OfflineAC) return null;
+        const offlineCtx = new OfflineAC(1, 1, 44100);
+        return offlineCtx.decodeAudioData(arrayBuffer.slice(0));
+      })
+      .then((buffer) => {
+        if (buffer) kalimaBufferCacheRef.current.set(url, buffer);
+        return buffer;
+      })
+      .catch((e) => {
+        console.warn("[mood] kalima audio decode failed", e);
+        return null;
+      })
+      .finally(() => {
+        kalimaBufferPendingRef.current.delete(url);
+      });
+    kalimaBufferPendingRef.current.set(url, p);
+    return p;
+  };
+
+  const playBufferedKalimaAudio = (url: string) => {
+    const buffer = kalimaBufferCacheRef.current.get(url);
+    if (!buffer) return false;
+    const ctx = getKalimaAudioContext();
+    if (!ctx) return false;
+    try { kalimaSourceRef.current?.stop(); } catch {}
+    const source = ctx.createBufferSource();
+    source.buffer = buffer;
+    source.connect(ctx.destination);
+    source.start(0);
+    kalimaSourceRef.current = source;
+    source.onended = () => {
+      if (kalimaSourceRef.current === source) kalimaSourceRef.current = null;
+    };
+    return true;
+  };
+
   const playKalimaAudio = (url: string) => {
+    if (playBufferedKalimaAudio(url)) return;
     if (!audioRef.current) audioRef.current = new Audio();
     const a = audioRef.current;
     a.onended = null;
@@ -87,6 +156,7 @@ function MoodPlayer() {
     // mobile browsers and is what caused the perceived tap-to-audio lag.
     try { a.currentTime = 0; } catch {}
     a.play().catch((e) => console.warn("[mood] audio play failed", e));
+    warmKalimaBuffer(url).catch(() => {});
   };
 
   // Shared TTS fetch — reuses an in-flight request if one already exists
@@ -101,6 +171,7 @@ function MoodPlayer() {
       .then((res) => {
         if (res?.url) {
           kalimaUrlCacheRef.current.set(text, res.url);
+          warmKalimaBuffer(res.url).catch(() => {});
           return res.url;
         }
         console.warn("[mood] kalima tts failed", res?.error);
@@ -201,6 +272,7 @@ function MoodPlayer() {
         a.preload = "auto";
         try { a.load(); } catch {}
       }
+      if (kalimaAudioUrl) warmKalimaBuffer(kalimaAudioUrl).catch(() => {});
       return;
     }
     const text = kalima.arabic;
@@ -211,6 +283,7 @@ function MoodPlayer() {
         a.preload = "auto";
         try { a.load(); } catch {}
       }
+      warmKalimaBuffer(cached).catch(() => {});
       return;
     }
     let cancelled = false;
@@ -221,6 +294,7 @@ function MoodPlayer() {
         a.preload = "auto";
         try { a.load(); } catch {}
       }
+      warmKalimaBuffer(url).catch(() => {});
     });
     return () => { cancelled = true; };
   }, [kalimaIdx, kalimaAudioUrl, kalima.ayah, kalima.arabic, fetchKalimaAudio]);
@@ -235,6 +309,10 @@ function MoodPlayer() {
         try { audioRef.current.src = ""; } catch {}
         audioRef.current = null;
       }
+      try { kalimaSourceRef.current?.stop(); } catch {}
+      try { kalimaAudioContextRef.current?.close(); } catch {}
+      kalimaSourceRef.current = null;
+      kalimaAudioContextRef.current = null;
     };
   }, []);
 
@@ -463,8 +541,10 @@ function MoodPlayer() {
   // Vibrate on tap (mobile, harmless if unsupported)
   const tapWithBuzz = () => {
     try { (navigator as any).vibrate?.(15); } catch {}
-    startAmbient();
     tap();
+    // Start the ambient pad only after the recitation has been kicked off;
+    // its first-run WebAudio setup can otherwise delay the tap sound.
+    startAmbient();
   };
 
   // ===== Render: full-screen verse player overlay =====
@@ -698,7 +778,16 @@ function MoodPlayer() {
               </defs>
             </svg>
             <button
-              onClick={tapWithBuzz}
+              onPointerDown={(e) => {
+                if (e.button !== 0) return;
+                e.preventDefault();
+                tapWithBuzz();
+              }}
+              onKeyDown={(e) => {
+                if (e.key !== "Enter" && e.key !== " ") return;
+                e.preventDefault();
+                tapWithBuzz();
+              }}
               aria-label="Count one"
               className={`absolute inset-3 rounded-full bg-gradient-to-br from-primary to-primary-glow text-primary-foreground glow-shadow flex flex-col items-center justify-center select-none active:scale-[0.97] transition-transform ${pulse ? "kalima-pulse" : ""}`}
             >
