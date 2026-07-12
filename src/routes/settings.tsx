@@ -73,9 +73,12 @@ function SettingsPage() {
 
         <button onClick={save} className="w-full rounded-md bg-primary text-primary-foreground py-2 font-medium transition-transform duration-150 active:scale-[0.97] hover:bg-primary/90">Save preferences</button>
 
-        <div className="pt-4 border-t border-border text-center">
+        <div className="pt-4 border-t border-border text-center flex flex-col gap-2 items-center">
           <Link to="/terms" className="text-sm text-muted-foreground hover:text-foreground transition-colors underline underline-offset-4">
             Terms and Conditions
+          </Link>
+          <Link to="/privacy" className="text-sm text-muted-foreground hover:text-foreground transition-colors underline underline-offset-4">
+            Privacy Policy
           </Link>
         </div>
       </div>

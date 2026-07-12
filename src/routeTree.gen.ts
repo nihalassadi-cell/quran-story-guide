@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AnimateRouteImport } from './routes/animate'
 import { Route as IndexRouteImport } from './routes/index'
@@ -27,6 +28,11 @@ const TermsRoute = TermsRouteImport.update({
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -70,6 +76,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/animate': typeof AnimateRoute
   '/auth': typeof AuthRoute
+  '/privacy': typeof PrivacyRoute
   '/settings': typeof SettingsRoute
   '/terms': typeof TermsRoute
   '/mood/$id': typeof MoodIdRoute
@@ -81,6 +88,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/animate': typeof AnimateRoute
   '/auth': typeof AuthRoute
+  '/privacy': typeof PrivacyRoute
   '/settings': typeof SettingsRoute
   '/terms': typeof TermsRoute
   '/mood/$id': typeof MoodIdRoute
@@ -93,6 +101,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/animate': typeof AnimateRoute
   '/auth': typeof AuthRoute
+  '/privacy': typeof PrivacyRoute
   '/settings': typeof SettingsRoute
   '/terms': typeof TermsRoute
   '/mood/$id': typeof MoodIdRoute
@@ -106,6 +115,7 @@ export interface FileRouteTypes {
     | '/'
     | '/animate'
     | '/auth'
+    | '/privacy'
     | '/settings'
     | '/terms'
     | '/mood/$id'
@@ -117,6 +127,7 @@ export interface FileRouteTypes {
     | '/'
     | '/animate'
     | '/auth'
+    | '/privacy'
     | '/settings'
     | '/terms'
     | '/mood/$id'
@@ -128,6 +139,7 @@ export interface FileRouteTypes {
     | '/'
     | '/animate'
     | '/auth'
+    | '/privacy'
     | '/settings'
     | '/terms'
     | '/mood/$id'
@@ -140,6 +152,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AnimateRoute: typeof AnimateRoute
   AuthRoute: typeof AuthRoute
+  PrivacyRoute: typeof PrivacyRoute
   SettingsRoute: typeof SettingsRoute
   TermsRoute: typeof TermsRoute
   MoodIdRoute: typeof MoodIdRoute
@@ -162,6 +175,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -220,6 +240,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AnimateRoute: AnimateRoute,
   AuthRoute: AuthRoute,
+  PrivacyRoute: PrivacyRoute,
   SettingsRoute: SettingsRoute,
   TermsRoute: TermsRoute,
   MoodIdRoute: MoodIdRoute,
