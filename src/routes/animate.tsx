@@ -18,7 +18,7 @@ export const Route = createFileRoute("/animate")({
       },
     ],
   }),
-  component: AnimatePage;
+  component: AnimatePage,
 });
 
 type Tab = "kalima" | "story";
