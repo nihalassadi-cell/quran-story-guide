@@ -12,6 +12,7 @@ import { shareContent } from "@/lib/share";
 import { useLanguage, tr, isRtl } from "@/lib/language";
 import { useT, moodLabel } from "@/lib/i18n";
 import { storyForMood } from "@/lib/stories";
+import { NarrationLangSelect } from "@/components/NarrationLangSelect";
 import { toast } from "sonner";
 
 
@@ -34,7 +35,7 @@ function MoodPlayer() {
   const { id } = Route.useParams();
   const mood = getMood(id);
   if (!mood) throw notFound();
-  const [lang] = useLanguage();
+  const [lang, setLang] = useLanguage();
   const t = useT();
   const storyId = storyForMood(mood.id);
   const rtl = isRtl(lang);
@@ -711,7 +712,10 @@ function MoodPlayer() {
               {ambientOn ? <Music className="h-5 w-5 text-primary" /> : <VolumeX className="h-5 w-5 text-muted-foreground" />}
             </button>
           </div>
+        </div>
 
+        <div className="flex justify-center mb-4">
+          <NarrationLangSelect value={lang} onChange={setLang} tone="light" title={t("settings.language")} />
         </div>
 
         {/* Kalima picker */}

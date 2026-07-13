@@ -6,6 +6,7 @@ import { useLanguage, tr } from "@/lib/language";
 import { useT } from "@/lib/i18n";
 import { speak, prefetchTTS, type Narrator } from "@/lib/narrator";
 import { createAmbientPad, type AmbientPad } from "@/lib/ambient-pad";
+import { NarrationLangSelect } from "@/components/NarrationLangSelect";
 
 export const Route = createFileRoute("/story/$id")({
   loader: ({ params }) => {
@@ -50,7 +51,8 @@ async function translateCaption(text: string, lang: string): Promise<string> {
 
 function StoryPlayer() {
   const { story } = Route.useLoaderData();
-  const [lang] = useLanguage();
+  const [lang, setLang] = useLanguage();
+
   const t = useT();
 
   const [idx, setIdx] = useState(0);
@@ -238,7 +240,8 @@ function StoryPlayer() {
       {/* Top bar */}
       <div className="absolute top-0 inset-x-0 pt-[calc(env(safe-area-inset-top)+0.75rem)] px-4 flex items-center gap-2 z-10">
         <Link
-          to="/today"
+          to="/animate"
+          search={{ tab: "story" }}
           className="rounded-full bg-black/40 backdrop-blur border border-white/15 p-2 hover:border-white/40"
           title={t("story.close")}
         >
@@ -257,6 +260,7 @@ function StoryPlayer() {
             </span>
           ))}
         </div>
+        <NarrationLangSelect value={lang} onChange={setLang} tone="dark" />
       </div>
 
       {/* Title */}
