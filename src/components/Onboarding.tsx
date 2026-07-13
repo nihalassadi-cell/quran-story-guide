@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { BookOpen, Heart, Languages } from "lucide-react";
-import { SUPPORTED_LANGUAGES, setLanguage, type LangCode } from "@/lib/language";
+import { SUPPORTED_LANGUAGES, setLanguage, getLanguage, type LangCode } from "@/lib/language";
 
 const KEY = "noor:onboarded:v1";
 
@@ -8,22 +8,33 @@ export function Onboarding() {
   const [show, setShow] = useState(false);
   const [i, setI] = useState(0);
   const [lang, setLang] = useState<LangCode>("en");
+  // Track whether the user actively picked a language on the language slide.
+  // If they don't, we must NOT overwrite any previously-saved preference.
+  const [langTouched, setLangTouched] = useState(false);
 
   useEffect(() => {
     try {
       if (!localStorage.getItem(KEY)) setShow(true);
+      // Seed from any previously-saved preference so returning users don't get reset.
+      setLang(getLanguage());
     } catch {}
   }, []);
 
   if (!show) return null;
 
+  const pickLang = (code: LangCode) => {
+    setLang(code);
+    setLangTouched(true);
+  };
+
   const finish = () => {
     try {
-      setLanguage(lang);
+      if (langTouched) setLanguage(lang);
       localStorage.setItem(KEY, "1");
     } catch {}
     setShow(false);
   };
+
 
   const slides = [
     {
