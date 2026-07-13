@@ -15,8 +15,10 @@ const STORAGE_KEY = "noor:settings";
 
 function SettingsPage() {
   const [lang, setLang] = useLanguage();
+  const t = useT();
   const [reciter, setReciter] = useState("ar.alafasy");
   const [autoplay, setAutoplay] = useState(true);
+
 
   useEffect(() => {
     try {
