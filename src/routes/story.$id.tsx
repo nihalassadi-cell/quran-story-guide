@@ -323,6 +323,15 @@ function StoryPlayer() {
             </span>
           ))}
         </div>
+        {hasVideo && (
+          <button
+            onClick={() => setMode((m) => (m === "video" ? "image" : "video"))}
+            className="rounded-full bg-black/40 backdrop-blur border border-white/15 p-2 hover:border-white/40"
+            title={mode === "video" ? "Switch to stills" : "Watch as video"}
+          >
+            {mode === "video" ? <ImageIcon className="h-5 w-5" /> : <Film className="h-5 w-5" />}
+          </button>
+        )}
         <NarrationLangSelect value={lang} onChange={setLang} tone="dark" />
       </div>
 
