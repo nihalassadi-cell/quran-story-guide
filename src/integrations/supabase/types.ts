@@ -84,6 +84,96 @@ export type Database = {
           },
         ]
       }
+      reading_progress: {
+        Row: {
+          created_at: string
+          current_surah: number
+          current_verse: number
+          show_streak: boolean
+          start_surah: number
+          start_verse: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_surah?: number
+          current_verse?: number
+          show_streak?: boolean
+          start_surah?: number
+          start_verse?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_surah?: number
+          current_verse?: number
+          show_streak?: boolean
+          start_surah?: number
+          start_verse?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      reading_sessions: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          id: string
+          pages_read: number
+          session_date: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          pages_read?: number
+          session_date: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          pages_read?: number
+          session_date?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      reading_streak: {
+        Row: {
+          created_at: string
+          current_streak: number
+          last_completed_date: string | null
+          longest_streak: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_streak?: number
+          last_completed_date?: string | null
+          longest_streak?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_streak?: number
+          last_completed_date?: string | null
+          longest_streak?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       scenes: {
         Row: {
           created_at: string
