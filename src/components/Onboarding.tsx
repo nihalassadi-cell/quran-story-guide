@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { BookOpen, Heart, Languages } from "lucide-react";
 import { SUPPORTED_LANGUAGES, setLanguage, getLanguage, type LangCode } from "@/lib/language";
+import { t as tt } from "@/lib/i18n";
+
 
 const KEY = "noor:onboarded:v1";
 
