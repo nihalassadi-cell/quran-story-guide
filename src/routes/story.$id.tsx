@@ -77,6 +77,7 @@ function StoryPlayer() {
   const videoRefs = useRef<[HTMLVideoElement | null, HTMLVideoElement | null]>([null, null]);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const nextAudioRef = useRef<HTMLAudioElement | null>(null);
+  const musicRef = useRef<HTMLAudioElement | null>(null);
   const advancedRef = useRef(false);
   const idleTimerRef = useRef<number | null>(null);
 
