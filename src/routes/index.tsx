@@ -93,10 +93,11 @@ function HomePage() {
           <p className="text-xs uppercase tracking-[0.3em] text-primary/80 flex items-center gap-2">
             <Sparkles className="h-3.5 w-3.5" /> Noor
           </p>
-          <h1 className="text-[clamp(1.75rem,7vw,2.5rem)] font-bold mt-2 gold-text leading-tight">The Quran</h1>
+          <h1 className="text-[clamp(1.75rem,7vw,2.5rem)] font-bold mt-2 gold-text leading-tight">{t("quran.title")}</h1>
           <p className="text-sm text-muted-foreground mt-2">
-            114 chapters. Recitation and translation — verse by verse.
+            {t("quran.sub")}
           </p>
+
         </header>
 
         <div className="relative mb-5">
