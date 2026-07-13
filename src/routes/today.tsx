@@ -2,10 +2,12 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { getToday, pickTr } from "@/lib/today";
 import { useLanguage } from "@/lib/language";
-import { useT } from "@/lib/i18n";
+import { useT, localeFor } from "@/lib/i18n";
+import { hasStory } from "@/lib/stories";
 
 import { BookOpen, Feather, Repeat, Film, PenLine, ArrowRight } from "lucide-react";
 import { useMemo } from "react";
+
 
 export const Route = createFileRoute("/today")({
   head: () => ({
