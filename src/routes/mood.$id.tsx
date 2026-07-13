@@ -35,6 +35,8 @@ function MoodPlayer() {
   const mood = getMood(id);
   if (!mood) throw notFound();
   const [lang] = useLanguage();
+  const t = useT();
+  const storyId = mood ? storyForMood(mood.id) : undefined;
   const rtl = isRtl(lang);
 
   // Track mood selection once per mount
