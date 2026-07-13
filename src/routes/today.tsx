@@ -46,7 +46,7 @@ function TodayPage() {
         <div className="space-y-4">
           {/* 1 · Verse */}
           <section className="relative rounded-3xl overflow-hidden border border-white/10 bg-gradient-to-br from-[#141432]/60 to-[#08090C] p-5">
-            <CardChip icon={<BookOpen className="h-3 w-3" />} label="Verse" tone="indigo" />
+            <CardChip icon={<BookOpen className="h-3 w-3" />} label={t("today.chip.verse")} tone="indigo" />
             <p className="arabic text-right text-2xl leading-loose mt-3 text-foreground" dir="rtl">
               {today.verse.arabic}
             </p>
@@ -62,10 +62,11 @@ function TodayPage() {
                 params={{ number: String(today.verse.surah) }}
                 className="text-xs font-semibold text-primary hover:text-primary-glow inline-flex items-center gap-1"
               >
-                Open surah <ArrowRight className="h-3 w-3" />
+                {t("quran.openSurah")} <ArrowRight className="h-3 w-3" />
               </Link>
             </div>
           </section>
+
 
           {/* 2 · Hadith */}
           <section className="relative rounded-3xl overflow-hidden border border-white/10 bg-card/40 p-5">
