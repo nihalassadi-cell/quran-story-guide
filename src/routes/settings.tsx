@@ -34,18 +34,18 @@ function SettingsPage() {
   const save = () => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify({ reciter, autoplay }));
-      toast.success("Preferences saved");
+      toast.success(t("settings.saved"));
     } catch {
-      toast.error("Could not save preferences");
+      toast.error(t("settings.saveErr"));
     }
   };
 
   return (
     <AppShell>
       <div className="max-w-md mx-auto px-4 pt-8 space-y-5">
-        <h1 className="text-2xl font-bold gold-text">Settings</h1>
+        <h1 className="text-2xl font-bold gold-text">{t("settings.title")}</h1>
 
-        <Field label="Preferred language">
+        <Field label={t("settings.language")}>
           <select
             value={lang}
             onChange={(e) => setLang(e.target.value as LangCode)}
@@ -56,34 +56,34 @@ function SettingsPage() {
             ))}
           </select>
           <p className="text-[11px] text-muted-foreground mt-1.5 leading-snug">
-            Translations of verses and kalimas appear in this language. The Quran recitation is always in Arabic.
-            Translation audio is currently available only for English and Urdu.
+            {t("settings.langHint")}
           </p>
         </Field>
 
-        <Field label="Reciter">
+        <Field label={t("settings.reciter")}>
           <select value={reciter} onChange={(e) => setReciter(e.target.value)} className="w-full bg-card border border-border rounded-md px-3 py-2">
             {RECITERS.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
           </select>
         </Field>
 
-        <Field label="Autoplay next verse">
+        <Field label={t("settings.autoplay")}>
           <label className="flex items-center gap-2">
             <input type="checkbox" checked={autoplay} onChange={(e) => setAutoplay(e.target.checked)} />
-            <span className="text-sm text-muted-foreground">Continue to next verse automatically</span>
+            <span className="text-sm text-muted-foreground">{t("settings.autoplayHint")}</span>
           </label>
         </Field>
 
-        <button onClick={save} className="w-full rounded-md bg-primary text-primary-foreground py-2 font-medium transition-transform duration-150 active:scale-[0.97] hover:bg-primary/90">Save preferences</button>
+        <button onClick={save} className="w-full rounded-md bg-primary text-primary-foreground py-2 font-medium transition-transform duration-150 active:scale-[0.97] hover:bg-primary/90">{t("settings.save")}</button>
 
         <div className="pt-4 border-t border-border text-center flex flex-col gap-2 items-center">
           <Link to="/terms" className="text-sm text-muted-foreground hover:text-foreground transition-colors underline underline-offset-4">
-            Terms and Conditions
+            {t("settings.terms")}
           </Link>
           <Link to="/privacy" className="text-sm text-muted-foreground hover:text-foreground transition-colors underline underline-offset-4">
-            Privacy Policy
+            {t("settings.privacy")}
           </Link>
         </div>
+
       </div>
     </AppShell>
   );
