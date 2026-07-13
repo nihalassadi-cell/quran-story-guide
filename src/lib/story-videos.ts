@@ -1,8 +1,10 @@
-// Pre-generated cinematic video + multi-language narration audio for stories.
-// Narrations use ElevenLabs "Brian" (voice ID nPczCjzI2devNBz1zQrb) for a
-// warm, consistent male voice across scenes and languages.
-// Currently only Musa is generated as a pilot. If a story is absent here, the
-// player falls back to the still-image + on-the-fly TTS experience.
+// Pre-generated cinematic video + optional narration/music manifests.
+// - Musa is the fully-baked pilot: cinematic videos, 10 languages of narration,
+//   and per-scene ambient background music.
+// - Yunus, Maryam, Adam, Ibrahim, Ayyub currently ship with the cinematic
+//   videos only. Narration falls back to on-video captions (audio will be
+//   filled in once the TTS quota is topped up), and music is empty.
+// - Any story not listed here uses the still-image + on-the-fly TTS fallback.
 
 const SUPA = "https://uponnojfyseqvvbjbxcf.supabase.co/storage/v1/object/public";
 
@@ -15,6 +17,7 @@ type StoryVideoManifest = {
   music?: string[];
 };
 
+// ---------- Musa (fully baked) ----------
 const MUSA_LANGS = ["en", "ur", "ru", "bn", "fa", "id", "ms", "tr", "fr", "de"];
 
 // Musa scene order in stories.ts:
@@ -41,8 +44,24 @@ const MUSA: StoryVideoManifest = {
   music: MUSA_MUSIC,
 };
 
+// ---------- Videos-only stories ----------
+// Videos are named scene-01.mp4 through scene-10.mp4 in scene order.
+function videosOnly(storyId: string): StoryVideoManifest {
+  return {
+    videos: Array.from({ length: 10 }, (_, i) =>
+      `${SUPA}/scene-images/${storyId}/videos/scene-${String(i + 1).padStart(2, "0")}.mp4`
+    ),
+    narrations: {},
+  };
+}
+
 export const STORY_VIDEO_MANIFESTS: Record<string, StoryVideoManifest | undefined> = {
   musa: MUSA,
+  yunus: videosOnly("yunus"),
+  maryam: videosOnly("maryam"),
+  adam: videosOnly("adam"),
+  ibrahim: videosOnly("ibrahim"),
+  ayyub: videosOnly("ayyub"),
 };
 
 export function getStoryVideoManifest(id: string): StoryVideoManifest | undefined {
