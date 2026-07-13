@@ -81,7 +81,7 @@ export function Onboarding() {
             {SUPPORTED_LANGUAGES.map((l) => (
               <button
                 key={l.code}
-                onClick={() => setLang(l.code)}
+                onClick={() => pickLang(l.code)}
                 className={`rounded-xl border px-3 py-2.5 text-left transition-colors ${
                   lang === l.code
                     ? "bg-primary text-primary-foreground border-primary"
