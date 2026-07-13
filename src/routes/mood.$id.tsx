@@ -717,7 +717,7 @@ function MoodPlayer() {
         {/* Kalima picker */}
         {mood.kalimas.length > 1 && (
           <div className="mb-4">
-            <p className="text-[10px] uppercase tracking-widest text-primary/70 text-center mb-2">Choose a kalima</p>
+            <p className="text-[10px] uppercase tracking-widest text-primary/70 text-center mb-2">{t("mood.chooseKalima")}</p>
             <div className="flex flex-wrap items-center justify-center gap-2">
               {mood.kalimas.map((k, i) => (
                 <button
@@ -740,7 +740,7 @@ function MoodPlayer() {
                   }`}
                   title={tr(k.translation, lang)}
                 >
-                  Kalima {i + 1} · {k.repeat}×
+                  {`${i + 1}`} · {k.repeat}×
                 </button>
               ))}
             </div>
@@ -762,7 +762,7 @@ function MoodPlayer() {
           <p className="mt-3 text-[10px] uppercase tracking-widest text-primary/70">{kalima.source}</p>
           {kalima.ayah ? (
             <div className="mt-3 flex items-center justify-center gap-2 text-[11px]">
-              <span className="text-muted-foreground">Reciter:</span>
+              <span className="text-muted-foreground">{t("mood.reciter")}</span>
               <select
                 value={reciter}
                 onChange={(e) => setReciter(e.target.value)}
@@ -773,7 +773,7 @@ function MoodPlayer() {
             </div>
           ) : (
             <p className="mt-2 text-[10px] text-muted-foreground italic">
-              (Hadith dhikr — recited via device voice)
+              {t("mood.hadithNote")}
             </p>
           )}
         </div>
@@ -860,7 +860,7 @@ function MoodPlayer() {
           >
             <span className="flex items-center gap-2 text-sm">
               <BookOpen className="h-4 w-4 text-primary" />
-              Verses for this feeling · {mood.verses.length}
+              {t("mood.versesFor")} · {mood.verses.length}
             </span>
             {versesOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
           </button>
