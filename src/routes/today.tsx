@@ -115,37 +115,49 @@ function TodayPage() {
           </section>
 
           {/* 4 · Story of the day */}
-          <Link
-            to="/mood/$id"
-            params={{ id: today.story.moodId }}
-            className="group relative block rounded-3xl overflow-hidden border border-white/10 bg-gradient-to-br from-indigo-950 via-slate-900 to-black p-5 min-h-[180px]"
-          >
-            <div className="absolute inset-0 opacity-30 bg-[radial-gradient(ellipse_at_top_right,theme(colors.indigo.500/40),transparent_60%)]" />
-            <div className="relative">
-              <CardChip icon={<Film className="h-3 w-3" />} label="Story" tone="indigo" />
-              <h3 className="font-display-serif italic text-2xl text-white mt-3">
-                {pickTr(today.story.title, lang)}
-              </h3>
-              <p className="text-sm text-white/60 mt-2 leading-relaxed line-clamp-2">
-                {pickTr(today.story.blurb, lang)}
-              </p>
-              <div className="flex items-center justify-between mt-4">
-                <span className="text-[10px] uppercase tracking-widest text-indigo-300/80">
-                  {today.story.durationMin} min · Prophet story
-                </span>
-                <span className="text-xs font-bold text-white uppercase tracking-wider inline-flex items-center gap-1 group-hover:text-primary transition-colors">
-                  Watch <ArrowRight className="h-3 w-3" />
-                </span>
-              </div>
-            </div>
-          </Link>
+          {(() => {
+            const storyReady = hasStory(today.story.storyId);
+            const inner = (
+              <>
+                <div className="absolute inset-0 opacity-30 bg-[radial-gradient(ellipse_at_top_right,theme(colors.indigo.500/40),transparent_60%)]" />
+                <div className="relative">
+                  <CardChip icon={<Film className="h-3 w-3" />} label={t("today.chip.story")} tone="indigo" />
+                  <h3 className="font-display-serif italic text-2xl text-white mt-3">
+                    {pickTr(today.story.title, lang)}
+                  </h3>
+                  <p className="text-sm text-white/60 mt-2 leading-relaxed line-clamp-2">
+                    {pickTr(today.story.blurb, lang)}
+                  </p>
+                  <div className="flex items-center justify-between mt-4">
+                    <span className="text-[10px] uppercase tracking-widest text-indigo-300/80">
+                      {today.story.durationMin} {t("today.prophetStory")}
+                    </span>
+                    <span className="text-xs font-bold text-white uppercase tracking-wider inline-flex items-center gap-1 group-hover:text-primary transition-colors">
+                      {t("today.watch")} <ArrowRight className="h-3 w-3" />
+                    </span>
+                  </div>
+                </div>
+              </>
+            );
+            const cls = "group relative block rounded-3xl overflow-hidden border border-white/10 bg-gradient-to-br from-indigo-950 via-slate-900 to-black p-5 min-h-[180px]";
+            return storyReady ? (
+              <Link to="/story/$id" params={{ id: today.story.storyId }} className={cls}>
+                {inner}
+              </Link>
+            ) : (
+              <Link to="/mood/$id" params={{ id: today.story.moodId }} className={cls}>
+                {inner}
+              </Link>
+            );
+          })()}
 
           {/* 5 · Reflection */}
           <section className="relative rounded-3xl overflow-hidden border border-white/10 bg-card/30 p-5">
-            <CardChip icon={<PenLine className="h-3 w-3" />} label="Reflect" tone="gold" />
+            <CardChip icon={<PenLine className="h-3 w-3" />} label={t("today.chip.reflect")} tone="gold" />
             <p className="font-display-serif italic text-xl leading-snug mt-3 text-foreground">
               {pickTr(today.reflection.prompt, lang)}
             </p>
+
             <p className="text-[11px] text-muted-foreground mt-3">
               Sit with it for a moment. Journaling coming soon.
             </p>
