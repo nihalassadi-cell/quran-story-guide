@@ -5,6 +5,8 @@ import { AppShell } from "@/components/AppShell";
 import { Input } from "@/components/ui/input";
 import { Search, Sparkles, BookMarked, Loader2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useT } from "@/lib/i18n";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({
