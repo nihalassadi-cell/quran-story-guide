@@ -1,7 +1,7 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { ChevronLeft, Play, Pause, RotateCcw, BookOpen, Sparkles, ChevronDown, ChevronUp, Loader2, SkipBack, SkipForward, Music, VolumeX, Share2 } from "lucide-react";
+import { ChevronLeft, Play, Pause, RotateCcw, BookOpen, Sparkles, ChevronDown, ChevronUp, Loader2, SkipBack, SkipForward, Music, VolumeX, Share2, Film } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchSurahWithTranslation, ayahAudioUrl, ayahGlobalNumber, RECITERS, type LanguageCode } from "@/lib/quran-api";
 import { getMood } from "@/lib/moods";
@@ -10,7 +10,10 @@ import { createAmbientPad } from "@/lib/ambient-pad";
 import { track } from "@/lib/analytics";
 import { shareContent } from "@/lib/share";
 import { useLanguage, tr, isRtl } from "@/lib/language";
+import { useT, moodLabel } from "@/lib/i18n";
+import { storyForMood } from "@/lib/stories";
 import { toast } from "sonner";
+
 
 export const Route = createFileRoute("/mood/$id")({
   head: ({ params }) => {
