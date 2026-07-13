@@ -2,9 +2,10 @@ import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { X, Play, Pause, ChevronLeft, ChevronRight, Volume2, VolumeX, RotateCcw } from "lucide-react";
 import { getStory } from "@/lib/stories";
-import { useLanguage, tr, isRtl } from "@/lib/language";
+import { useLanguage, tr } from "@/lib/language";
 import { useT } from "@/lib/i18n";
 import { speak, prefetchTTS, type Narrator } from "@/lib/narrator";
+import { createAmbientPad, type AmbientPad } from "@/lib/ambient-pad";
 
 export const Route = createFileRoute("/story/$id")({
   loader: ({ params }) => {
@@ -23,17 +24,41 @@ export const Route = createFileRoute("/story/$id")({
   component: StoryPlayer,
 });
 
+// Shared in-memory translation cache — captions and TTS both hit the same
+// translation, so we only pay once per (text, lang).
+const captionCache = new Map<string, string>();
+async function translateCaption(text: string, lang: string): Promise<string> {
+  if (lang === "en") return text;
+  const key = `${lang}:${text}`;
+  const hit = captionCache.get(key);
+  if (hit) return hit;
+  try {
+    const res = await fetch("/api/translate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text, lang }),
+    });
+    if (!res.ok) return text;
+    const json = await res.json() as { text?: string };
+    const out = json.text?.trim() || text;
+    captionCache.set(key, out);
+    return out;
+  } catch {
+    return text;
+  }
+}
+
 function StoryPlayer() {
   const { story } = Route.useLoaderData();
   const [lang] = useLanguage();
   const t = useT();
-  const rtl = isRtl(lang);
 
   const [idx, setIdx] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [muted, setMuted] = useState(false);
-  const [progress, setProgress] = useState(0); // 0..1 within current scene
+  const [progress, setProgress] = useState(0);
   const [ended, setEnded] = useState(false);
+  const [caption, setCaption] = useState("");
 
   const scene = story.scenes[idx];
   const total = story.scenes.length;
@@ -41,19 +66,49 @@ function StoryPlayer() {
   const rafRef = useRef<number | null>(null);
   const startedAtRef = useRef<number>(0);
   const narratorRef = useRef<Narrator | null>(null);
+  const padRef = useRef<AmbientPad | null>(null);
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
       narratorRef.current?.stop();
+      padRef.current?.stop();
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
   }, []);
 
-  // Prefetch next scene's audio while current plays
+  // Ambient music follows play state
+  useEffect(() => {
+    if (playing && !muted) {
+      if (!padRef.current) padRef.current = createAmbientPad();
+      padRef.current.setVolume(0.14);
+      void padRef.current.start();
+    } else {
+      padRef.current?.stop();
+      padRef.current = null;
+    }
+  }, [playing, muted]);
+
+  // Load caption for the current scene in the selected language
+  useEffect(() => {
+    let cancelled = false;
+    const source = tr(scene.narration, "en");
+    const localized = tr(scene.narration, lang);
+    // If a hand-written translation exists (differs from en), use it directly.
+    if (lang === "en" || (localized && localized !== source)) {
+      setCaption(localized || source);
+      return;
+    }
+    // Otherwise translate on the fly.
+    setCaption(source);
+    translateCaption(source, lang).then((out) => { if (!cancelled) setCaption(out); });
+    return () => { cancelled = true; };
+  }, [idx, lang, scene.narration]);
+
+  // Prefetch next scene's narration audio while current plays
   useEffect(() => {
     const next = story.scenes[idx + 1];
-    if (next) prefetchTTS(tr(next.narration, lang));
+    if (next) prefetchTTS(tr(next.narration, "en"), lang);
   }, [idx, lang, story.scenes]);
 
   // Scene ticker + narration
@@ -63,9 +118,10 @@ function StoryPlayer() {
     startedAtRef.current = performance.now();
     let cancelled = false;
 
-    // Start narration
     if (!muted) {
-      speak(tr(scene.narration, lang), { lang })
+      // Always feed the English source to /api/tts; the server translates
+      // when lang != en so audio matches the selected language.
+      speak(tr(scene.narration, "en"), { lang, volume: 1 })
         .then((n) => { if (cancelled) { n.stop(); return; } narratorRef.current = n; })
         .catch((e) => console.warn("[story] narration failed", e));
     }
@@ -121,7 +177,7 @@ function StoryPlayer() {
   }, [scene.kenBurns]);
 
   return (
-    <div className="fixed inset-0 z-[80] bg-black text-white overflow-hidden" dir={rtl ? "rtl" : "ltr"}>
+    <div className="fixed inset-0 z-[80] bg-black text-white overflow-hidden">
       {/* Image */}
       <div className="absolute inset-0">
         <img
@@ -187,10 +243,10 @@ function StoryPlayer() {
       {/* Caption */}
       <div className="absolute bottom-0 inset-x-0 pb-[calc(env(safe-area-inset-bottom)+7rem)] px-6 z-10">
         <p
-          key={idx}
+          key={`${idx}-${caption}`}
           className="max-w-2xl mx-auto text-base sm:text-lg text-white/95 leading-relaxed text-center fade-in font-display-serif italic"
         >
-          {tr(scene.narration, lang)}
+          {caption}
         </p>
       </div>
 
