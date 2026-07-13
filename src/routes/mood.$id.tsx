@@ -12,6 +12,7 @@ import { shareContent } from "@/lib/share";
 import { useLanguage, tr, isRtl } from "@/lib/language";
 import { useT, moodLabel } from "@/lib/i18n";
 import { storyForMood } from "@/lib/stories";
+import { NarrationLangSelect } from "@/components/NarrationLangSelect";
 import { toast } from "sonner";
 
 
