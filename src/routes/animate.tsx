@@ -1,5 +1,5 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { Heart, Repeat, Film, Play, Sparkles } from "lucide-react";
 import { MOODS } from "@/lib/moods";
@@ -7,7 +7,13 @@ import { useLanguage, tr } from "@/lib/language";
 import { useT, moodLabel } from "@/lib/i18n";
 import { allStories, storyForMood } from "@/lib/stories";
 
+type Tab = "kalima" | "story";
+
 export const Route = createFileRoute("/animate")({
+  validateSearch: (search: Record<string, unknown>): { tab?: Tab } => {
+    const t = search.tab;
+    return { tab: t === "story" || t === "kalima" ? t : undefined };
+  },
   head: () => ({
     meta: [
       { title: "How are you feeling? — Noor" },
@@ -21,11 +27,19 @@ export const Route = createFileRoute("/animate")({
   component: AnimatePage,
 });
 
-type Tab = "kalima" | "story";
-
 function AnimatePage() {
   const t = useT();
-  const [tab, setTab] = useState<Tab>("kalima");
+  const search = Route.useSearch();
+  const navigate = useNavigate({ from: Route.fullPath });
+  const [tab, setTabState] = useState<Tab>(search.tab ?? "kalima");
+  useEffect(() => {
+    if (search.tab && search.tab !== tab) setTabState(search.tab);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search.tab]);
+  const setTab = (next: Tab) => {
+    setTabState(next);
+    navigate({ search: { tab: next }, replace: true });
+  };
 
   return (
     <AppShell>
