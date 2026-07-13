@@ -113,8 +113,9 @@ export function Onboarding() {
           onClick={next}
           className="w-full max-w-xs rounded-full bg-gradient-to-r from-primary to-primary-glow text-primary-foreground font-semibold py-3.5 glow-shadow"
         >
-          {i < total - 1 ? "Next" : "Begin"}
+          {i < total - 1 ? tt("onb.next", lang) : tt("onb.begin", lang)}
         </button>
+
       </div>
     </div>
   );
