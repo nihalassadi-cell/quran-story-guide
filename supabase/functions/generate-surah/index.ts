@@ -133,7 +133,24 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    // Open to all users — no auth required for scene generation.
+    // Require an authenticated Supabase user. verify_jwt is false at the
+    // platform level so we validate the JWT explicitly here.
+    const authHeader = req.headers.get("Authorization") ?? "";
+    const token = authHeader.toLowerCase().startsWith("bearer ")
+      ? authHeader.slice(7).trim()
+      : "";
+    if (!token) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    const authClient = createClient(SUPABASE_URL, Deno.env.get("SUPABASE_ANON_KEY") ?? Deno.env.get("SUPABASE_PUBLISHABLE_KEY") ?? "", {
+      global: { headers: { Authorization: `Bearer ${token}` } },
+    });
+    const { data: userData, error: userErr } = await authClient.auth.getUser(token);
+    if (userErr || !userData?.user) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    const userId = userData.user.id;
+
     const body = await req.json();
     const surahNumber: number = body.surahNumber;
     const batchSize: number = Math.min(body.batchSize ?? 8, 20);
@@ -147,7 +164,13 @@ Deno.serve(async (req) => {
     // 1. Ensure verses + translations exist
     const verses = await ensureVerses(admin, surahNumber);
 
-    const regenerate: boolean = !!body.regenerate;
+    // Restrict `regenerate` to admins only — it re-consumes AI credits.
+    let regenerate: boolean = !!body.regenerate;
+    if (regenerate) {
+      const { data: isAdmin } = await admin.rpc("has_role", { _user_id: userId, _role: "admin" });
+      if (!isAdmin) regenerate = false;
+    }
+
 
     // 2. Find verses to process
     const verseIds = verses.map((v) => v.id);
