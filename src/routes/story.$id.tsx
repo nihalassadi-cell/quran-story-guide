@@ -124,37 +124,53 @@ function StoryPlayer() {
     if (next) prefetchTTS(tr(next.narration, "en"), lang);
   }, [idx, lang, story.scenes]);
 
-  // Scene ticker + narration
+  // Scene ticker + narration. We start the progress timer only once the
+  // narration audio is actually playing (or immediately if muted / audio
+  // failed) so image + audio + progress stay in sync and there's no silent
+  // "already advancing" gap while the TTS request is in flight.
   useEffect(() => {
     if (!playing) return;
     setEnded(false);
-    startedAtRef.current = performance.now();
     let cancelled = false;
+    let started = false;
 
-    if (!muted) {
-      // Always feed the English source to /api/tts; the server translates
-      // when lang != en so audio matches the selected language.
-      speak(tr(scene.narration, "en"), { lang, volume: 1 })
-        .then((n) => { if (cancelled) { n.stop(); return; } narratorRef.current = n; })
-        .catch((e) => console.warn("[story] narration failed", e));
-    }
-
-    const tick = () => {
-      const elapsed = performance.now() - startedAtRef.current;
-      const p = Math.min(1, elapsed / scene.durationMs);
-      setProgress(p);
-      if (p >= 1) {
-        if (idx < total - 1) {
-          setIdx((n) => n + 1);
-        } else {
-          setPlaying(false);
-          setEnded(true);
+    const startTick = () => {
+      if (started || cancelled) return;
+      started = true;
+      startedAtRef.current = performance.now();
+      const tick = () => {
+        const elapsed = performance.now() - startedAtRef.current;
+        const p = Math.min(1, elapsed / scene.durationMs);
+        setProgress(p);
+        if (p >= 1) {
+          if (idx < total - 1) setIdx((n) => n + 1);
+          else { setPlaying(false); setEnded(true); }
+          return;
         }
-        return;
-      }
+        rafRef.current = requestAnimationFrame(tick);
+      };
       rafRef.current = requestAnimationFrame(tick);
     };
-    rafRef.current = requestAnimationFrame(tick);
+
+    if (!muted) {
+      // Fallback: if TTS takes too long, don't stall the scene forever.
+      const failsafe = window.setTimeout(startTick, 1500);
+      speak(tr(scene.narration, "en"), { lang, volume: 1 })
+        .then((n) => {
+          if (cancelled) { n.stop(); return; }
+          narratorRef.current = n;
+          window.clearTimeout(failsafe);
+          startTick();
+        })
+        .catch((e) => {
+          console.warn("[story] narration failed", e);
+          window.clearTimeout(failsafe);
+          startTick();
+        });
+    } else {
+      startTick();
+    }
+
 
     return () => {
       cancelled = true;
