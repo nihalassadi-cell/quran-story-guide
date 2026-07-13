@@ -404,6 +404,8 @@ function StoryPlayer() {
             />
             <audio ref={audioRef} preload="auto" />
             <audio ref={nextAudioRef} preload="auto" />
+            <audio ref={musicRef} preload="auto" loop />
+
           </>
         ) : (
           <img
