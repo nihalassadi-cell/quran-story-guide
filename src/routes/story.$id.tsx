@@ -77,6 +77,7 @@ function StoryPlayer() {
   const videoRefs = useRef<[HTMLVideoElement | null, HTMLVideoElement | null]>([null, null]);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const nextAudioRef = useRef<HTMLAudioElement | null>(null);
+  const musicRef = useRef<HTMLAudioElement | null>(null);
   const advancedRef = useRef(false);
   const idleTimerRef = useRef<number | null>(null);
 
@@ -107,6 +108,7 @@ function StoryPlayer() {
     return () => {
       narratorRef.current?.stop();
       padRef.current?.stop();
+      try { musicRef.current?.pause(); } catch { /* noop */ }
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
   }, []);
@@ -234,11 +236,52 @@ function StoryPlayer() {
       a.volume = 1;
     }
 
+    // Per-scene background music (calm Middle-Eastern instrumental)
+    const musicUrl = videoManifest.music?.[idx];
+    const m = musicRef.current;
+    if (m && musicUrl) {
+      if (m.src !== musicUrl) {
+        m.src = musicUrl;
+        m.load();
+      }
+      m.loop = true;
+      m.muted = muted;
+      // Fade-in from 0 to target volume for a gentle transition
+      const target = 0.18;
+      m.volume = 0;
+      if (playing && !muted) {
+        m.play().catch(() => {});
+        let v = 0;
+        const fade = window.setInterval(() => {
+          v = Math.min(target, v + 0.02);
+          try { m.volume = v; } catch { /* noop */ }
+          if (v >= target) window.clearInterval(fade);
+        }, 60);
+      }
+    }
+
     const advance = () => {
       if (advancedRef.current) return;
       advancedRef.current = true;
+
+      // Fade out current music during the hold pause
+      const mNow = musicRef.current;
+      if (mNow) {
+        const start = mNow.volume;
+        let step = 0;
+        const steps = 20;
+        const fadeOut = window.setInterval(() => {
+          step += 1;
+          try { mNow.volume = Math.max(0, start * (1 - step / steps)); } catch { /* noop */ }
+          if (step >= steps) {
+            window.clearInterval(fadeOut);
+            try { mNow.pause(); } catch { /* noop */ }
+          }
+        }, 90);
+      }
+
       if (idx < total - 1) {
-        // Preload next video into inactive layer and crossfade
+        // Preload next video into inactive layer (kept muted, paused on last frame)
         const nextLayer: 0 | 1 = targetLayer === 0 ? 1 : 0;
         const nextEl = videoRefs.current[nextLayer];
         const nextSrc = videoManifest.videos[idx + 1];
@@ -246,16 +289,18 @@ function StoryPlayer() {
           nextEl.src = nextSrc;
           nextEl.muted = true;
           nextEl.load();
-          nextEl.play().catch(() => {});
         }
-        // Small delay so first frame of next video is decoded before fade
+        // Hold the last frame for ~2s of breathing room, then crossfade to next
         window.setTimeout(() => {
+          if (nextEl) nextEl.play().catch(() => {});
           setActiveLayer(nextLayer);
           setIdx((n) => n + 1);
-        }, 120);
+        }, 2000);
       } else {
-        setPlaying(false);
-        setEnded(true);
+        window.setTimeout(() => {
+          setPlaying(false);
+          setEnded(true);
+        }, 1200);
       }
     };
 
@@ -278,7 +323,7 @@ function StoryPlayer() {
 
     if (playing) {
       layerEl.play().catch(() => {});
-      // If muted, no audio => advance when video ends
+      // If muted or no audio => advance when video ends
       if (muted || !audioUrl) {
         layerEl.removeEventListener("ended", onVideoEnded);
         const onEndNoAudio = () => advance();
@@ -289,6 +334,7 @@ function StoryPlayer() {
     } else {
       layerEl.pause();
       a?.pause();
+      musicRef.current?.pause();
     }
 
     return () => {
@@ -359,6 +405,8 @@ function StoryPlayer() {
             />
             <audio ref={audioRef} preload="auto" />
             <audio ref={nextAudioRef} preload="auto" />
+            <audio ref={musicRef} preload="auto" loop />
+
           </>
         ) : (
           <img
