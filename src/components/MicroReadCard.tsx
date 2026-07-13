@@ -78,7 +78,10 @@ export function MicroReadCard() {
                 {t("quran.verse")} {startVerse}–{endVerse}
               </span>
             </h3>
-            <p className="text-sm text-muted-foreground mt-2">
+            <p className="text-sm text-primary/80 mt-2 leading-relaxed">
+              {t("micro.preRead")}
+            </p>
+            <p className="text-xs text-muted-foreground/80 mt-1">
               {t("micro.est")} ~{target * 3} {t("micro.min")}
             </p>
           </>
