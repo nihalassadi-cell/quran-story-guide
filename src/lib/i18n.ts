@@ -3,7 +3,38 @@
 
 import { useLanguage, type LangCode } from "@/lib/language";
 
-type Dict = Record<string, Partial<Record<LangCode, string>> & { en: string }>;
+type Entry = Partial<Record<LangCode, string>> & { en: string };
+type Dict = Record<string, Entry>;
+
+// BCP-47 locale for date/number formatting.
+const LOCALE: Record<LangCode, string> = {
+  en: "en-US", ur: "ur-PK", ru: "ru-RU", bn: "bn-BD", fa: "fa-IR",
+  id: "id-ID", ms: "ms-MY", tr: "tr-TR", fr: "fr-FR", de: "de-DE",
+};
+export function localeFor(lang: LangCode): string {
+  return LOCALE[lang] ?? "en-US";
+}
+
+// Mood label translations, keyed by mood.id.
+const MOOD_LABELS: Record<string, Entry> = {
+  stressed:  { en: "Stressed",             ur: "پریشان",           ru: "Напряжён",         bn: "চাপে আছি",       fa: "پرتنش",         id: "Tertekan",       ms: "Tertekan",       tr: "Stresli",         fr: "Stressé",              de: "Gestresst" },
+  anxious:   { en: "Anxious",              ur: "بے چین",           ru: "Тревожно",         bn: "উদ্বিগ্ন",         fa: "نگران",          id: "Cemas",          ms: "Cemas",          tr: "Endişeli",        fr: "Anxieux",              de: "Ängstlich" },
+  sad:       { en: "Sad",                  ur: "غمگین",            ru: "Грустно",          bn: "দুঃখিত",           fa: "غمگین",          id: "Sedih",          ms: "Sedih",          tr: "Üzgün",           fr: "Triste",               de: "Traurig" },
+  angry:     { en: "Angry",                ur: "ناراض",            ru: "Гневно",           bn: "রাগান্বিত",         fa: "خشمگین",         id: "Marah",          ms: "Marah",          tr: "Kızgın",          fr: "En colère",            de: "Wütend" },
+  lonely:    { en: "Lonely",               ur: "تنہا",             ru: "Одиноко",          bn: "একাকী",             fa: "تنها",           id: "Kesepian",       ms: "Kesepian",       tr: "Yalnız",          fr: "Seul",                 de: "Einsam" },
+  grateful:  { en: "Grateful",             ur: "شکر گزار",         ru: "Благодарно",       bn: "কৃতজ্ঞ",           fa: "سپاسگزار",       id: "Bersyukur",      ms: "Bersyukur",      tr: "Şükran",          fr: "Reconnaissant",        de: "Dankbar" },
+  hopeful:   { en: "Hopeful",              ur: "پُر امید",         ru: "С надеждой",       bn: "আশাবাদী",           fa: "امیدوار",        id: "Berharap",       ms: "Berharap",       tr: "Umutlu",          fr: "Plein d'espoir",       de: "Hoffnungsvoll" },
+  guilty:    { en: "Seeking forgiveness",  ur: "معافی کا طلبگار",  ru: "Ищу прощения",     bn: "ক্ষমা প্রার্থী",     fa: "طالب آمرزش",     id: "Memohon ampun",  ms: "Memohon ampun",  tr: "Bağışlanma diliyorum", fr: "En quête de pardon", de: "Um Vergebung bittend" },
+  fearful:   { en: "Fearful",              ur: "خوفزدہ",           ru: "Страшно",          bn: "ভীত",              fa: "ترسان",          id: "Takut",          ms: "Takut",          tr: "Korkmuş",         fr: "Craintif",             de: "Furchtsam" },
+  impatient: { en: "Impatient",            ur: "بے صبر",           ru: "Нетерпеливо",      bn: "অধৈর্য",           fa: "بی‌صبر",         id: "Tidak sabar",    ms: "Tidak sabar",    tr: "Sabırsız",        fr: "Impatient",            de: "Ungeduldig" },
+  afraid:    { en: "Afraid",               ur: "خوفزدہ",           ru: "Боюсь",            bn: "ভীত",              fa: "هراسان",         id: "Takut",          ms: "Takut",          tr: "Korkmuş",         fr: "Effrayé",              de: "Verängstigt" },
+};
+
+export function moodLabel(id: string, fallback: string, lang: LangCode): string {
+  const entry = MOOD_LABELS[id];
+  if (!entry) return fallback;
+  return entry[lang] ?? entry.en ?? fallback;
+}
 
 const UI: Dict = {
   // Tabs
@@ -14,18 +45,7 @@ const UI: Dict = {
 
   // Quran home
   "quran.title":   { en: "The Quran", ur: "قرآن مجید", ru: "Коран", bn: "আল-কুরআন", fa: "قرآن کریم", id: "Al-Qur'an", ms: "Al-Qur'an", tr: "Kur'an-ı Kerim", fr: "Le Coran", de: "Der Koran" },
-  "quran.sub":     {
-    en: "114 chapters. Recitation and translation — verse by verse.",
-    ur: "114 سورتیں۔ تلاوت اور ترجمہ — آیت بہ آیت۔",
-    ru: "114 сур. Чтение и перевод — стих за стихом.",
-    bn: "১১৪টি সূরা। তেলাওয়াত ও অনুবাদ — আয়াতে আয়াতে।",
-    fa: "۱۱۴ سوره. تلاوت و ترجمه — آیه به آیه.",
-    id: "114 surah. Bacaan dan terjemahan — ayat demi ayat.",
-    ms: "114 surah. Bacaan dan terjemahan — ayat demi ayat.",
-    tr: "114 sûre. Tilavet ve tercüme — âyet âyet.",
-    fr: "114 chapitres. Récitation et traduction — verset par verset.",
-    de: "114 Kapitel. Rezitation und Übersetzung — Vers für Vers.",
-  },
+  "quran.sub":     { en: "114 chapters. Recitation and translation — verse by verse.", ur: "114 سورتیں۔ تلاوت اور ترجمہ — آیت بہ آیت۔", ru: "114 сур. Чтение и перевод — стих за стихом.", bn: "১১৪টি সূরা। তেলাওয়াত ও অনুবাদ — আয়াতে আয়াতে।", fa: "۱۱۴ سوره. تلاوت و ترجمه — آیه به آیه.", id: "114 surah. Bacaan dan terjemahan — ayat demi ayat.", ms: "114 surah. Bacaan dan terjemahan — ayat demi ayat.", tr: "114 sûre. Tilavet ve tercüme — âyet âyet.", fr: "114 chapitres. Récitation et traduction — verset par verset.", de: "114 Kapitel. Rezitation und Übersetzung — Vers für Vers." },
   "quran.search":  { en: "Search across the entire Quran", ur: "پورے قرآن میں تلاش کریں", ru: "Поиск по всему Корану", bn: "সম্পূর্ণ কুরআনে খুঁজুন", fa: "جستجو در سراسر قرآن", id: "Cari di seluruh Al-Qur'an", ms: "Cari di seluruh Al-Qur'an", tr: "Kur'an'ın tamamında ara", fr: "Rechercher dans tout le Coran", de: "Im gesamten Koran suchen" },
   "quran.continue":{ en: "Continue reading", ur: "پڑھنا جاری رکھیں", ru: "Продолжить чтение", bn: "পড়া চালিয়ে যান", fa: "ادامهٔ خواندن", id: "Lanjutkan membaca", ms: "Sambung membaca", tr: "Okumaya devam et", fr: "Continuer la lecture", de: "Weiterlesen" },
   "quran.page":    { en: "Page", ur: "صفحہ", ru: "Стр.", bn: "পৃষ্ঠা", fa: "صفحه", id: "Halaman", ms: "Halaman", tr: "Sayfa", fr: "Page", de: "Seite" },
@@ -36,41 +56,30 @@ const UI: Dict = {
   "quran.surah":   { en: "Surah", ur: "سورہ", ru: "Сура", bn: "সূরা", fa: "سوره", id: "Surah", ms: "Surah", tr: "Sûre", fr: "Sourate", de: "Sure" },
   "quran.verseSuffix": { en: "verses", ur: "آیات", ru: "аятов", bn: "আয়াত", fa: "آیه", id: "ayat", ms: "ayat", tr: "âyet", fr: "versets", de: "Verse" },
   "quran.noMatches": { en: "No matches. Try a different word.", ur: "کوئی نتیجہ نہیں۔ کوئی اور لفظ آزمائیں۔", ru: "Ничего не найдено. Попробуйте другое слово.", bn: "কিছু পাওয়া যায়নি। অন্য শব্দ চেষ্টা করুন।", fa: "چیزی یافت نشد. کلمهٔ دیگری امتحان کنید.", id: "Tidak ada hasil. Coba kata lain.", ms: "Tiada padanan. Cuba perkataan lain.", tr: "Eşleşme yok. Farklı bir kelime deneyin.", fr: "Aucun résultat. Essayez un autre mot.", de: "Keine Treffer. Versuche ein anderes Wort." },
+  "quran.openSurah": { en: "Open surah", ur: "سورہ کھولیں", ru: "Открыть суру", bn: "সূরা খুলুন", fa: "بازکردن سوره", id: "Buka surah", ms: "Buka surah", tr: "Sûreyi aç", fr: "Ouvrir la sourate", de: "Sure öffnen" },
 
   // Feelings
   "feel.title":    { en: "How are you feeling right now?", ur: "آپ ابھی کیسا محسوس کر رہے ہیں؟", ru: "Как вы сейчас себя чувствуете?", bn: "আপনি এখন কেমন অনুভব করছেন?", fa: "الان چه احساسی دارید؟", id: "Bagaimana perasaanmu sekarang?", ms: "Bagaimana perasaan kamu sekarang?", tr: "Şu an nasıl hissediyorsun?", fr: "Comment vous sentez-vous en ce moment ?", de: "Wie fühlst du dich gerade?" },
-  "feel.sub":      {
-    en: "Pick a mood. For each feeling, the Prophet ﷺ taught a short remembrance — a kalima you can repeat like a heartbeat. Tap a mood to begin.",
-    ur: "ایک احساس چنیں۔ ہر احساس کے لیے نبی ﷺ نے ایک مختصر ذکر سکھایا — ایک کلمہ جسے آپ دل کی دھڑکن کی طرح دہرا سکتے ہیں۔ شروع کرنے کے لیے کسی احساس پر ٹیپ کریں۔",
-    ru: "Выберите состояние. Для каждого чувства Пророк ﷺ научил короткому поминанию — калиме, которую можно повторять как биение сердца. Нажмите, чтобы начать.",
-    bn: "একটি অনুভূতি বেছে নিন। প্রতিটি অনুভূতির জন্য নবী ﷺ একটি সংক্ষিপ্ত জিকির শিখিয়েছেন — একটি কালিমা যা আপনি হৃদস্পন্দনের মতো পুনরাবৃত্তি করতে পারেন। শুরু করতে ট্যাপ করুন।",
-    fa: "یک احساس را انتخاب کنید. برای هر احساس، پیامبر ﷺ ذکری کوتاه آموخته است — کلمه‌ای که مانند ضربان قلب تکرار می‌کنید. برای شروع لمس کنید.",
-    id: "Pilih suasana hati. Untuk tiap perasaan, Nabi ﷺ mengajarkan zikir singkat — kalimah yang dapat kamu ulang seperti detak jantung. Ketuk untuk mulai.",
-    ms: "Pilih perasaan. Untuk setiap perasaan, Nabi ﷺ mengajar zikir pendek — kalimah yang boleh kamu ulang seperti degupan jantung. Ketik untuk mula.",
-    tr: "Bir duygu seç. Her duygu için Peygamber ﷺ kısa bir zikir öğretti — kalp atışı gibi tekrar edebileceğin bir kelime. Başlamak için dokun.",
-    fr: "Choisissez un état. Pour chaque émotion, le Prophète ﷺ a enseigné une brève invocation — une kalima à répéter comme un battement de cœur. Touchez pour commencer.",
-    de: "Wähle ein Gefühl. Für jedes Gefühl lehrte der Prophet ﷺ ein kurzes Gedenken — eine Kalima, die du wie einen Herzschlag wiederholen kannst. Tippe zum Beginnen.",
-  },
+  "feel.sub":      { en: "Pick a mood. For each feeling, the Prophet ﷺ taught a short remembrance — a kalima you can repeat like a heartbeat. Tap a mood to begin.", ur: "ایک احساس چنیں۔ ہر احساس کے لیے نبی ﷺ نے ایک مختصر ذکر سکھایا — ایک کلمہ جسے آپ دل کی دھڑکن کی طرح دہرا سکتے ہیں۔ شروع کرنے کے لیے کسی احساس پر ٹیپ کریں۔", ru: "Выберите состояние. Для каждого чувства Пророк ﷺ научил короткому поминанию — калиме, которую можно повторять как биение сердца. Нажмите, чтобы начать.", bn: "একটি অনুভূতি বেছে নিন। প্রতিটি অনুভূতির জন্য নবী ﷺ একটি সংক্ষিপ্ত জিকির শিখিয়েছেন — একটি কালিমা যা আপনি হৃদস্পন্দনের মতো পুনরাবৃত্তি করতে পারেন। শুরু করতে ট্যাপ করুন।", fa: "یک احساس را انتخاب کنید. برای هر احساس، پیامبر ﷺ ذکری کوتاه آموخته است — کلمه‌ای که مانند ضربان قلب تکرار می‌کنید. برای شروع لمس کنید.", id: "Pilih suasana hati. Untuk tiap perasaan, Nabi ﷺ mengajarkan zikir singkat — kalimah yang dapat kamu ulang seperti detak jantung. Ketuk untuk mulai.", ms: "Pilih perasaan. Untuk setiap perasaan, Nabi ﷺ mengajar zikir pendek — kalimah yang boleh kamu ulang seperti degupan jantung. Ketik untuk mula.", tr: "Bir duygu seç. Her duygu için Peygamber ﷺ kısa bir zikir öğretti — kalp atışı gibi tekrar edebileceğin bir kelime. Başlamak için dokun.", fr: "Choisissez un état. Pour chaque émotion, le Prophète ﷺ a enseigné une brève invocation — une kalima à répéter comme un battement de cœur. Touchez pour commencer.", de: "Wähle ein Gefühl. Für jedes Gefühl lehrte der Prophet ﷺ ein kurzes Gedenken — eine Kalima, die du wie einen Herzschlag wiederholen kannst. Tippe zum Beginnen." },
 
   // Today
   "today.eyebrow": { en: "Today's Guidance", ur: "آج کی رہنمائی", ru: "Наставление на сегодня", bn: "আজকের পথনির্দেশ", fa: "راهنمای امروز", id: "Panduan Hari Ini", ms: "Panduan Hari Ini", tr: "Bugünün Rehberi", fr: "Guidance du jour", de: "Rechtleitung heute" },
   "today.sub":     { en: "Five small things. Take them slowly.", ur: "پانچ چھوٹی چیزیں۔ آہستہ آہستہ لیں۔", ru: "Пять малых вещей. Не спешите.", bn: "পাঁচটি ছোট বিষয়। ধীরে ধীরে গ্রহণ করুন।", fa: "پنج چیز کوچک. آرام‌آرام دریافت کنید.", id: "Lima hal kecil. Nikmati perlahan.", ms: "Lima perkara kecil. Ambil perlahan-lahan.", tr: "Beş küçük şey. Yavaşça al.", fr: "Cinq petites choses. Prenez-les lentement.", de: "Fünf kleine Dinge. Nimm sie langsam." },
+  "today.chip.verse":      { en: "Verse", ur: "آیت", ru: "Аят", bn: "আয়াত", fa: "آیه", id: "Ayat", ms: "Ayat", tr: "Âyet", fr: "Verset", de: "Vers" },
+  "today.chip.hadith":     { en: "Hadith", ur: "حدیث", ru: "Хадис", bn: "হাদিস", fa: "حدیث", id: "Hadits", ms: "Hadis", tr: "Hadis", fr: "Hadith", de: "Hadith" },
+  "today.chip.dhikr":      { en: "Dhikr", ur: "ذکر", ru: "Зикр", bn: "যিকর", fa: "ذکر", id: "Zikir", ms: "Zikir", tr: "Zikir", fr: "Dhikr", de: "Dhikr" },
+  "today.chip.story":      { en: "Story", ur: "کہانی", ru: "История", bn: "গল্প", fa: "داستان", id: "Kisah", ms: "Kisah", tr: "Kıssa", fr: "Récit", de: "Geschichte" },
+  "today.chip.reflect":    { en: "Reflect", ur: "غور و فکر", ru: "Размышление", bn: "চিন্তাভাবনা", fa: "تأمل", id: "Renungan", ms: "Renungan", tr: "Tefekkür", fr: "Réflexion", de: "Nachdenken" },
+  "today.narratedBy":      { en: "Narrated by", ur: "روایت کنندہ:", ru: "Передал", bn: "বর্ণনাকারী", fa: "روایت‌کننده", id: "Diriwayatkan oleh", ms: "Diriwayatkan oleh", tr: "Rivayet eden", fr: "Rapporté par", de: "Überliefert von" },
+  "today.practice":        { en: "Practice", ur: "مشق کریں", ru: "Практика", bn: "অনুশীলন", fa: "تمرین", id: "Amalkan", ms: "Amalkan", tr: "Uygula", fr: "Pratiquer", de: "Üben" },
+  "today.watch":           { en: "Watch", ur: "دیکھیں", ru: "Смотреть", bn: "দেখুন", fa: "تماشا", id: "Tonton", ms: "Tonton", tr: "İzle", fr: "Regarder", de: "Ansehen" },
+  "today.prophetStory":    { en: "min · Prophet story", ur: "منٹ · نبی کی کہانی", ru: "мин · Пророческая история", bn: "মিনিট · নবীর কাহিনি", fa: "دقیقه · داستان پیامبر", id: "mnt · Kisah nabi", ms: "min · Kisah nabi", tr: "dk · Peygamber kıssası", fr: "min · Récit prophétique", de: "Min · Prophetengeschichte" },
+  "today.sitWithIt":       { en: "Sit with it for a moment. Journaling coming soon.", ur: "ایک لمحہ اس کے ساتھ بیٹھیں۔ جرنلنگ جلد آ رہی ہے۔", ru: "Побудьте с этим мгновение. Дневник — скоро.", bn: "কিছুক্ষণ এর সাথে থাকুন। জার্নালিং শীঘ্রই আসছে।", fa: "لحظه‌ای با آن بمانید. یادداشت‌برداری به‌زودی می‌آید.", id: "Duduklah sejenak dengannya. Jurnal segera hadir.", ms: "Duduklah seketika dengannya. Jurnal akan datang.", tr: "Bir an onunla otur. Günlük yakında geliyor.", fr: "Restez avec cela un instant. Journal bientôt disponible.", de: "Verweile einen Moment damit. Tagebuch kommt bald." },
 
   // Settings
   "settings.title":    { en: "Settings", ur: "ترتیبات", ru: "Настройки", bn: "সেটিংস", fa: "تنظیمات", id: "Pengaturan", ms: "Tetapan", tr: "Ayarlar", fr: "Paramètres", de: "Einstellungen" },
   "settings.language": { en: "Preferred language", ur: "پسندیدہ زبان", ru: "Предпочитаемый язык", bn: "পছন্দের ভাষা", fa: "زبان دلخواه", id: "Bahasa pilihan", ms: "Bahasa pilihan", tr: "Tercih edilen dil", fr: "Langue préférée", de: "Bevorzugte Sprache" },
-  "settings.langHint": {
-    en: "Translations of verses and kalimas appear in this language. The Quran recitation is always in Arabic. Translation audio is currently available only for English and Urdu.",
-    ur: "آیات اور کلمات کے ترجمے اس زبان میں ظاہر ہوں گے۔ قرآن کی تلاوت ہمیشہ عربی میں ہوتی ہے۔ ترجمے کی آواز فی الحال صرف انگریزی اور اردو کے لیے دستیاب ہے۔",
-    ru: "Переводы аятов и калим отображаются на этом языке. Чтение Корана всегда на арабском. Аудио перевода пока доступно только для английского и урду.",
-    bn: "আয়াত ও কালিমার অনুবাদ এই ভাষায় দেখাবে। কুরআনের তেলাওয়াত সর্বদা আরবিতে। অনুবাদের অডিও এখন শুধু ইংরেজি ও উর্দুতে উপলব্ধ।",
-    fa: "ترجمهٔ آیات و کلمات به این زبان نمایش داده می‌شود. تلاوت قرآن همیشه به عربی است. صوت ترجمه در حال حاضر تنها برای انگلیسی و اردو موجود است.",
-    id: "Terjemahan ayat dan kalimah tampil dalam bahasa ini. Bacaan Al-Qur'an selalu dalam bahasa Arab. Audio terjemahan saat ini hanya tersedia untuk bahasa Inggris dan Urdu.",
-    ms: "Terjemahan ayat dan kalimah dipaparkan dalam bahasa ini. Bacaan Al-Qur'an sentiasa dalam bahasa Arab. Audio terjemahan buat masa ini hanya tersedia untuk Inggeris dan Urdu.",
-    tr: "Âyet ve kelimelerin çevirileri bu dilde görünür. Kur'an tilaveti daima Arapçadır. Çeviri sesi şimdilik yalnızca İngilizce ve Urduca için mevcuttur.",
-    fr: "Les traductions des versets et des kalimas apparaissent dans cette langue. La récitation du Coran est toujours en arabe. L'audio des traductions n'est actuellement disponible qu'en anglais et en ourdou.",
-    de: "Übersetzungen von Versen und Kalimas erscheinen in dieser Sprache. Die Koran-Rezitation ist stets auf Arabisch. Übersetzungs-Audio ist derzeit nur auf Englisch und Urdu verfügbar.",
-  },
+  "settings.langHint": { en: "Translations of verses and kalimas appear in this language. The Quran recitation is always in Arabic. Translation audio is currently available only for English and Urdu.", ur: "آیات اور کلمات کے ترجمے اس زبان میں ظاہر ہوں گے۔ قرآن کی تلاوت ہمیشہ عربی میں ہوتی ہے۔ ترجمے کی آواز فی الحال صرف انگریزی اور اردو کے لیے دستیاب ہے۔", ru: "Переводы аятов и калим отображаются на этом языке. Чтение Корана всегда на арабском. Аудио перевода пока доступно только для английского и урду.", bn: "আয়াত ও কালিমার অনুবাদ এই ভাষায় দেখাবে। কুরআনের তেলাওয়াত সর্বদা আরবিতে। অনুবাদের অডিও এখন শুধু ইংরেজি ও উর্দুতে উপলব্ধ।", fa: "ترجمهٔ آیات و کلمات به این زبان نمایش داده می‌شود. تلاوت قرآن همیشه به عربی است. صوت ترجمه در حال حاضر تنها برای انگلیسی و اردو موجود است.", id: "Terjemahan ayat dan kalimah tampil dalam bahasa ini. Bacaan Al-Qur'an selalu dalam bahasa Arab. Audio terjemahan saat ini hanya tersedia untuk bahasa Inggris dan Urdu.", ms: "Terjemahan ayat dan kalimah dipaparkan dalam bahasa ini. Bacaan Al-Qur'an sentiasa dalam bahasa Arab. Audio terjemahan buat masa ini hanya tersedia untuk Inggeris dan Urdu.", tr: "Âyet ve kelimelerin çevirileri bu dilde görünür. Kur'an tilaveti daima Arapçadır. Çeviri sesi şimdilik yalnızca İngilizce ve Urduca için mevcuttur.", fr: "Les traductions des versets et des kalimas apparaissent dans cette langue. La récitation du Coran est toujours en arabe. L'audio des traductions n'est actuellement disponible qu'en anglais et en ourdou.", de: "Übersetzungen von Versen und Kalimas erscheinen in dieser Sprache. Die Koran-Rezitation ist stets auf Arabisch. Übersetzungs-Audio ist derzeit nur auf Englisch und Urdu verfügbar." },
   "settings.reciter":  { en: "Reciter", ur: "قاری", ru: "Чтец", bn: "ক্বারী", fa: "قاری", id: "Qari", ms: "Qari", tr: "Kari", fr: "Récitateur", de: "Rezitator" },
   "settings.autoplay": { en: "Autoplay next verse", ur: "اگلی آیت خودکار چلائیں", ru: "Автовоспроизведение следующего аята", bn: "পরবর্তী আয়াত স্বয়ংক্রিয় চালু", fa: "پخش خودکار آیهٔ بعدی", id: "Putar otomatis ayat berikutnya", ms: "Main auto ayat seterusnya", tr: "Sonraki âyeti otomatik oynat", fr: "Lecture automatique du verset suivant", de: "Nächsten Vers automatisch abspielen" },
   "settings.autoplayHint": { en: "Continue to next verse automatically", ur: "خود بخود اگلی آیت پر جائیں", ru: "Автоматически переходить к следующему аяту", bn: "স্বয়ংক্রিয়ভাবে পরবর্তী আয়াতে যান", fa: "به‌طور خودکار به آیهٔ بعدی برو", id: "Lanjut otomatis ke ayat berikutnya", ms: "Sambung ke ayat berikutnya secara automatik", tr: "Sonraki âyete otomatik geç", fr: "Passer automatiquement au verset suivant", de: "Automatisch zum nächsten Vers weitergehen" },
@@ -79,6 +88,38 @@ const UI: Dict = {
   "settings.saveErr":  { en: "Could not save preferences", ur: "ترجیحات محفوظ نہ ہو سکیں", ru: "Не удалось сохранить настройки", bn: "পছন্দ সংরক্ষণ করা যায়নি", fa: "ذخیرهٔ تنظیمات ممکن نشد", id: "Tidak dapat menyimpan preferensi", ms: "Tidak dapat menyimpan keutamaan", tr: "Tercihler kaydedilemedi", fr: "Impossible d'enregistrer les préférences", de: "Einstellungen konnten nicht gespeichert werden" },
   "settings.terms":    { en: "Terms and Conditions", ur: "شرائط و ضوابط", ru: "Условия использования", bn: "শর্তাবলী", fa: "شرایط و ضوابط", id: "Syarat dan Ketentuan", ms: "Terma dan Syarat", tr: "Şartlar ve Koşullar", fr: "Conditions générales", de: "Nutzungsbedingungen" },
   "settings.privacy":  { en: "Privacy Policy", ur: "پرائیویسی پالیسی", ru: "Политика конфиденциальности", bn: "গোপনীয়তা নীতি", fa: "سیاست حریم خصوصی", id: "Kebijakan Privasi", ms: "Dasar Privasi", tr: "Gizlilik Politikası", fr: "Politique de confidentialité", de: "Datenschutzerklärung" },
+
+  // Onboarding
+  "onb.skip":     { en: "Skip", ur: "چھوڑیں", ru: "Пропустить", bn: "এড়িয়ে যান", fa: "رد کردن", id: "Lewati", ms: "Langkau", tr: "Atla", fr: "Passer", de: "Überspringen" },
+  "onb.next":     { en: "Next", ur: "اگلا", ru: "Далее", bn: "পরবর্তী", fa: "بعدی", id: "Berikutnya", ms: "Seterusnya", tr: "İleri", fr: "Suivant", de: "Weiter" },
+  "onb.begin":    { en: "Begin", ur: "شروع کریں", ru: "Начать", bn: "শুরু করুন", fa: "شروع", id: "Mulai", ms: "Mula", tr: "Başla", fr: "Commencer", de: "Beginnen" },
+  "onb.1.title":  { en: "The Quran, verse by verse", ur: "قرآن، آیت بہ آیت", ru: "Коран, стих за стихом", bn: "কুরআন, আয়াতে আয়াতে", fa: "قرآن، آیه به آیه", id: "Al-Qur'an, ayat demi ayat", ms: "Al-Qur'an, ayat demi ayat", tr: "Kur'an, âyet âyet", fr: "Le Coran, verset par verset", de: "Der Koran, Vers für Vers" },
+  "onb.1.body":   { en: "Browse all 114 Surahs with recitation and translation — read at your own pace.", ur: "تمام 114 سورتیں تلاوت اور ترجمے کے ساتھ — اپنی رفتار سے پڑھیں۔", ru: "Все 114 сур с чтением и переводом — читайте в своём темпе.", bn: "সব ১১৪টি সূরা তেলাওয়াত ও অনুবাদ সহ — নিজের গতিতে পড়ুন।", fa: "تمام ۱۱۴ سوره با تلاوت و ترجمه — با سرعت خودتان بخوانید.", id: "Jelajahi 114 surah dengan bacaan dan terjemahan — baca sesuai temponya.", ms: "Jelajah 114 surah dengan bacaan dan terjemahan — baca ikut rentak sendiri.", tr: "114 sûrenin tamamı — tilavet ve tercümeyle, kendi hızında oku.", fr: "Parcourez les 114 sourates avec récitation et traduction — à votre rythme.", de: "Alle 114 Suren mit Rezitation und Übersetzung — in deinem Tempo." },
+  "onb.2.title":  { en: "How do you feel?", ur: "آپ کیسا محسوس کر رہے ہیں؟", ru: "Как вы себя чувствуете?", bn: "আপনি কেমন অনুভব করছেন?", fa: "چه احساسی دارید؟", id: "Bagaimana perasaanmu?", ms: "Bagaimana perasaan kamu?", tr: "Nasıl hissediyorsun?", fr: "Comment vous sentez-vous ?", de: "Wie fühlst du dich?" },
+  "onb.2.body":   { en: "Pick a mood and recite a short prophetic kalima — gentle, repetitive, calming.", ur: "ایک احساس چنیں اور ایک مختصر نبوی کلمہ پڑھیں — نرم، بار بار، سکون بخش۔", ru: "Выберите состояние и прочтите короткую пророческую калиму — мягкую, повторяющуюся, успокаивающую.", bn: "একটি অনুভূতি বেছে নিন এবং একটি সংক্ষিপ্ত নবী-কালিমা পড়ুন — কোমল, পুনরাবৃত্ত, শান্ত।", fa: "احساسی را انتخاب کنید و کلمهٔ کوتاه نبوی را بخوانید — لطیف، تکراری، آرامش‌بخش.", id: "Pilih perasaan dan bacalah kalimah nabawi singkat — lembut, berulang, menenangkan.", ms: "Pilih perasaan dan bacalah kalimah nabawi pendek — lembut, berulang, menenangkan.", tr: "Bir duygu seç ve kısa bir nebevî kelime oku — nazik, tekrar tekrar, sakinleştirici.", fr: "Choisissez une émotion et récitez une brève kalima prophétique — douce, répétée, apaisante.", de: "Wähle ein Gefühl und rezitiere eine kurze prophetische Kalima — sanft, wiederholend, beruhigend." },
+  "onb.3.title":  { en: "Choose your language", ur: "اپنی زبان چنیں", ru: "Выберите свой язык", bn: "আপনার ভাষা বেছে নিন", fa: "زبان خود را انتخاب کنید", id: "Pilih bahasamu", ms: "Pilih bahasa kamu", tr: "Dilini seç", fr: "Choisissez votre langue", de: "Wähle deine Sprache" },
+  "onb.3.body":   { en: "Translations of verses and kalimas will appear in this language. The Quran recitation is always in Arabic.", ur: "آیات اور کلمات کے ترجمے اسی زبان میں ظاہر ہوں گے۔ قرآن کی تلاوت ہمیشہ عربی میں ہوتی ہے۔", ru: "Переводы аятов и калим появятся на этом языке. Чтение Корана всегда на арабском.", bn: "আয়াত ও কালিমার অনুবাদ এই ভাষায় দেখাবে। কুরআনের তেলাওয়াত সর্বদা আরবিতে।", fa: "ترجمهٔ آیات و کلمات به این زبان نمایش داده می‌شود. تلاوت قرآن همیشه به عربی است.", id: "Terjemahan ayat dan kalimah akan muncul dalam bahasa ini. Bacaan Al-Qur'an selalu dalam bahasa Arab.", ms: "Terjemahan ayat dan kalimah akan muncul dalam bahasa ini. Bacaan Al-Qur'an sentiasa dalam bahasa Arab.", tr: "Âyet ve kelimelerin çevirileri bu dilde görünecektir. Kur'an tilaveti daima Arapçadır.", fr: "Les traductions des versets et des kalimas apparaîtront dans cette langue. La récitation du Coran est toujours en arabe.", de: "Übersetzungen von Versen und Kalimas erscheinen in dieser Sprache. Die Koran-Rezitation ist stets auf Arabisch." },
+
+  // Mood detail
+  "mood.forWhen":   { en: "For when you feel", ur: "جب آپ محسوس کریں", ru: "Когда ты чувствуешь", bn: "যখন আপনি অনুভব করেন", fa: "وقتی احساس می‌کنی", id: "Untuk saat kamu merasa", ms: "Untuk saat kamu merasa", tr: "Şu his için", fr: "Quand vous ressentez", de: "Wenn du dich so fühlst" },
+  "mood.chooseKalima": { en: "Choose a kalima", ur: "کلمہ چنیں", ru: "Выберите калиму", bn: "একটি কালিমা বেছে নিন", fa: "کلمه‌ای انتخاب کنید", id: "Pilih kalimah", ms: "Pilih kalimah", tr: "Bir kelime seç", fr: "Choisissez une kalima", de: "Wähle eine Kalima" },
+  "mood.reciter":   { en: "Reciter:", ur: "قاری:", ru: "Чтец:", bn: "ক্বারী:", fa: "قاری:", id: "Qari:", ms: "Qari:", tr: "Kari:", fr: "Récitateur :", de: "Rezitator:" },
+  "mood.hadithNote":{ en: "(Hadith dhikr — recited via device voice)", ur: "(حدیث ذکر — آلے کی آواز سے)", ru: "(Хадис-зикр — читается голосом устройства)", bn: "(হাদিস যিকর — ডিভাইস কণ্ঠে পড়া)", fa: "(ذکر حدیثی — با صدای دستگاه)", id: "(Zikir hadis — dibaca dengan suara perangkat)", ms: "(Zikir hadis — dibaca dengan suara peranti)", tr: "(Hadis zikri — cihaz sesiyle okunur)", fr: "(Dhikr de hadith — voix de l'appareil)", de: "(Hadith-Dhikr — Gerätestimme)" },
+  "mood.versesFor": { en: "Verses for this feeling", ur: "اس احساس کے لیے آیات", ru: "Аяты для этого чувства", bn: "এই অনুভূতির জন্য আয়াত", fa: "آیات برای این احساس", id: "Ayat untuk perasaan ini", ms: "Ayat untuk perasaan ini", tr: "Bu duygu için âyetler", fr: "Versets pour cette émotion", de: "Verse für dieses Gefühl" },
+  "mood.share":     { en: "Share this kalima", ur: "یہ کلمہ شیئر کریں", ru: "Поделиться калимой", bn: "এই কালিমা শেয়ার করুন", fa: "این کلمه را به اشتراک بگذارید", id: "Bagikan kalimah ini", ms: "Kongsi kalimah ini", tr: "Bu kelimeyi paylaş", fr: "Partager cette kalima", de: "Diese Kalima teilen" },
+  "mood.muteAmbient": { en: "Mute ambient music", ur: "پس منظر موسیقی خاموش کریں", ru: "Отключить фон", bn: "পরিবেশ সুর নীরব করুন", fa: "قطع موسیقی محیطی", id: "Bisukan musik latar", ms: "Bisukan muzik latar", tr: "Ortam sesini kapat", fr: "Couper la musique d'ambiance", de: "Ambient stummschalten" },
+  "mood.playAmbient": { en: "Play ambient music", ur: "پس منظر موسیقی چلائیں", ru: "Включить фон", bn: "পরিবেশ সুর চালান", fa: "پخش موسیقی محیطی", id: "Putar musik latar", ms: "Main muzik latar", tr: "Ortam sesini aç", fr: "Jouer la musique d'ambiance", de: "Ambient abspielen" },
+
+  // Story player
+  "story.playPause": { en: "Play / Pause", ur: "چلائیں / روکیں", ru: "Пуск/Пауза", bn: "চালু/বিরতি", fa: "پخش/توقف", id: "Putar/Jeda", ms: "Main/Jeda", tr: "Oynat/Duraklat", fr: "Lecture / Pause", de: "Wiedergabe / Pause" },
+  "story.mute":      { en: "Mute", ur: "خاموش", ru: "Без звука", bn: "নিঃশব্দ", fa: "بی‌صدا", id: "Bisu", ms: "Bisu", tr: "Sessiz", fr: "Muet", de: "Stumm" },
+  "story.unmute":    { en: "Unmute", ur: "آواز چلائیں", ru: "Со звуком", bn: "শব্দ চালু", fa: "با صدا", id: "Suarakan", ms: "Suarakan", tr: "Sesi aç", fr: "Réactiver", de: "Ton an" },
+  "story.close":     { en: "Close", ur: "بند کریں", ru: "Закрыть", bn: "বন্ধ", fa: "بستن", id: "Tutup", ms: "Tutup", tr: "Kapat", fr: "Fermer", de: "Schließen" },
+  "story.prev":      { en: "Previous scene", ur: "پچھلا منظر", ru: "Пред. сцена", bn: "পূর্ববর্তী দৃশ্য", fa: "صحنهٔ قبل", id: "Adegan sebelumnya", ms: "Babak sebelumnya", tr: "Önceki sahne", fr: "Scène précédente", de: "Vorherige Szene" },
+  "story.next":      { en: "Next scene", ur: "اگلا منظر", ru: "След. сцена", bn: "পরবর্তী দৃশ্য", fa: "صحنهٔ بعد", id: "Adegan berikutnya", ms: "Babak seterusnya", tr: "Sonraki sahne", fr: "Scène suivante", de: "Nächste Szene" },
+  "story.sources":   { en: "Sources", ur: "مآخذ", ru: "Источники", bn: "উৎসসমূহ", fa: "منابع", id: "Sumber", ms: "Sumber", tr: "Kaynaklar", fr: "Sources", de: "Quellen" },
+  "story.tap":       { en: "Tap to play", ur: "چلانے کے لیے ٹیپ کریں", ru: "Коснитесь, чтобы начать", bn: "চালাতে ট্যাপ করুন", fa: "برای پخش لمس کنید", id: "Ketuk untuk memulai", ms: "Ketik untuk mula", tr: "Başlamak için dokun", fr: "Touchez pour lire", de: "Zum Abspielen tippen" },
+  "story.replay":    { en: "Replay", ur: "دوبارہ چلائیں", ru: "Заново", bn: "আবার চালান", fa: "پخش دوباره", id: "Putar ulang", ms: "Main semula", tr: "Tekrar oynat", fr: "Rejouer", de: "Nochmal ansehen" },
 };
 
 export function t(key: keyof typeof UI, lang: LangCode): string {
