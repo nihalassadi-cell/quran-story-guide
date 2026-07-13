@@ -18,16 +18,18 @@ export const Route = createFileRoute("/animate")({
 
 function AnimatePage() {
   const [lang] = useLanguage();
+  const t = useT();
   return (
     <AppShell>
       <div className="max-w-2xl mx-auto px-4 pt-8 pb-24">
         <div className="flex items-center gap-2 mb-1">
           <Heart className="h-5 w-5 text-primary shrink-0" />
-          <h1 className="text-[clamp(1.25rem,5.2vw,1.75rem)] font-bold gold-text leading-tight">How are you feeling right now?</h1>
+          <h1 className="text-[clamp(1.25rem,5.2vw,1.75rem)] font-bold gold-text leading-tight">{t("feel.title")}</h1>
         </div>
         <p className="text-xs sm:text-sm text-muted-foreground mb-6 leading-relaxed">
-          Pick a mood. For each feeling, the Prophet ﷺ taught a short remembrance — a kalima you can repeat like a heartbeat. Tap a mood to begin.
+          {t("feel.sub")}
         </p>
+
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {MOODS.map((m) => (
