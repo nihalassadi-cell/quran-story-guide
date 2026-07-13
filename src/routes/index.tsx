@@ -105,7 +105,7 @@ function HomePage() {
           <Input
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
-            placeholder="Search across the entire Quran"
+            placeholder={t("quran.search")}
             className="pl-9 bg-card/60 border-border"
           />
         </div>
