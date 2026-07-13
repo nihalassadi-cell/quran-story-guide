@@ -169,7 +169,7 @@ function StoryPlayer() {
           <X className="h-5 w-5" />
         </Link>
         <div className="flex-1 flex gap-1 items-center">
-          {story.scenes.map((_, i) => (
+          {story.scenes.map((_: unknown, i: number) => (
             <span key={i} className="relative flex-1 h-1 rounded-full bg-white/15 overflow-hidden">
               <span
                 className="absolute inset-y-0 left-0 bg-white"
@@ -255,7 +255,7 @@ function StoryPlayer() {
             {t("story.sources")}
           </summary>
           <ul className="mt-2 space-y-0.5 text-white/70">
-            {story.sources.map((s) => <li key={s}>· {s}</li>)}
+            {story.sources.map((s: string) => <li key={s}>· {s}</li>)}
           </ul>
         </details>
       </div>
