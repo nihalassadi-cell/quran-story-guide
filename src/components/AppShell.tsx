@@ -15,10 +15,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
 
   return (
-    <div className="min-h-screen flex flex-col pb-20">
+    <div className="min-h-screen flex flex-col pb-24">
       <main className="flex-1 pt-[calc(env(safe-area-inset-top)+3.5rem)]">{children}</main>
-      <nav className="fixed bottom-0 inset-x-0 z-40 bg-card/90 backdrop-blur-xl border-t border-border">
-        <ul className="flex items-stretch justify-around max-w-md mx-auto">
+      <nav
+        className="fixed bottom-0 inset-x-0 z-40 border-t border-border/60 bg-card/70 backdrop-blur-2xl"
+        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+      >
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 -top-6 h-6 bg-gradient-to-t from-background/80 to-transparent"
+        />
+        <ul className="relative flex items-stretch justify-around max-w-md mx-auto px-1">
           {tabs.map((t) => {
             const active =
               t.to === "/"
@@ -29,12 +36,30 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <li key={t.to} className="flex-1">
                 <Link
                   to={t.to}
-                  className={`flex flex-col items-center gap-1 py-3 text-xs transition-colors ${
+                  className={`group relative flex flex-col items-center gap-1 py-2.5 text-[11px] font-medium transition-colors ${
                     active ? "text-primary" : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
-                  <Icon className="h-5 w-5" />
-                  <span className="text-center leading-tight">{t.label}</span>
+                  <span
+                    className={`relative grid place-items-center h-9 w-14 rounded-full transition-all ${
+                      active
+                        ? "bg-primary/12 shadow-[0_0_20px_-6px_var(--primary)]"
+                        : "bg-transparent group-hover:bg-foreground/5"
+                    }`}
+                  >
+                    <Icon
+                      className={`h-[18px] w-[18px] transition-transform ${
+                        active ? "scale-110" : "group-active:scale-90"
+                      }`}
+                    />
+                  </span>
+                  <span className="text-center leading-tight tracking-wide">{t.label}</span>
+                  {active && (
+                    <span
+                      aria-hidden
+                      className="absolute -top-px left-1/2 -translate-x-1/2 h-[2px] w-8 rounded-full bg-primary"
+                    />
+                  )}
                 </Link>
               </li>
             );
