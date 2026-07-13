@@ -209,6 +209,38 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   );
 }
 
+function ShareBtn({
+  title,
+  text,
+  url,
+  tone = "gold",
+}: {
+  title: string;
+  text: string;
+  url?: string;
+  tone?: "gold" | "indigo" | "emerald";
+}) {
+  const styles = {
+    gold: "text-primary/70 hover:text-primary hover:bg-primary/10 border-primary/25",
+    indigo: "text-indigo-200/80 hover:text-indigo-100 hover:bg-indigo-500/15 border-indigo-400/30",
+    emerald: "text-emerald-300/80 hover:text-emerald-200 hover:bg-emerald-500/15 border-emerald-300/25",
+  }[tone];
+  return (
+    <button
+      type="button"
+      aria-label="Share"
+      onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        void shareContent({ title, text, url });
+      }}
+      className={`inline-flex items-center justify-center h-7 w-7 rounded-full border transition-colors ${styles}`}
+    >
+      <Share2 className="h-3.5 w-3.5" />
+    </button>
+  );
+}
+
 function CardChip({
   icon,
   label,
