@@ -712,6 +712,12 @@ function MoodPlayer() {
               {ambientOn ? <Music className="h-5 w-5 text-primary" /> : <VolumeX className="h-5 w-5 text-muted-foreground" />}
             </button>
           </div>
+        </div>
+
+        <div className="flex justify-center mb-4">
+          <NarrationLangSelect value={lang} onChange={setLang} tone="light" title={t("settings.language")} />
+        </div>
+        <div style={{ display: "none" }}>
 
         </div>
 
