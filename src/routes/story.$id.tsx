@@ -50,7 +50,8 @@ async function translateCaption(text: string, lang: string): Promise<string> {
 
 function StoryPlayer() {
   const { story } = Route.useLoaderData();
-  const [lang] = useLanguage();
+  const [lang, setLang] = useLanguage();
+
   const t = useT();
 
   const [idx, setIdx] = useState(0);
