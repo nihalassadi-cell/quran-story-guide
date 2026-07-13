@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Moon, Sun } from "lucide-react";
 import { getStoredTheme, setTheme, type ThemeId } from "@/lib/theme";
 
 export function ThemeSwitch() {
@@ -17,26 +18,21 @@ export function ThemeSwitch() {
   };
 
   return (
-    <div className="fixed top-[calc(env(safe-area-inset-top)+0.75rem)] right-3 z-50 flex items-center gap-2 rounded-full bg-card/90 backdrop-blur-md border border-border px-2.5 py-1.5 shadow-md">
-      <span className="text-[10px] font-bold uppercase tracking-wider text-primary">Theme</span>
-      <span className={`text-[10px] font-medium uppercase tracking-wider transition-colors ${!isLight ? "text-primary" : "text-muted-foreground"}`}>
-        Dark
-      </span>
-      <button
-        type="button"
-        role="switch"
-        aria-checked={isLight}
-        aria-label="Toggle light/dark theme"
-        onClick={toggle}
-        className={`relative h-5 w-9 rounded-full transition-colors ${isLight ? "bg-primary" : "bg-muted"}`}
-      >
-        <span
-          className={`absolute top-0.5 left-0.5 h-4 w-4 rounded-full shadow transition-transform ${isLight ? "translate-x-4 bg-background" : "translate-x-0 bg-primary"}`}
+    <button
+      type="button"
+      onClick={toggle}
+      aria-label={isLight ? "Switch to dark theme" : "Switch to light theme"}
+      title={isLight ? "Switch to dark" : "Switch to light"}
+      className="fixed top-[calc(env(safe-area-inset-top)+0.75rem)] right-3 z-50 h-9 w-9 grid place-items-center rounded-full bg-card/80 backdrop-blur-md border border-border text-primary shadow-md hover:bg-card hover:border-primary/50 active:scale-95 transition-all"
+    >
+      <span className="relative block h-4 w-4">
+        <Sun
+          className={`absolute inset-0 h-4 w-4 transition-all ${isLight ? "opacity-100 rotate-0 scale-100" : "opacity-0 -rotate-90 scale-75"}`}
         />
-      </button>
-      <span className={`text-[10px] font-medium uppercase tracking-wider transition-colors ${isLight ? "text-primary" : "text-muted-foreground"}`}>
-        Light
+        <Moon
+          className={`absolute inset-0 h-4 w-4 transition-all ${isLight ? "opacity-0 rotate-90 scale-75" : "opacity-100 rotate-0 scale-100"}`}
+        />
       </span>
-    </div>
+    </button>
   );
 }

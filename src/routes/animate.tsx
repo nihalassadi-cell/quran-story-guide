@@ -41,13 +41,19 @@ function AnimatePage() {
                 key={m.id}
                 to="/mood/$id"
                 params={{ id: m.id }}
-                className="group rounded-xl border border-border bg-card/60 backdrop-blur p-4 flex flex-col gap-2 hover:border-primary/60 hover:bg-card transition-colors"
+                className="group relative overflow-hidden rounded-2xl border border-border/70 bg-card/50 backdrop-blur p-4 flex flex-col gap-2.5 hover:border-primary/60 hover:bg-card active:scale-[0.985] transition-all"
               >
-                <div className="flex items-center justify-between">
-                  <span className="text-2xl sm:text-3xl">{m.emoji}</span>
-                  <div className="flex items-center gap-2">
+                <span
+                  aria-hidden
+                  className="pointer-events-none absolute -top-16 -right-16 h-40 w-40 rounded-full bg-primary/10 blur-3xl opacity-0 group-hover:opacity-100 transition-opacity"
+                />
+                <div className="relative flex items-center justify-between">
+                  <span className="grid place-items-center h-11 w-11 rounded-full bg-primary/10 border border-primary/20 text-2xl leading-none">
+                    {m.emoji}
+                  </span>
+                  <div className="flex items-center gap-1.5">
                     {storyId && (
-                      <span className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wider text-indigo-300/90 border border-indigo-400/40 rounded-full px-1.5 py-0.5 bg-indigo-500/10">
+                      <span className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wider text-indigo-200 border border-indigo-400/40 rounded-full px-1.5 py-0.5 bg-indigo-500/15">
                         <Film className="h-2.5 w-2.5" /> {t("today.chip.story")}
                       </span>
                     )}
@@ -56,15 +62,18 @@ function AnimatePage() {
                     </span>
                   </div>
                 </div>
-                <span className="font-semibold text-foreground text-sm sm:text-base">{moodLabel(m.id, m.label, lang)}</span>
-                <p className="arabic text-right text-base sm:text-lg leading-snug text-primary/90 line-clamp-2" dir="rtl">
+                <span className="relative font-semibold text-foreground text-base tracking-tight">
+                  {moodLabel(m.id, m.label, lang)}
+                </span>
+                <p className="relative arabic text-right text-lg leading-snug text-primary/90 line-clamp-2" dir="rtl">
                   {m.kalima.arabic}
                 </p>
-                <p className="text-[11px] text-muted-foreground italic line-clamp-2">“{tr(m.kalima.translation, lang)}”</p>
+                <p className="relative text-[11px] text-muted-foreground italic line-clamp-2">
+                  “{tr(m.kalima.translation, lang)}”
+                </p>
               </Link>
             );
           })}
-
         </div>
       </div>
     </AppShell>
