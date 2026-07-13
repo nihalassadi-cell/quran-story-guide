@@ -28,6 +28,33 @@ export const Route = createFileRoute("/story/$id")({
 
 // Shared in-memory translation cache
 const captionCache = new Map<string, string>();
+const VIDEO_CROSSFADE_MS = 1200;
+const SCENE_BREATH_MS = 850;
+const MUSIC_CROSSFADE_MS = 1800;
+const MUSIC_TARGET_VOLUME = 0.18;
+const NARRATION_FADE_IN_MS = 650;
+
+function fadeMediaVolume(
+  media: HTMLMediaElement | null,
+  to: number,
+  durationMs: number,
+  onComplete?: () => void,
+) {
+  if (!media) return () => {};
+  const from = media.volume;
+  const startedAt = performance.now();
+  let frame = 0;
+  const step = (now: number) => {
+    const raw = durationMs <= 0 ? 1 : Math.min(1, (now - startedAt) / durationMs);
+    const eased = raw < 0.5 ? 2 * raw * raw : 1 - Math.pow(-2 * raw + 2, 2) / 2;
+    try { media.volume = Math.max(0, Math.min(1, from + (to - from) * eased)); } catch { /* noop */ }
+    if (raw < 1) frame = requestAnimationFrame(step);
+    else onComplete?.();
+  };
+  frame = requestAnimationFrame(step);
+  return () => cancelAnimationFrame(frame);
+}
+
 async function translateCaption(text: string, lang: string): Promise<string> {
   if (lang === "en") return text;
   const key = `${lang}:${text}`;
@@ -77,7 +104,11 @@ function StoryPlayer() {
   const videoRefs = useRef<[HTMLVideoElement | null, HTMLVideoElement | null]>([null, null]);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const nextAudioRef = useRef<HTMLAudioElement | null>(null);
-  const musicRef = useRef<HTMLAudioElement | null>(null);
+  const musicRefs = useRef<[HTMLAudioElement | null, HTMLAudioElement | null]>([null, null]);
+  const activeMusicLayerRef = useRef<0 | 1>(0);
+  const musicSceneIdxRef = useRef<number | null>(null);
+  const fadeStopsRef = useRef<(() => void)[]>([]);
+  const transitionTimersRef = useRef<number[]>([]);
   const advancedRef = useRef(false);
   const idleTimerRef = useRef<number | null>(null);
 
@@ -108,7 +139,9 @@ function StoryPlayer() {
     return () => {
       narratorRef.current?.stop();
       padRef.current?.stop();
-      try { musicRef.current?.pause(); } catch { /* noop */ }
+      fadeStopsRef.current.forEach((stop) => stop());
+      transitionTimersRef.current.forEach((timer) => window.clearTimeout(timer));
+      musicRefs.current.forEach((music) => { try { music?.pause(); } catch { /* noop */ } });
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
   }, []);
@@ -150,6 +183,12 @@ function StoryPlayer() {
       if (url && nextAudioRef.current) {
         nextAudioRef.current.src = url;
         nextAudioRef.current.load();
+      }
+      const nextMusicUrl = videoManifest.music?.[idx + 1];
+      const inactiveMusic = musicRefs.current[activeMusicLayerRef.current === 0 ? 1 : 0];
+      if (nextMusicUrl && inactiveMusic && inactiveMusic.src !== nextMusicUrl) {
+        inactiveMusic.src = nextMusicUrl;
+        inactiveMusic.load();
       }
     }
   }, [idx, lang, story.scenes, hasVideo, videoManifest]);
@@ -209,6 +248,10 @@ function StoryPlayer() {
   // never gets cut off.
   useEffect(() => {
     if (!hasVideo || !videoManifest) return;
+    fadeStopsRef.current.forEach((stop) => stop());
+    fadeStopsRef.current = [];
+    transitionTimersRef.current.forEach((timer) => window.clearTimeout(timer));
+    transitionTimersRef.current = [];
     advancedRef.current = false;
     setEnded(false);
     setProgress(0);
@@ -233,52 +276,77 @@ function StoryPlayer() {
       if (a.src !== audioUrl) a.src = audioUrl ?? "";
       a.muted = muted;
       a.currentTime = 0;
-      a.volume = 1;
+      a.volume = muted ? 0 : 0;
     }
 
-    // Per-scene background music (calm Middle-Eastern instrumental)
+    // Per-scene background music (calm Middle-Eastern instrumental), crossfaded
+    // between two audio layers so the old scene never cuts off abruptly.
     const musicUrl = videoManifest.music?.[idx];
-    const m = musicRef.current;
-    if (m && musicUrl) {
-      if (m.src !== musicUrl) {
-        m.src = musicUrl;
-        m.load();
+    const musicSceneChanged = musicSceneIdxRef.current !== idx;
+    let musicLayer = activeMusicLayerRef.current;
+    if (musicSceneChanged) {
+      musicLayer = musicSceneIdxRef.current === null ? 0 : activeMusicLayerRef.current === 0 ? 1 : 0;
+      musicSceneIdxRef.current = idx;
+      activeMusicLayerRef.current = musicLayer;
+    }
+    const currentMusic = musicRefs.current[musicLayer];
+    const outgoingMusic = musicRefs.current[musicLayer === 0 ? 1 : 0];
+    if (currentMusic && musicUrl) {
+      if (currentMusic.src !== musicUrl) {
+        currentMusic.src = musicUrl;
+        currentMusic.load();
       }
-      m.loop = true;
-      m.muted = muted;
-      // Fade-in from 0 to target volume for a gentle transition
-      const target = 0.18;
-      m.volume = 0;
+      currentMusic.loop = true;
+      currentMusic.muted = muted;
       if (playing && !muted) {
-        m.play().catch(() => {});
-        let v = 0;
-        const fade = window.setInterval(() => {
-          v = Math.min(target, v + 0.02);
-          try { m.volume = v; } catch { /* noop */ }
-          if (v >= target) window.clearInterval(fade);
-        }, 60);
+        if (musicSceneChanged) currentMusic.volume = 0;
+        currentMusic.play().catch(() => {});
+        fadeStopsRef.current.push(fadeMediaVolume(currentMusic, MUSIC_TARGET_VOLUME, musicSceneChanged ? MUSIC_CROSSFADE_MS : 450));
+      } else {
+        currentMusic.pause();
       }
     }
+    if (outgoingMusic && outgoingMusic.src && musicSceneChanged) {
+      outgoingMusic.muted = muted;
+      fadeStopsRef.current.push(fadeMediaVolume(outgoingMusic, 0, MUSIC_CROSSFADE_MS, () => {
+        try { outgoingMusic.pause(); } catch { /* noop */ }
+      }));
+    }
+    if (!playing || muted) {
+      musicRefs.current.forEach((music) => { try { music?.pause(); } catch { /* noop */ } });
+    }
+
+    const queueTransition = (callback: () => void, delay: number) => {
+      const timer = window.setTimeout(() => {
+        transitionTimersRef.current = transitionTimersRef.current.filter((id) => id !== timer);
+        callback();
+      }, delay);
+      transitionTimersRef.current.push(timer);
+      return timer;
+    };
+
+    const beginNextScene = () => {
+      const nextLayer: 0 | 1 = targetLayer === 0 ? 1 : 0;
+      const nextEl = videoRefs.current[nextLayer];
+      const nextSrc = videoManifest.videos[idx + 1];
+      if (nextEl && nextSrc) {
+        if (nextEl.src !== nextSrc) {
+          nextEl.src = nextSrc;
+          nextEl.load();
+        }
+        try { nextEl.currentTime = 0; } catch { /* noop */ }
+        nextEl.muted = true;
+        nextEl.play().catch(() => {});
+      }
+      queueTransition(() => {
+        setActiveLayer(nextLayer);
+        setIdx((n) => n + 1);
+      }, 120);
+    };
 
     const advance = () => {
       if (advancedRef.current) return;
       advancedRef.current = true;
-
-      // Fade out current music during the hold pause
-      const mNow = musicRef.current;
-      if (mNow) {
-        const start = mNow.volume;
-        let step = 0;
-        const steps = 20;
-        const fadeOut = window.setInterval(() => {
-          step += 1;
-          try { mNow.volume = Math.max(0, start * (1 - step / steps)); } catch { /* noop */ }
-          if (step >= steps) {
-            window.clearInterval(fadeOut);
-            try { mNow.pause(); } catch { /* noop */ }
-          }
-        }, 90);
-      }
 
       if (idx < total - 1) {
         // Preload next video into inactive layer (kept muted, paused on last frame)
@@ -290,17 +358,19 @@ function StoryPlayer() {
           nextEl.muted = true;
           nextEl.load();
         }
-        // Hold the last frame for ~2s of breathing room, then crossfade to next
-        window.setTimeout(() => {
-          if (nextEl) nextEl.play().catch(() => {});
-          setActiveLayer(nextLayer);
-          setIdx((n) => n + 1);
-        }, 2000);
+        // Hold the last frame briefly, then begin the visual crossfade while
+        // the new narration fades in and the music layers crossfade.
+        queueTransition(beginNextScene, SCENE_BREATH_MS);
       } else {
-        window.setTimeout(() => {
+        musicRefs.current.forEach((music) => {
+          fadeStopsRef.current.push(fadeMediaVolume(music, 0, MUSIC_CROSSFADE_MS, () => {
+            try { music?.pause(); } catch { /* noop */ }
+          }));
+        });
+        queueTransition(() => {
           setPlaying(false);
           setEnded(true);
-        }, 1200);
+        }, 1400);
       }
     };
 
@@ -320,30 +390,34 @@ function StoryPlayer() {
     a?.addEventListener("timeupdate", onAudioTime);
     a?.addEventListener("ended", onAudioEnded);
     layerEl.addEventListener("ended", onVideoEnded);
+    let onEndNoAudio: (() => void) | null = null;
 
     if (playing) {
       layerEl.play().catch(() => {});
       // If muted or no audio => advance when video ends
       if (muted || !audioUrl) {
         layerEl.removeEventListener("ended", onVideoEnded);
-        const onEndNoAudio = () => advance();
+        onEndNoAudio = () => advance();
         layerEl.addEventListener("ended", onEndNoAudio);
       } else {
-        a?.play().catch(() => {});
+        a?.play().then(() => {
+          fadeStopsRef.current.push(fadeMediaVolume(a, 1, NARRATION_FADE_IN_MS));
+        }).catch(() => {});
       }
     } else {
       layerEl.pause();
       a?.pause();
-      musicRef.current?.pause();
+      musicRefs.current.forEach((music) => music?.pause());
     }
 
     return () => {
       a?.removeEventListener("timeupdate", onAudioTime);
       a?.removeEventListener("ended", onAudioEnded);
       layerEl.removeEventListener("ended", onVideoEnded);
+      if (onEndNoAudio) layerEl.removeEventListener("ended", onEndNoAudio);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hasVideo, idx, lang, playing, muted, videoManifest, total]);
+  }, [hasVideo, idx, lang, playing, muted, videoManifest, total, activeLayer]);
 
   const go = (delta: number) => {
     const next = Math.max(0, Math.min(total - 1, idx + delta));
@@ -389,23 +463,24 @@ function StoryPlayer() {
           <>
             <video
               ref={(el) => { videoRefs.current[0] = el; }}
-              className="absolute inset-0 w-full h-full object-cover transition-opacity duration-500"
-              style={{ opacity: activeLayer === 0 ? 1 : 0 }}
+              className="absolute inset-0 w-full h-full object-cover transition-opacity ease-in-out"
+              style={{ opacity: activeLayer === 0 ? 1 : 0, transitionDuration: `${VIDEO_CROSSFADE_MS}ms` }}
               playsInline
               muted
               preload="auto"
             />
             <video
               ref={(el) => { videoRefs.current[1] = el; }}
-              className="absolute inset-0 w-full h-full object-cover transition-opacity duration-500"
-              style={{ opacity: activeLayer === 1 ? 1 : 0 }}
+              className="absolute inset-0 w-full h-full object-cover transition-opacity ease-in-out"
+              style={{ opacity: activeLayer === 1 ? 1 : 0, transitionDuration: `${VIDEO_CROSSFADE_MS}ms` }}
               playsInline
               muted
               preload="auto"
             />
             <audio ref={audioRef} preload="auto" />
             <audio ref={nextAudioRef} preload="auto" />
-            <audio ref={musicRef} preload="auto" loop />
+            <audio ref={(el) => { musicRefs.current[0] = el; }} preload="auto" loop />
+            <audio ref={(el) => { musicRefs.current[1] = el; }} preload="auto" loop />
 
           </>
         ) : (
