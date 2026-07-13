@@ -135,7 +135,7 @@ function HomePage() {
         {filter && verseHits.length > 0 && (
           <section className="mb-5">
             <h2 className="text-xs uppercase tracking-widest text-primary/80 mb-2 flex items-center gap-2">
-              Verses {verseLoading && <Loader2 className="h-3 w-3 animate-spin" />}
+              {t("quran.verses")} {verseLoading && <Loader2 className="h-3 w-3 animate-spin" />}
             </h2>
             <ul className="space-y-2">
               {verseHits.map((v, i) => (
