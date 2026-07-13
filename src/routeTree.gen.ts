@@ -19,6 +19,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as SurahNumberRouteImport } from './routes/surah.$number'
 import { Route as StoryIdRouteImport } from './routes/story.$id'
 import { Route as MoodIdRouteImport } from './routes/mood.$id'
+import { Route as ApiTtsRouteImport } from './routes/api/tts'
 import { Route as ApiPublicKalimaTtsHashRouteImport } from './routes/api/public/kalima-tts.$hash'
 import { Route as ApiPublicQuranAudioReciterAyahRouteImport } from './routes/api/public/quran-audio.$reciter.$ayah'
 
@@ -72,6 +73,11 @@ const MoodIdRoute = MoodIdRouteImport.update({
   path: '/mood/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiTtsRoute = ApiTtsRouteImport.update({
+  id: '/api/tts',
+  path: '/api/tts',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicKalimaTtsHashRoute = ApiPublicKalimaTtsHashRouteImport.update({
   id: '/api/public/kalima-tts/$hash',
   path: '/api/public/kalima-tts/$hash',
@@ -92,6 +98,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof SettingsRoute
   '/terms': typeof TermsRoute
   '/today': typeof TodayRoute
+  '/api/tts': typeof ApiTtsRoute
   '/mood/$id': typeof MoodIdRoute
   '/story/$id': typeof StoryIdRoute
   '/surah/$number': typeof SurahNumberRoute
@@ -106,6 +113,7 @@ export interface FileRoutesByTo {
   '/settings': typeof SettingsRoute
   '/terms': typeof TermsRoute
   '/today': typeof TodayRoute
+  '/api/tts': typeof ApiTtsRoute
   '/mood/$id': typeof MoodIdRoute
   '/story/$id': typeof StoryIdRoute
   '/surah/$number': typeof SurahNumberRoute
@@ -121,6 +129,7 @@ export interface FileRoutesById {
   '/settings': typeof SettingsRoute
   '/terms': typeof TermsRoute
   '/today': typeof TodayRoute
+  '/api/tts': typeof ApiTtsRoute
   '/mood/$id': typeof MoodIdRoute
   '/story/$id': typeof StoryIdRoute
   '/surah/$number': typeof SurahNumberRoute
@@ -137,6 +146,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/terms'
     | '/today'
+    | '/api/tts'
     | '/mood/$id'
     | '/story/$id'
     | '/surah/$number'
@@ -151,6 +161,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/terms'
     | '/today'
+    | '/api/tts'
     | '/mood/$id'
     | '/story/$id'
     | '/surah/$number'
@@ -165,6 +176,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/terms'
     | '/today'
+    | '/api/tts'
     | '/mood/$id'
     | '/story/$id'
     | '/surah/$number'
@@ -180,6 +192,7 @@ export interface RootRouteChildren {
   SettingsRoute: typeof SettingsRoute
   TermsRoute: typeof TermsRoute
   TodayRoute: typeof TodayRoute
+  ApiTtsRoute: typeof ApiTtsRoute
   MoodIdRoute: typeof MoodIdRoute
   StoryIdRoute: typeof StoryIdRoute
   SurahNumberRoute: typeof SurahNumberRoute
@@ -259,6 +272,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MoodIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/tts': {
+      id: '/api/tts'
+      path: '/api/tts'
+      fullPath: '/api/tts'
+      preLoaderRoute: typeof ApiTtsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/kalima-tts/$hash': {
       id: '/api/public/kalima-tts/$hash'
       path: '/api/public/kalima-tts/$hash'
@@ -284,6 +304,7 @@ const rootRouteChildren: RootRouteChildren = {
   SettingsRoute: SettingsRoute,
   TermsRoute: TermsRoute,
   TodayRoute: TodayRoute,
+  ApiTtsRoute: ApiTtsRoute,
   MoodIdRoute: MoodIdRoute,
   StoryIdRoute: StoryIdRoute,
   SurahNumberRoute: SurahNumberRoute,
