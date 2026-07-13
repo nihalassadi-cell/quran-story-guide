@@ -8,8 +8,9 @@ import { MicroReadCard } from "@/components/MicroReadCard";
 import { StreakOverlay } from "@/components/StreakOverlay";
 import { Button } from "@/components/ui/button";
 
-import { BookOpen, Feather, Repeat, Film, ArrowRight } from "lucide-react";
+import { BookOpen, Feather, Repeat, Film, ArrowRight, Share2 } from "lucide-react";
 import { useMemo } from "react";
+import { shareContent } from "@/lib/share";
 
 
 export const Route = createFileRoute("/today")({
@@ -59,9 +60,15 @@ function TodayPage() {
           <div className="relative">
             <div className="flex items-center justify-between mb-4">
               <CardChip icon={<BookOpen className="h-3 w-3" />} label={t("today.chip.verse")} tone="indigo" />
-              <span className="text-[10px] font-mono uppercase tracking-widest text-primary/70 border border-primary/25 rounded-full px-2 py-0.5">
-                {today.verse.surah}:{today.verse.verse}
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-mono uppercase tracking-widest text-primary/70 border border-primary/25 rounded-full px-2 py-0.5">
+                  {today.verse.surah}:{today.verse.verse}
+                </span>
+                <ShareBtn
+                  title="Verse of the Day"
+                  text={`"${today.verse.arabic}"\n\n"${pickTr(today.verse.translation, lang)}"\n— Qur'an ${today.verse.surah}:${today.verse.verse} (${today.verse.surahName})`}
+                />
+              </div>
             </div>
             <p className="arabic text-right text-3xl sm:text-4xl leading-loose text-foreground" dir="rtl">
               {today.verse.arabic}
@@ -87,7 +94,13 @@ function TodayPage() {
 
         {/* Hadith */}
         <section className="relative rounded-3xl overflow-hidden border border-white/10 bg-card/40 p-5 mb-8">
-          <CardChip icon={<Feather className="h-3 w-3" />} label={t("today.chip.hadith")} tone="gold" />
+          <div className="flex items-center justify-between">
+            <CardChip icon={<Feather className="h-3 w-3" />} label={t("today.chip.hadith")} tone="gold" />
+            <ShareBtn
+              title="Hadith of the Day"
+              text={`"${pickTr(today.hadith.text, lang)}"\n\n${today.hadith.narrator ? `— ${today.hadith.narrator}, ` : "— "}${today.hadith.source}`}
+            />
+          </div>
           <p className="font-display-serif italic text-lg leading-relaxed mt-3 text-foreground">
             "{pickTr(today.hadith.text, lang)}"
           </p>
@@ -111,9 +124,16 @@ function TodayPage() {
             <div className="relative flex-1 flex flex-col">
               <div className="flex items-center justify-between">
                 <CardChip icon={<Repeat className="h-3 w-3" />} label={t("today.chip.dhikr")} tone="emerald" />
-                <span className="text-[10px] font-mono uppercase tracking-widest text-emerald-300/80 border border-emerald-300/25 rounded-full px-2 py-0.5">
-                  {today.dhikr.count}×
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-mono uppercase tracking-widest text-emerald-300/80 border border-emerald-300/25 rounded-full px-2 py-0.5">
+                    {today.dhikr.count}×
+                  </span>
+                  <ShareBtn
+                    title="Dhikr of the Day"
+                    text={`${today.dhikr.arabic}\n${today.dhikr.transliteration}\n\n"${pickTr(today.dhikr.translation, lang)}"\n— ${today.dhikr.count}× · ${today.dhikr.source}`}
+                    tone="emerald"
+                  />
+                </div>
               </div>
               <p className="arabic text-right text-2xl leading-loose mt-3 text-emerald-100" dir="rtl">
                 {today.dhikr.arabic}
@@ -139,7 +159,15 @@ function TodayPage() {
           <section className="relative rounded-3xl overflow-hidden border border-white/10 bg-gradient-to-br from-indigo-950 via-slate-900 to-black p-5 flex flex-col">
             <div className="absolute inset-0 opacity-30 bg-[radial-gradient(ellipse_at_top_right,theme(colors.indigo.500/40),transparent_60%)] pointer-events-none" />
             <div className="relative flex-1 flex flex-col">
-              <CardChip icon={<Film className="h-3 w-3" />} label={t("today.chip.story")} tone="indigo" />
+              <div className="flex items-center justify-between">
+                <CardChip icon={<Film className="h-3 w-3" />} label={t("today.chip.story")} tone="indigo" />
+                <ShareBtn
+                  title={pickTr(today.story.title, lang)}
+                  text={`${pickTr(today.story.title, lang)}\n\n${pickTr(today.story.blurb, lang)}`}
+                  url={typeof window !== "undefined" ? window.location.origin + (storyReady ? `/story/${today.story.storyId}` : `/mood/${today.story.moodId}`) : undefined}
+                  tone="indigo"
+                />
+              </div>
               <h3 className="font-display-serif italic text-2xl text-white mt-3 leading-tight">
                 {pickTr(today.story.title, lang)}
               </h3>
@@ -167,6 +195,7 @@ function TodayPage() {
         </div>
       </div>
       <StreakOverlay />
+
     </AppShell>
   );
 }
@@ -177,6 +206,38 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
       <span className="text-[10px] uppercase tracking-[0.28em] text-primary/60 font-bold">{children}</span>
       <span className="h-px flex-1 bg-gradient-to-r from-primary/20 to-transparent" />
     </div>
+  );
+}
+
+function ShareBtn({
+  title,
+  text,
+  url,
+  tone = "gold",
+}: {
+  title: string;
+  text: string;
+  url?: string;
+  tone?: "gold" | "indigo" | "emerald";
+}) {
+  const styles = {
+    gold: "text-primary/70 hover:text-primary hover:bg-primary/10 border-primary/25",
+    indigo: "text-indigo-200/80 hover:text-indigo-100 hover:bg-indigo-500/15 border-indigo-400/30",
+    emerald: "text-emerald-300/80 hover:text-emerald-200 hover:bg-emerald-500/15 border-emerald-300/25",
+  }[tone];
+  return (
+    <button
+      type="button"
+      aria-label="Share"
+      onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        void shareContent({ title, text, url });
+      }}
+      className={`inline-flex items-center justify-center h-7 w-7 rounded-full border transition-colors ${styles}`}
+    >
+      <Share2 className="h-3.5 w-3.5" />
+    </button>
   );
 }
 
