@@ -159,8 +159,9 @@ function TodayPage() {
             </p>
 
             <p className="text-[11px] text-muted-foreground mt-3">
-              Sit with it for a moment. Journaling coming soon.
+              {t("today.sitWithIt")}
             </p>
+
           </section>
         </div>
       </div>
