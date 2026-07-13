@@ -69,7 +69,7 @@ function StoryPlayer() {
       try {
         window.speechSynthesis.cancel();
         const u = new SpeechSynthesisUtterance(tr(scene.narration, lang));
-        u.lang = lang === "ar" ? "ar-SA" : lang;
+        u.lang = lang;
         u.rate = 0.92;
         u.pitch = 1;
         utterRef.current = u;
