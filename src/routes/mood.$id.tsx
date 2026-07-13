@@ -34,7 +34,7 @@ function MoodPlayer() {
   const { id } = Route.useParams();
   const mood = getMood(id);
   if (!mood) throw notFound();
-  const [lang] = useLanguage();
+  const [lang, setLang] = useLanguage();
   const t = useT();
   const storyId = storyForMood(mood.id);
   const rtl = isRtl(lang);
