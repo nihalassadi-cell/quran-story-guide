@@ -1,12 +1,13 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { X, Play, Pause, ChevronLeft, ChevronRight, Volume2, VolumeX, RotateCcw } from "lucide-react";
+import { X, Play, Pause, ChevronLeft, ChevronRight, Volume2, VolumeX, RotateCcw, Film, ImageIcon } from "lucide-react";
 import { getStory } from "@/lib/stories";
 import { useLanguage, tr } from "@/lib/language";
 import { useT } from "@/lib/i18n";
 import { speak, prefetchTTS, type Narrator } from "@/lib/narrator";
 import { createAmbientPad, type AmbientPad } from "@/lib/ambient-pad";
 import { NarrationLangSelect } from "@/components/NarrationLangSelect";
+import { getStoryVideoManifest } from "@/lib/story-videos";
 
 export const Route = createFileRoute("/story/$id")({
   loader: ({ params }) => {
@@ -55,6 +56,10 @@ function StoryPlayer() {
 
   const t = useT();
 
+  const videoManifest = useMemo(() => getStoryVideoManifest(story.id), [story.id]);
+  const hasVideo = !!videoManifest;
+  const [mode, setMode] = useState<"image" | "video">(hasVideo ? "video" : "image");
+
   const [idx, setIdx] = useState(0);
   const [playing, setPlaying] = useState(true);
   const [muted, setMuted] = useState(false);
@@ -69,6 +74,8 @@ function StoryPlayer() {
   const startedAtRef = useRef<number>(0);
   const narratorRef = useRef<Narrator | null>(null);
   const padRef = useRef<AmbientPad | null>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   // Warm the first scene's narration + caption the moment the player mounts,
   // so tapping a story card feels instant instead of waiting on a TTS round
@@ -92,9 +99,9 @@ function StoryPlayer() {
     };
   }, []);
 
-  // Ambient music follows play state
+  // Ambient music follows play state (only in image mode; video has its own atmosphere)
   useEffect(() => {
-    if (playing && !muted) {
+    if (mode === "image" && playing && !muted) {
       if (!padRef.current) padRef.current = createAmbientPad();
       padRef.current.setVolume(0.14);
       void padRef.current.start();
@@ -102,7 +109,7 @@ function StoryPlayer() {
       padRef.current?.stop();
       padRef.current = null;
     }
-  }, [playing, muted]);
+  }, [playing, muted, mode]);
 
   // Load caption for the current scene in the selected language
   useEffect(() => {
@@ -120,17 +127,16 @@ function StoryPlayer() {
     return () => { cancelled = true; };
   }, [idx, lang, scene.narration]);
 
-  // Prefetch next scene's narration audio while current plays
+  // Prefetch next scene's narration audio while current plays (image mode only)
   useEffect(() => {
+    if (mode !== "image") return;
     const next = story.scenes[idx + 1];
     if (next) prefetchTTS(tr(next.narration, "en"), lang);
-  }, [idx, lang, story.scenes]);
+  }, [idx, lang, story.scenes, mode]);
 
-  // Scene ticker + narration. We start the progress timer only once the
-  // narration audio is actually playing (or immediately if muted / audio
-  // failed) so image + audio + progress stay in sync and there's no silent
-  // "already advancing" gap while the TTS request is in flight.
+  // IMAGE MODE: scene ticker + on-demand TTS narration.
   useEffect(() => {
+    if (mode !== "image") return;
     if (!playing) return;
     setEnded(false);
     let cancelled = false;
@@ -155,7 +161,6 @@ function StoryPlayer() {
     };
 
     if (!muted) {
-      // Fallback: if TTS takes too long, don't stall the scene forever.
       const failsafe = window.setTimeout(startTick, 1500);
       speak(tr(scene.narration, "en"), { lang, volume: 1 })
         .then((n) => {
@@ -173,7 +178,6 @@ function StoryPlayer() {
       startTick();
     }
 
-
     return () => {
       cancelled = true;
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
@@ -181,7 +185,51 @@ function StoryPlayer() {
       narratorRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [playing, idx, muted, lang]);
+  }, [playing, idx, muted, lang, mode]);
+
+  // VIDEO MODE: sync video + narration audio. Advance on video 'ended'.
+  useEffect(() => {
+    if (mode !== "video" || !videoManifest) return;
+    const v = videoRef.current;
+    const a = audioRef.current;
+    if (!v) return;
+    setEnded(false);
+    setProgress(0);
+
+    const audioUrl = videoManifest.narrations[lang]?.[idx] ?? videoManifest.narrations.en?.[idx];
+    if (a) {
+      a.src = audioUrl ?? "";
+      a.muted = muted;
+      a.currentTime = 0;
+    }
+    v.currentTime = 0;
+    v.muted = true; // video is silent; audio track is the narration
+    v.loop = false;
+
+    const onTime = () => {
+      if (!v.duration) return;
+      setProgress(Math.min(1, v.currentTime / v.duration));
+    };
+    const onEnded = () => {
+      if (idx < total - 1) setIdx((n) => n + 1);
+      else { setPlaying(false); setEnded(true); }
+    };
+    v.addEventListener("timeupdate", onTime);
+    v.addEventListener("ended", onEnded);
+
+    if (playing) {
+      v.play().catch(() => {});
+      if (a && !muted && audioUrl) a.play().catch(() => {});
+    } else {
+      v.pause();
+      a?.pause();
+    }
+
+    return () => {
+      v.removeEventListener("timeupdate", onTime);
+      v.removeEventListener("ended", onEnded);
+    };
+  }, [mode, idx, lang, playing, muted, videoManifest, total]);
 
   const go = (delta: number) => {
     const next = Math.max(0, Math.min(total - 1, idx + delta));
@@ -209,15 +257,30 @@ function StoryPlayer() {
 
   return (
     <div className="fixed inset-0 z-[80] bg-black text-white overflow-hidden">
-      {/* Image */}
+      {/* Media */}
       <div className="absolute inset-0">
-        <img
-          key={idx}
-          src={scene.image}
-          alt=""
-          className={`w-full h-full object-cover ${kenBurnsClass}`}
-          style={{ animationDuration: `${scene.durationMs}ms`, animationPlayState: playing ? "running" : "paused" }}
-        />
+        {mode === "video" && videoManifest ? (
+          <>
+            <video
+              ref={videoRef}
+              key={`v-${idx}`}
+              src={videoManifest.videos[idx]}
+              poster={scene.image}
+              className="w-full h-full object-cover"
+              playsInline
+              preload="auto"
+            />
+            <audio ref={audioRef} preload="auto" />
+          </>
+        ) : (
+          <img
+            key={idx}
+            src={scene.image}
+            alt=""
+            className={`w-full h-full object-cover ${kenBurnsClass}`}
+            style={{ animationDuration: `${scene.durationMs}ms`, animationPlayState: playing ? "running" : "paused" }}
+          />
+        )}
         <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black/85" />
       </div>
 
@@ -260,6 +323,15 @@ function StoryPlayer() {
             </span>
           ))}
         </div>
+        {hasVideo && (
+          <button
+            onClick={() => setMode((m) => (m === "video" ? "image" : "video"))}
+            className="rounded-full bg-black/40 backdrop-blur border border-white/15 p-2 hover:border-white/40"
+            title={mode === "video" ? "Switch to stills" : "Watch as video"}
+          >
+            {mode === "video" ? <ImageIcon className="h-5 w-5" /> : <Film className="h-5 w-5" />}
+          </button>
+        )}
         <NarrationLangSelect value={lang} onChange={setLang} tone="dark" />
       </div>
 
