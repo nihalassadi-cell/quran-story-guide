@@ -8,8 +8,9 @@ import { MicroReadCard } from "@/components/MicroReadCard";
 import { StreakOverlay } from "@/components/StreakOverlay";
 import { Button } from "@/components/ui/button";
 
-import { BookOpen, Feather, Repeat, Film, ArrowRight } from "lucide-react";
+import { BookOpen, Feather, Repeat, Film, ArrowRight, Share2 } from "lucide-react";
 import { useMemo } from "react";
+import { shareContent } from "@/lib/share";
 
 
 export const Route = createFileRoute("/today")({
