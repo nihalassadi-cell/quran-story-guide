@@ -7,6 +7,9 @@ import { localizedSurahMeaning } from "@/lib/surah-names.i18n";
 import { ChevronLeft, Play, Pause, ChevronRight, Bookmark, BookmarkCheck, Loader2, Volume2, VolumeX, Youtube } from "lucide-react";
 import { track } from "@/lib/analytics";
 import { toast } from "sonner";
+import { addPagesRead, saveCursor, DAILY_TARGET_PAGES, MIN_DWELL_MS } from "@/lib/reading-progress";
+import { ContinueSheet } from "@/components/ContinueSheet";
+
 
 type SurahSearch = { verse?: number; page?: number; micro?: number };
 
@@ -63,9 +66,14 @@ export const Route = createFileRoute("/surah/$number")({
 
 function SurahPlayer() {
   const { number } = Route.useParams();
-  const { verse, page } = Route.useSearch();
+  const { verse, page, micro } = Route.useSearch();
   const navigate = useNavigate({ from: "/surah/$number" });
   const surahNum = parseInt(number, 10);
+  const microMode = micro === 1;
+  const [microPagesRead, setMicroPagesRead] = useState(0);
+  const [showSheet, setShowSheet] = useState(false);
+  const pageStartRef = useRef<number>(Date.now());
+  const microStartVerseRef = useRef<number>(verse ?? 1);
 
   const [data, setData] = useState<Awaited<ReturnType<typeof fetchSurahWithTranslation>> | null>(null);
   const [pageIdx, setPageIdx] = useState<number>((page ?? 1) - 1);
