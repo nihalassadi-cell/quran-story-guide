@@ -54,7 +54,7 @@ function StoryPlayer() {
   const t = useT();
 
   const [idx, setIdx] = useState(0);
-  const [playing, setPlaying] = useState(false);
+  const [playing, setPlaying] = useState(true);
   const [muted, setMuted] = useState(false);
   const [progress, setProgress] = useState(0);
   const [ended, setEnded] = useState(false);
@@ -67,6 +67,19 @@ function StoryPlayer() {
   const startedAtRef = useRef<number>(0);
   const narratorRef = useRef<Narrator | null>(null);
   const padRef = useRef<AmbientPad | null>(null);
+
+  // Warm the first scene's narration + caption the moment the player mounts,
+  // so tapping a story card feels instant instead of waiting on a TTS round
+  // trip after we've already navigated in.
+  useEffect(() => {
+    const first = story.scenes[0];
+    if (first) {
+      const src = tr(first.narration, "en");
+      prefetchTTS(src, lang);
+      if (lang !== "en") void translateCaption(src, lang);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Cleanup on unmount
   useEffect(() => {
