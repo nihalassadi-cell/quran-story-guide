@@ -1,4 +1,6 @@
 // Pre-generated cinematic video + multi-language narration audio for stories.
+// Narrations use ElevenLabs "Brian" (voice ID nPczCjzI2devNBz1zQrb) for a
+// warm, consistent male voice across scenes and languages.
 // Currently only Musa is generated as a pilot. If a story is absent here, the
 // player falls back to the still-image + on-the-fly TTS experience.
 
@@ -9,8 +11,6 @@ type StoryVideoManifest = {
   videos: string[];
   /** narrations[langCode][sceneIndex] = audioUrl */
   narrations: Record<string, string[]>;
-  /** Optional: per-scene duration in ms (defaults to 10s per Veo clip) */
-  durationsMs?: number[];
 };
 
 const MUSA_LANGS = ["en", "ur", "ru", "bn", "fa", "id", "ms", "tr", "fr", "de"];
@@ -32,7 +32,6 @@ function musaNarrationsFor(lang: string) {
 const MUSA: StoryVideoManifest = {
   videos: MUSA_VIDEO_FILES.map((f) => `${SUPA}/scene-images/musa/videos/${f}.mp4`),
   narrations: Object.fromEntries(MUSA_LANGS.map((l) => [l, musaNarrationsFor(l)])),
-  durationsMs: Array(10).fill(10000),
 };
 
 export const STORY_VIDEO_MANIFESTS: Record<string, StoryVideoManifest | undefined> = {

@@ -1,6 +1,6 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { X, Play, Pause, ChevronLeft, ChevronRight, Volume2, VolumeX, RotateCcw, Film, ImageIcon } from "lucide-react";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import { X, Play, Pause, ChevronLeft, ChevronRight, Volume2, VolumeX, RotateCcw } from "lucide-react";
 import { getStory } from "@/lib/stories";
 import { useLanguage, tr } from "@/lib/language";
 import { useT } from "@/lib/i18n";
@@ -26,8 +26,7 @@ export const Route = createFileRoute("/story/$id")({
   component: StoryPlayer,
 });
 
-// Shared in-memory translation cache — captions and TTS both hit the same
-// translation, so we only pay once per (text, lang).
+// Shared in-memory translation cache
 const captionCache = new Map<string, string>();
 async function translateCaption(text: string, lang: string): Promise<string> {
   if (lang === "en") return text;
@@ -53,12 +52,10 @@ async function translateCaption(text: string, lang: string): Promise<string> {
 function StoryPlayer() {
   const { story } = Route.useLoaderData();
   const [lang, setLang] = useLanguage();
-
   const t = useT();
 
   const videoManifest = useMemo(() => getStoryVideoManifest(story.id), [story.id]);
   const hasVideo = !!videoManifest;
-  const [mode, setMode] = useState<"image" | "video">(hasVideo ? "video" : "image");
 
   const [idx, setIdx] = useState(0);
   const [playing, setPlaying] = useState(true);
@@ -66,6 +63,9 @@ function StoryPlayer() {
   const [progress, setProgress] = useState(0);
   const [ended, setEnded] = useState(false);
   const [caption, setCaption] = useState("");
+  const [showControls, setShowControls] = useState(true);
+  // Two-layer crossfade for video mode: which layer is currently visible
+  const [activeLayer, setActiveLayer] = useState<0 | 1>(0);
 
   const scene = story.scenes[idx];
   const total = story.scenes.length;
@@ -74,15 +74,27 @@ function StoryPlayer() {
   const startedAtRef = useRef<number>(0);
   const narratorRef = useRef<Narrator | null>(null);
   const padRef = useRef<AmbientPad | null>(null);
-  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const videoRefs = useRef<[HTMLVideoElement | null, HTMLVideoElement | null]>([null, null]);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const nextAudioRef = useRef<HTMLAudioElement | null>(null);
+  const advancedRef = useRef(false);
+  const idleTimerRef = useRef<number | null>(null);
 
-  // Warm the first scene's narration + caption the moment the player mounts,
-  // so tapping a story card feels instant instead of waiting on a TTS round
-  // trip after we've already navigated in.
+  // Auto-hide controls after inactivity
+  const bumpControls = useCallback(() => {
+    setShowControls(true);
+    if (idleTimerRef.current) window.clearTimeout(idleTimerRef.current);
+    idleTimerRef.current = window.setTimeout(() => setShowControls(false), 3500);
+  }, []);
+  useEffect(() => {
+    bumpControls();
+    return () => { if (idleTimerRef.current) window.clearTimeout(idleTimerRef.current); };
+  }, [bumpControls]);
+
+  // Warm first scene
   useEffect(() => {
     const first = story.scenes[0];
-    if (first) {
+    if (first && !hasVideo) {
       const src = tr(first.narration, "en");
       prefetchTTS(src, lang);
       if (lang !== "en") void translateCaption(src, lang);
@@ -90,7 +102,7 @@ function StoryPlayer() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Cleanup on unmount
+  // Cleanup
   useEffect(() => {
     return () => {
       narratorRef.current?.stop();
@@ -99,9 +111,9 @@ function StoryPlayer() {
     };
   }, []);
 
-  // Ambient music follows play state (only in image mode; video has its own atmosphere)
+  // Ambient music only in image mode
   useEffect(() => {
-    if (mode === "image" && playing && !muted) {
+    if (!hasVideo && playing && !muted) {
       if (!padRef.current) padRef.current = createAmbientPad();
       padRef.current.setVolume(0.14);
       void padRef.current.start();
@@ -109,34 +121,40 @@ function StoryPlayer() {
       padRef.current?.stop();
       padRef.current = null;
     }
-  }, [playing, muted, mode]);
+  }, [playing, muted, hasVideo]);
 
-  // Load caption for the current scene in the selected language
+  // Load caption
   useEffect(() => {
     let cancelled = false;
     const source = tr(scene.narration, "en");
     const localized = tr(scene.narration, lang);
-    // If a hand-written translation exists (differs from en), use it directly.
     if (lang === "en" || (localized && localized !== source)) {
       setCaption(localized || source);
       return;
     }
-    // Otherwise translate on the fly.
     setCaption(source);
     translateCaption(source, lang).then((out) => { if (!cancelled) setCaption(out); });
     return () => { cancelled = true; };
   }, [idx, lang, scene.narration]);
 
-  // Prefetch next scene's narration audio while current plays (image mode only)
+  // Prefetch next narration (image mode) or next audio (video mode)
   useEffect(() => {
-    if (mode !== "image") return;
     const next = story.scenes[idx + 1];
-    if (next) prefetchTTS(tr(next.narration, "en"), lang);
-  }, [idx, lang, story.scenes, mode]);
+    if (!next) return;
+    if (!hasVideo) {
+      prefetchTTS(tr(next.narration, "en"), lang);
+    } else if (videoManifest) {
+      const url = videoManifest.narrations[lang]?.[idx + 1] ?? videoManifest.narrations.en?.[idx + 1];
+      if (url && nextAudioRef.current) {
+        nextAudioRef.current.src = url;
+        nextAudioRef.current.load();
+      }
+    }
+  }, [idx, lang, story.scenes, hasVideo, videoManifest]);
 
-  // IMAGE MODE: scene ticker + on-demand TTS narration.
+  // ================= IMAGE MODE =================
   useEffect(() => {
-    if (mode !== "image") return;
+    if (hasVideo) return;
     if (!playing) return;
     setEnded(false);
     let cancelled = false;
@@ -169,11 +187,7 @@ function StoryPlayer() {
           window.clearTimeout(failsafe);
           startTick();
         })
-        .catch((e) => {
-          console.warn("[story] narration failed", e);
-          window.clearTimeout(failsafe);
-          startTick();
-        });
+        .catch(() => { window.clearTimeout(failsafe); startTick(); });
     } else {
       startTick();
     }
@@ -185,57 +199,112 @@ function StoryPlayer() {
       narratorRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [playing, idx, muted, lang, mode]);
+  }, [playing, idx, muted, lang, hasVideo]);
 
-  // VIDEO MODE: sync video + narration audio. Advance on video 'ended'.
+  // ================= VIDEO MODE =================
+  // Two-layer crossfade: on scene change we load next scene into the INACTIVE
+  // layer, then swap active. Audio drives advancement (not video), so voice
+  // never gets cut off.
   useEffect(() => {
-    if (mode !== "video" || !videoManifest) return;
-    const v = videoRef.current;
-    const a = audioRef.current;
-    if (!v) return;
+    if (!hasVideo || !videoManifest) return;
+    advancedRef.current = false;
     setEnded(false);
     setProgress(0);
 
+    const targetLayer = idx === 0 ? 0 : activeLayer; // first render uses layer 0
+    const layerEl = videoRefs.current[targetLayer];
+    if (!layerEl) return;
+
+    // Ensure current active layer has the correct src for this idx.
+    const wanted = videoManifest.videos[idx];
+    if (layerEl.src !== wanted) {
+      layerEl.src = wanted;
+      layerEl.load();
+    }
+    layerEl.currentTime = 0;
+    layerEl.muted = true;
+    layerEl.loop = false;
+
     const audioUrl = videoManifest.narrations[lang]?.[idx] ?? videoManifest.narrations.en?.[idx];
+    const a = audioRef.current;
     if (a) {
-      a.src = audioUrl ?? "";
+      if (a.src !== audioUrl) a.src = audioUrl ?? "";
       a.muted = muted;
       a.currentTime = 0;
+      a.volume = 1;
     }
-    v.currentTime = 0;
-    v.muted = true; // video is silent; audio track is the narration
-    v.loop = false;
 
-    const onTime = () => {
-      if (!v.duration) return;
-      setProgress(Math.min(1, v.currentTime / v.duration));
+    const advance = () => {
+      if (advancedRef.current) return;
+      advancedRef.current = true;
+      if (idx < total - 1) {
+        // Preload next video into inactive layer and crossfade
+        const nextLayer: 0 | 1 = targetLayer === 0 ? 1 : 0;
+        const nextEl = videoRefs.current[nextLayer];
+        const nextSrc = videoManifest.videos[idx + 1];
+        if (nextEl && nextSrc) {
+          nextEl.src = nextSrc;
+          nextEl.muted = true;
+          nextEl.load();
+          nextEl.play().catch(() => {});
+        }
+        // Small delay so first frame of next video is decoded before fade
+        window.setTimeout(() => {
+          setActiveLayer(nextLayer);
+          setIdx((n) => n + 1);
+        }, 120);
+      } else {
+        setPlaying(false);
+        setEnded(true);
+      }
     };
-    const onEnded = () => {
-      if (idx < total - 1) setIdx((n) => n + 1);
-      else { setPlaying(false); setEnded(true); }
+
+    const onAudioTime = () => {
+      if (!a?.duration) return;
+      setProgress(Math.min(1, a.currentTime / a.duration));
     };
-    v.addEventListener("timeupdate", onTime);
-    v.addEventListener("ended", onEnded);
+    const onAudioEnded = () => advance();
+    const onVideoEnded = () => {
+      // Freeze on last frame while narration continues
+      try {
+        layerEl.pause();
+        layerEl.currentTime = Math.max(0, layerEl.duration - 0.05);
+      } catch { /* noop */ }
+    };
+
+    a?.addEventListener("timeupdate", onAudioTime);
+    a?.addEventListener("ended", onAudioEnded);
+    layerEl.addEventListener("ended", onVideoEnded);
 
     if (playing) {
-      v.play().catch(() => {});
-      if (a && !muted && audioUrl) a.play().catch(() => {});
+      layerEl.play().catch(() => {});
+      // If muted, no audio => advance when video ends
+      if (muted || !audioUrl) {
+        layerEl.removeEventListener("ended", onVideoEnded);
+        const onEndNoAudio = () => advance();
+        layerEl.addEventListener("ended", onEndNoAudio);
+      } else {
+        a?.play().catch(() => {});
+      }
     } else {
-      v.pause();
+      layerEl.pause();
       a?.pause();
     }
 
     return () => {
-      v.removeEventListener("timeupdate", onTime);
-      v.removeEventListener("ended", onEnded);
+      a?.removeEventListener("timeupdate", onAudioTime);
+      a?.removeEventListener("ended", onAudioEnded);
+      layerEl.removeEventListener("ended", onVideoEnded);
     };
-  }, [mode, idx, lang, playing, muted, videoManifest, total]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasVideo, idx, lang, playing, muted, videoManifest, total]);
 
   const go = (delta: number) => {
     const next = Math.max(0, Math.min(total - 1, idx + delta));
     setIdx(next);
     setProgress(0);
     setEnded(false);
+    bumpControls();
   };
 
   const replay = () => {
@@ -243,6 +312,12 @@ function StoryPlayer() {
     setProgress(0);
     setEnded(false);
     setPlaying(true);
+    bumpControls();
+  };
+
+  const togglePlay = () => {
+    setPlaying((p) => !p);
+    bumpControls();
   };
 
   const kenBurnsClass = useMemo(() => {
@@ -256,21 +331,34 @@ function StoryPlayer() {
   }, [scene.kenBurns]);
 
   return (
-    <div className="fixed inset-0 z-[80] bg-black text-white overflow-hidden">
+    <div
+      className="fixed inset-0 z-[80] bg-black text-white overflow-hidden"
+      onMouseMove={bumpControls}
+      onTouchStart={bumpControls}
+      onClick={bumpControls}
+    >
       {/* Media */}
       <div className="absolute inset-0">
-        {mode === "video" && videoManifest ? (
+        {hasVideo && videoManifest ? (
           <>
             <video
-              ref={videoRef}
-              key={`v-${idx}`}
-              src={videoManifest.videos[idx]}
-              poster={scene.image}
-              className="w-full h-full object-cover"
+              ref={(el) => { videoRefs.current[0] = el; }}
+              className="absolute inset-0 w-full h-full object-cover transition-opacity duration-500"
+              style={{ opacity: activeLayer === 0 ? 1 : 0 }}
               playsInline
+              muted
+              preload="auto"
+            />
+            <video
+              ref={(el) => { videoRefs.current[1] = el; }}
+              className="absolute inset-0 w-full h-full object-cover transition-opacity duration-500"
+              style={{ opacity: activeLayer === 1 ? 1 : 0 }}
+              playsInline
+              muted
               preload="auto"
             />
             <audio ref={audioRef} preload="auto" />
+            <audio ref={nextAudioRef} preload="auto" />
           </>
         ) : (
           <img
@@ -281,40 +369,35 @@ function StoryPlayer() {
             style={{ animationDuration: `${scene.durationMs}ms`, animationPlayState: playing ? "running" : "paused" }}
           />
         )}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black/85" />
+        {/* Subtle vignette — lighter than before so it doesn't wash out the video */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/70 pointer-events-none" />
       </div>
 
-      {/* Ambient particles */}
-      <div className="absolute inset-0 pointer-events-none opacity-40">
-        {Array.from({ length: 20 }).map((_, i) => (
-          <span
-            key={i}
-            className="absolute block w-1 h-1 rounded-full bg-white/60 story-particle"
-            style={{
-              left: `${(i * 53) % 100}%`,
-              top: `${(i * 37) % 100}%`,
-              animationDelay: `${(i % 10) * 0.7}s`,
-              animationDuration: `${8 + (i % 5)}s`,
-            }}
-          />
-        ))}
-      </div>
+      {/* Ambient particles — only in image mode; distracting on video */}
+      {!hasVideo && (
+        <div className="absolute inset-0 pointer-events-none opacity-40">
+          {Array.from({ length: 20 }).map((_, i) => (
+            <span
+              key={i}
+              className="absolute block w-1 h-1 rounded-full bg-white/60 story-particle"
+              style={{
+                left: `${(i * 53) % 100}%`,
+                top: `${(i * 37) % 100}%`,
+                animationDelay: `${(i % 10) * 0.7}s`,
+                animationDuration: `${8 + (i % 5)}s`,
+              }}
+            />
+          ))}
+        </div>
+      )}
 
-      {/* Top bar */}
-      <div className="absolute top-0 inset-x-0 pt-[calc(env(safe-area-inset-top)+0.75rem)] px-4 flex items-center gap-2 z-10">
-        <Link
-          to="/animate"
-          search={{ tab: "story" }}
-          className="rounded-full bg-black/40 backdrop-blur border border-white/15 p-2 hover:border-white/40"
-          title={t("story.close")}
-        >
-          <X className="h-5 w-5" />
-        </Link>
-        <div className="flex-1 flex gap-1 items-center">
+      {/* Progress bar — always visible at top, minimal */}
+      <div className="absolute top-0 inset-x-0 pt-[calc(env(safe-area-inset-top)+0.5rem)] px-3 z-10 pointer-events-none">
+        <div className="flex gap-1 items-center">
           {story.scenes.map((_: unknown, i: number) => (
-            <span key={i} className="relative flex-1 h-1 rounded-full bg-white/15 overflow-hidden">
+            <span key={i} className="relative flex-1 h-[3px] rounded-full bg-white/20 overflow-hidden">
               <span
-                className="absolute inset-y-0 left-0 bg-white"
+                className="absolute inset-y-0 left-0 bg-white/95"
                 style={{
                   width: i < idx ? "100%" : i === idx ? `${progress * 100}%` : "0%",
                   transition: i === idx ? "none" : "width 200ms linear",
@@ -323,43 +406,53 @@ function StoryPlayer() {
             </span>
           ))}
         </div>
-        {hasVideo && (
-          <button
-            onClick={() => setMode((m) => (m === "video" ? "image" : "video"))}
-            className="rounded-full bg-black/40 backdrop-blur border border-white/15 p-2 hover:border-white/40"
-            title={mode === "video" ? "Switch to stills" : "Watch as video"}
-          >
-            {mode === "video" ? <ImageIcon className="h-5 w-5" /> : <Film className="h-5 w-5" />}
-          </button>
-        )}
+      </div>
+
+      {/* Top bar — auto-hides */}
+      <div
+        className={`absolute top-0 inset-x-0 pt-[calc(env(safe-area-inset-top)+1.25rem)] px-4 flex items-center gap-2 z-20 transition-opacity duration-300 ${showControls ? "opacity-100" : "opacity-0 pointer-events-none"}`}
+      >
+        <Link
+          to="/animate"
+          search={{ tab: "story" }}
+          className="rounded-full bg-black/50 backdrop-blur border border-white/15 p-2 hover:border-white/40"
+          title={t("story.close")}
+        >
+          <X className="h-5 w-5" />
+        </Link>
+        <div className="flex-1" />
         <NarrationLangSelect value={lang} onChange={setLang} tone="dark" />
       </div>
 
-      {/* Title */}
-      <div className="absolute top-[calc(env(safe-area-inset-top)+3.25rem)] inset-x-0 text-center px-6 z-10">
-        <p className="text-[10px] uppercase tracking-[0.3em] text-white/60">
+      {/* Title — small badge, auto-hides with controls */}
+      <div
+        className={`absolute top-[calc(env(safe-area-inset-top)+4rem)] inset-x-0 text-center px-6 z-10 transition-opacity duration-300 ${showControls ? "opacity-100" : "opacity-0"}`}
+      >
+        <p className="text-[10px] uppercase tracking-[0.3em] text-white/70">
           {idx + 1} / {total}
         </p>
-        <h1 className="font-display-serif italic text-2xl mt-1 text-white/95">
+        <h1 className="font-display-serif italic text-xl mt-1 text-white/95 drop-shadow-lg">
           {tr(story.title, lang)}
         </h1>
       </div>
 
-      {/* Caption */}
-      <div className="absolute bottom-0 inset-x-0 pb-[calc(env(safe-area-inset-bottom)+7rem)] px-6 z-10">
+      {/* Caption — persistent but discreet, translucent panel */}
+      <div className="absolute bottom-0 inset-x-0 pb-[calc(env(safe-area-inset-bottom)+5rem)] px-4 z-10 pointer-events-none">
         <p
           key={`${idx}-${caption}`}
-          className="max-w-2xl mx-auto text-base sm:text-lg text-white/95 leading-relaxed text-center fade-in font-display-serif italic"
+          className="max-w-2xl mx-auto text-[15px] sm:text-base text-white leading-relaxed text-center fade-in font-display-serif italic drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]"
         >
           {caption}
         </p>
       </div>
 
-      {/* Controls */}
-      <div className="absolute bottom-0 inset-x-0 pb-[calc(env(safe-area-inset-bottom)+1.5rem)] px-4 z-10">
-        <div className="max-w-md mx-auto flex items-center justify-between gap-2 bg-black/40 backdrop-blur border border-white/10 rounded-full px-3 py-2">
+      {/* Bottom controls — auto-hide, floating */}
+      <div
+        className={`absolute bottom-0 inset-x-0 pb-[calc(env(safe-area-inset-bottom)+1rem)] px-4 z-20 transition-all duration-300 ${showControls ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"}`}
+      >
+        <div className="max-w-md mx-auto flex items-center justify-between gap-2 bg-black/45 backdrop-blur-md border border-white/10 rounded-full px-2 py-1.5">
           <button
-            onClick={() => go(-1)}
+            onClick={(e) => { e.stopPropagation(); go(-1); }}
             disabled={idx === 0}
             className="rounded-full p-2 hover:bg-white/10 disabled:opacity-30"
             title={t("story.prev")}
@@ -369,23 +462,23 @@ function StoryPlayer() {
 
           {ended ? (
             <button
-              onClick={replay}
-              className="rounded-full bg-white text-black font-semibold px-5 py-2 inline-flex items-center gap-2"
+              onClick={(e) => { e.stopPropagation(); replay(); }}
+              className="rounded-full bg-white text-black font-semibold px-4 py-1.5 inline-flex items-center gap-2 text-sm"
             >
               <RotateCcw className="h-4 w-4" /> {t("story.replay")}
             </button>
           ) : (
             <button
-              onClick={() => setPlaying((p) => !p)}
-              className="rounded-full bg-white text-black font-semibold px-5 py-2 inline-flex items-center gap-2"
+              onClick={(e) => { e.stopPropagation(); togglePlay(); }}
+              className="rounded-full bg-white/95 text-black font-semibold p-2.5 inline-flex items-center justify-center"
               title={t("story.playPause")}
             >
-              {playing ? <><Pause className="h-4 w-4" /> {t("story.playPause")}</> : <><Play className="h-4 w-4" /> {t("story.tap")}</>}
+              {playing ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
             </button>
           )}
 
           <button
-            onClick={() => setMuted((m) => !m)}
+            onClick={(e) => { e.stopPropagation(); setMuted((m) => !m); bumpControls(); }}
             className="rounded-full p-2 hover:bg-white/10"
             title={muted ? t("story.unmute") : t("story.mute")}
           >
@@ -393,7 +486,7 @@ function StoryPlayer() {
           </button>
 
           <button
-            onClick={() => go(1)}
+            onClick={(e) => { e.stopPropagation(); go(1); }}
             disabled={idx >= total - 1}
             className="rounded-full p-2 hover:bg-white/10 disabled:opacity-30"
             title={t("story.next")}
@@ -401,15 +494,6 @@ function StoryPlayer() {
             <ChevronRight className="h-5 w-5" />
           </button>
         </div>
-
-        <details className="max-w-md mx-auto mt-3 text-white/60 text-[11px] text-center">
-          <summary className="cursor-pointer inline-block px-3 py-1 rounded-full border border-white/10 bg-black/30 backdrop-blur">
-            {t("story.sources")}
-          </summary>
-          <ul className="mt-2 space-y-0.5 text-white/70">
-            {story.sources.map((s: string) => <li key={s}>· {s}</li>)}
-          </ul>
-        </details>
       </div>
     </div>
   );
