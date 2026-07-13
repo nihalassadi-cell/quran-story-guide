@@ -146,7 +146,7 @@ function HomePage() {
                     search={{ verse: v.verse_number }}
                     className="block rounded-lg bg-card/60 border border-border px-4 py-2.5 hover:border-primary/50"
                   >
-                    <p className="text-[11px] text-primary mb-0.5">Surah {v.surah_number}, verse {v.verse_number}</p>
+                    <p className="text-[11px] text-primary mb-0.5">{t("quran.surah")} {v.surah_number}, {t("quran.verse").toLowerCase()} {v.verse_number}</p>
                     <p className="text-sm line-clamp-2">{v.text}</p>
                   </Link>
                 </li>
