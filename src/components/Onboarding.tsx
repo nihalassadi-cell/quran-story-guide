@@ -69,8 +69,9 @@ export function Onboarding() {
         onClick={finish}
         className="absolute top-5 right-5 text-xs uppercase tracking-widest text-muted-foreground hover:text-foreground"
       >
-        Skip
+        {tt("onb.skip", lang)}
       </button>
+
 
       <div className="flex-1 flex flex-col items-center justify-center px-8 text-center fade-in overflow-y-auto py-10" key={i}>
         <div className="h-24 w-24 rounded-3xl bg-gradient-to-br from-primary/30 to-accent/20 grid place-items-center glow-shadow mb-8 border border-primary/30 shrink-0">
