@@ -717,9 +717,6 @@ function MoodPlayer() {
         <div className="flex justify-center mb-4">
           <NarrationLangSelect value={lang} onChange={setLang} tone="light" title={t("settings.language")} />
         </div>
-        <div style={{ display: "none" }}>
-
-        </div>
 
         {/* Kalima picker */}
         {mood.kalimas.length > 1 && (
