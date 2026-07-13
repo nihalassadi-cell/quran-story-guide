@@ -255,17 +255,53 @@ function SurahPlayer() {
     } catch {}
   }, [data, surahNum, pageIdx, activeVerse]);
 
-  // Sync URL with current page + verse
+  // Sync URL with current page + verse (preserve micro flag)
   useEffect(() => {
-    navigate({ search: { verse: activeVerse, page: pageIdx + 1 }, replace: true });
+    navigate({ search: (prev) => ({ ...prev, verse: activeVerse, page: pageIdx + 1 }), replace: true });
   }, [activeVerse, pageIdx, navigate]);
+
+  // Reset dwell timer whenever the page changes in micro mode
+  useEffect(() => {
+    if (microMode) pageStartRef.current = Date.now();
+  }, [pageIdx, microMode]);
+
+  // Save cursor + notify when leaving in micro mode
+  useEffect(() => {
+    return () => {
+      if (microMode) {
+        void saveCursor(surahNum, activeVerse);
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [microMode]);
 
   const goPage = (delta: number) => {
     const next = Math.max(0, Math.min(totalPages - 1, pageIdx + delta));
     if (next === pageIdx) return;
+
+    if (microMode && delta > 0) {
+      const dwell = Date.now() - pageStartRef.current;
+      if (dwell >= MIN_DWELL_MS) {
+        const newCount = microPagesRead + 1;
+        setMicroPagesRead(newCount);
+        void addPagesRead(1);
+        // After hitting the daily target, gate the next turn behind the sheet.
+        if (newCount >= DAILY_TARGET_PAGES) {
+          setPlaying(false);
+          setShowSheet(true);
+          return;
+        }
+      } else {
+        const remaining = Math.ceil((MIN_DWELL_MS - dwell) / 1000);
+        toast(`Take a breath — ${remaining}s more on this page`, { duration: 1500 });
+        return;
+      }
+    }
+
     setPlaying(false);
     turnToPage(next, delta > 0 ? "next" : "prev");
   };
+
 
   const toggleBookmark = () => {
     try {
