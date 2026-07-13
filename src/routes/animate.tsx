@@ -188,10 +188,6 @@ function StoryGrid() {
                 </div>
               )}
 
-              {/* Scenes badge */}
-              <div className="absolute top-2 right-2 inline-flex items-center gap-1 text-[10px] uppercase tracking-wider text-white/90 bg-black/45 backdrop-blur border border-white/15 rounded-full px-2 py-0.5">
-                <Film className="h-2.5 w-2.5" /> {s.scenes.length} {t("feel.scenes")}
-              </div>
 
               {/* Play affordance */}
               <div className="absolute inset-0 grid place-items-center">
