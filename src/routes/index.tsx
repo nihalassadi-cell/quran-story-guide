@@ -156,7 +156,7 @@ function HomePage() {
         )}
 
         {filter && (filtered?.length ?? 0) > 0 && (
-          <h2 className="text-xs uppercase tracking-widest text-primary/80 mb-2">Surahs</h2>
+          <h2 className="text-xs uppercase tracking-widest text-primary/80 mb-2">{t("quran.surahs")}</h2>
         )}
 
         <ul className="space-y-2">
