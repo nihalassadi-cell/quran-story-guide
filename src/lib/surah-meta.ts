@@ -18,7 +18,7 @@ export async function getAllSurahMeta(): Promise<SurahMeta[]> {
   pending = (async () => {
     const { data, error } = await supabase
       .from("surahs")
-      .select("number,name_ar,name_translit,verses_count")
+      .select("number,name_ar,name_translit,name_en,verse_count")
       .order("number", { ascending: true });
     if (error || !data) {
       pending = null;
