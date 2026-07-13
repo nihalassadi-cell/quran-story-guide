@@ -89,7 +89,7 @@ function TodayPage() {
               <div className="absolute inset-12 border border-emerald-300/30 rounded-full" />
             </div>
             <div className="relative">
-              <CardChip icon={<Repeat className="h-3 w-3" />} label="Dhikr" tone="emerald" />
+              <CardChip icon={<Repeat className="h-3 w-3" />} label={t("today.chip.dhikr")} tone="emerald" />
               <p className="arabic text-right text-2xl leading-loose mt-3 text-emerald-100" dir="rtl">
                 {today.dhikr.arabic}
               </p>
@@ -107,9 +107,10 @@ function TodayPage() {
                   to="/animate"
                   className="text-xs font-semibold text-emerald-300 hover:text-emerald-200 inline-flex items-center gap-1"
                 >
-                  Practice <ArrowRight className="h-3 w-3" />
+                  {t("today.practice")} <ArrowRight className="h-3 w-3" />
                 </Link>
               </div>
+
             </div>
           </section>
 
