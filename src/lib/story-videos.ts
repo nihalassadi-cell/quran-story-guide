@@ -44,24 +44,36 @@ const MUSA: StoryVideoManifest = {
   music: MUSA_MUSIC,
 };
 
-// ---------- Videos-only stories ----------
-// Videos are named scene-01.mp4 through scene-10.mp4 in scene order.
-function videosOnly(storyId: string): StoryVideoManifest {
+// ---------- Fully-baked stories (videos + narrations + music) ----------
+const ALL_LANGS = ["en", "ur", "ru", "bn", "fa", "id", "ms", "tr", "fr", "de"];
+
+function narrationsFor(storyId: string, lang: string) {
+  return Array.from({ length: 10 }, (_, i) =>
+    `${SUPA}/narrations/${storyId}/${lang}/scene-${String(i + 1).padStart(2, "0")}.mp3`
+  );
+}
+function musicFor(storyId: string) {
+  return Array.from({ length: 10 }, (_, i) =>
+    `${SUPA}/narrations/${storyId}/music/scene-${String(i + 1).padStart(2, "0")}.mp3`
+  );
+}
+function fullyBaked(storyId: string): StoryVideoManifest {
   return {
     videos: Array.from({ length: 10 }, (_, i) =>
       `${SUPA}/scene-images/${storyId}/videos/scene-${String(i + 1).padStart(2, "0")}.mp4`
     ),
-    narrations: {},
+    narrations: Object.fromEntries(ALL_LANGS.map((l) => [l, narrationsFor(storyId, l)])),
+    music: musicFor(storyId),
   };
 }
 
 export const STORY_VIDEO_MANIFESTS: Record<string, StoryVideoManifest | undefined> = {
   musa: MUSA,
-  yunus: videosOnly("yunus"),
-  maryam: videosOnly("maryam"),
-  adam: videosOnly("adam"),
-  ibrahim: videosOnly("ibrahim"),
-  ayyub: videosOnly("ayyub"),
+  yunus: fullyBaked("yunus"),
+  maryam: fullyBaked("maryam"),
+  adam: fullyBaked("adam"),
+  ibrahim: fullyBaked("ibrahim"),
+  ayyub: fullyBaked("ayyub"),
 };
 
 export function getStoryVideoManifest(id: string): StoryVideoManifest | undefined {
