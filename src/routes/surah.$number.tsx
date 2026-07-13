@@ -7,8 +7,11 @@ import { localizedSurahMeaning } from "@/lib/surah-names.i18n";
 import { ChevronLeft, Play, Pause, ChevronRight, Bookmark, BookmarkCheck, Loader2, Volume2, VolumeX, Youtube } from "lucide-react";
 import { track } from "@/lib/analytics";
 import { toast } from "sonner";
+import { addPagesRead, saveCursor, DAILY_TARGET_PAGES, MIN_DWELL_MS } from "@/lib/reading-progress";
+import { ContinueSheet } from "@/components/ContinueSheet";
 
-type SurahSearch = { verse?: number; page?: number };
+
+type SurahSearch = { verse?: number; page?: number; micro?: number };
 
 const EVERYAYAH_TRANSLATIONS: Record<string, string> = {
   en: "English/Sahih_Intnl_Ibrahim_Walk_192kbps",
@@ -45,9 +48,11 @@ export const Route = createFileRoute("/surah/$number")({
   validateSearch: (search: Record<string, unknown>): SurahSearch => {
     const v = Number(search.verse);
     const p = Number(search.page);
+    const m = Number(search.micro);
     return {
       verse: Number.isFinite(v) && v >= 1 ? Math.floor(v) : undefined,
       page: Number.isFinite(p) && p >= 1 ? Math.floor(p) : undefined,
+      micro: m === 1 ? 1 : undefined,
     };
   },
   head: ({ params }) => ({
@@ -61,9 +66,14 @@ export const Route = createFileRoute("/surah/$number")({
 
 function SurahPlayer() {
   const { number } = Route.useParams();
-  const { verse, page } = Route.useSearch();
+  const { verse, page, micro } = Route.useSearch();
   const navigate = useNavigate({ from: "/surah/$number" });
   const surahNum = parseInt(number, 10);
+  const microMode = micro === 1;
+  const [microPagesRead, setMicroPagesRead] = useState(0);
+  const [showSheet, setShowSheet] = useState(false);
+  const pageStartRef = useRef<number>(Date.now());
+  const microStartVerseRef = useRef<number>(verse ?? 1);
 
   const [data, setData] = useState<Awaited<ReturnType<typeof fetchSurahWithTranslation>> | null>(null);
   const [pageIdx, setPageIdx] = useState<number>((page ?? 1) - 1);
@@ -245,17 +255,53 @@ function SurahPlayer() {
     } catch {}
   }, [data, surahNum, pageIdx, activeVerse]);
 
-  // Sync URL with current page + verse
+  // Sync URL with current page + verse (preserve micro flag)
   useEffect(() => {
-    navigate({ search: { verse: activeVerse, page: pageIdx + 1 }, replace: true });
+    navigate({ search: (prev: SurahSearch) => ({ ...prev, verse: activeVerse, page: pageIdx + 1 }), replace: true });
   }, [activeVerse, pageIdx, navigate]);
+
+  // Reset dwell timer whenever the page changes in micro mode
+  useEffect(() => {
+    if (microMode) pageStartRef.current = Date.now();
+  }, [pageIdx, microMode]);
+
+  // Save cursor + notify when leaving in micro mode
+  useEffect(() => {
+    return () => {
+      if (microMode) {
+        void saveCursor(surahNum, activeVerse);
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [microMode]);
 
   const goPage = (delta: number) => {
     const next = Math.max(0, Math.min(totalPages - 1, pageIdx + delta));
     if (next === pageIdx) return;
+
+    if (microMode && delta > 0) {
+      const dwell = Date.now() - pageStartRef.current;
+      if (dwell >= MIN_DWELL_MS) {
+        const newCount = microPagesRead + 1;
+        setMicroPagesRead(newCount);
+        void addPagesRead(1);
+        // After hitting the daily target, gate the next turn behind the sheet.
+        if (newCount >= DAILY_TARGET_PAGES) {
+          setPlaying(false);
+          setShowSheet(true);
+          return;
+        }
+      } else {
+        const remaining = Math.ceil((MIN_DWELL_MS - dwell) / 1000);
+        toast(`Take a breath — ${remaining}s more on this page`, { duration: 1500 });
+        return;
+      }
+    }
+
     setPlaying(false);
     turnToPage(next, delta > 0 ? "next" : "prev");
   };
+
 
   const toggleBookmark = () => {
     try {
@@ -500,6 +546,38 @@ function SurahPlayer() {
           </div>
         </div>
       )}
+
+      {microMode && (
+        <div className="absolute top-14 inset-x-0 z-30 flex justify-center pointer-events-none">
+          <div className="pointer-events-auto rounded-full bg-primary/15 border border-primary/30 backdrop-blur px-3 py-1 text-[11px] text-primary font-semibold shadow">
+            Page {Math.min(microPagesRead + 1, DAILY_TARGET_PAGES)} of {DAILY_TARGET_PAGES}
+            <span className="ml-2 inline-block w-16 align-middle h-1 rounded-full bg-primary/20 overflow-hidden">
+              <span
+                className="block h-full bg-primary transition-all duration-500"
+                style={{ width: `${(microPagesRead / DAILY_TARGET_PAGES) * 100}%` }}
+              />
+            </span>
+          </div>
+        </div>
+      )}
+
+      <ContinueSheet
+        open={showSheet}
+        onEnd={() => {
+          setShowSheet(false);
+          void saveCursor(surahNum, activeVerse);
+          navigate({ to: "/today" });
+        }}
+        onContinue={() => {
+          setShowSheet(false);
+          pageStartRef.current = Date.now();
+          // Allow further page turns without re-gating; reset microPagesRead so target isn't retriggered.
+          setMicroPagesRead(0);
+          const next = Math.min(totalPages - 1, pageIdx + 1);
+          if (next !== pageIdx) turnToPage(next, "next");
+        }}
+      />
     </div>
   );
 }
+

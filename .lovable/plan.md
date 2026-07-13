@@ -1,114 +1,132 @@
-# Phase 2 — Full i18n + Animated Stories
+## Micro-Reading Habit — Implementation Plan
 
-Two tracks land in Phase 2. Track A is a thorough translation sweep across every screen and sub-screen. Track B builds the animated Story player and ships the Yunus (AS) pilot.
-
----
-
-## Track A — App-wide translations
-
-### Scope (every visible English string)
-
-- **Bottom tab bar** (already done — verify)
-- **Today** (`/today`)
-  - Date label — currently forced to `en-US`; switch to the user's language locale (`ur-PK`, `fr-FR`, `de-DE`, `tr-TR`, `id-ID`, `ms-MY`, `ru-RU`, `bn-BD`, `fa-IR`)
-  - Card chips: "Verse", "Hadith", "Dhikr", "Story", "Reflection"
-  - Card actions: "Open Surah", "Reveal reflection", "×N", "min · Prophet story", source labels
-- **Quran home** (`/`) — done, verify
-- **Feelings** (`/animate`) — headers done; mood tile labels ("Anxious", "Grateful", …) still English
-- **Mood detail** (`/mood/$id`)
-  - Top bar, Practice card headings, "Repeat ×N", counter, "Verses for this feeling", verse-player controls, share sheet, tafsir/reflection accordions, "Related verses"
-- **Surah reader** (`/surah/$number`)
-  - Header, page/verse counter, reciter dropdown label, translation toggle, autoplay indicator, "Bookmark", "Continue from here", empty/loading states
-- **Onboarding** — 3 slide titles + bodies + "Skip" / "Next" / "Begin"
-- **Settings** — done
-- **Auth** (`/auth`) — sign-in labels, email/password fields, OAuth buttons, errors
-- **Terms / Privacy** — leave English (legal), add a note at top in user's language: "Legal text is provided in English."
-- **Toasts** — every `toast.success/error` string
-- **Common** — Loading, Error, Retry, Back, Close, Play, Pause, Next, Previous
-
-### Implementation
-
-- Extend `src/lib/i18n.ts` with all keys above across all 10 languages
-- Add `localeFor(lang)` helper mapping `LangCode → BCP-47` for `toLocaleDateString`/`toLocaleTimeString`
-- Localize `MOODS[].label` by converting it from `string` to `Localized` (add `label_i18n` field, keep `label` as English fallback for logging/analytics)
-- Add RTL support: when `isRtl(lang)` is true, set `dir="rtl"` on `<AppShell>` root and mirror icons where directional
-- Add a `scripts/check-i18n.mjs` audit that greps for hardcoded English strings in JSX and fails CI (optional stretch)
-
-### Acceptance
-
-- Switching Settings → Urdu changes every visible label on Today, Quran, Feelings, Mood, Surah, Onboarding
-- Date on Today reads "پیر، 13 جولائی" for Urdu, "lundi 13 juillet" for French, etc.
-- No English string remains on any of the 4 main tabs or the mood/surah detail pages
+Build a daily 2-page Qur'an reading habit, surfaced on the Today tab, persisted in Lovable Cloud, with a soft "continue?" prompt and a return-visit celebration.
 
 ---
 
-## Track B — Animated Story infrastructure
+### 1. Decisions locked in
 
-### New data model (`src/lib/stories.ts`)
+- **Starting point:** user picks during a one-time setup (surah OR juz OR "start from Al-Fatihah"). Editable later from Settings.
+- **What counts as "read":** hybrid — a page is marked complete when the user **scrolls to the bottom of that page's ayahs AND spends ≥20 seconds on it**. Prevents flick-through gaming without requiring an explicit tap. A subtle "✓ Page complete" chip animates in when the threshold is met.
+- **Persistence:** Lovable Cloud (auth already exists). Syncs across devices; anonymous users see a "Sign in to save your progress" prompt on the micro-read card.
+- **Translation:** respects the user's existing language setting (already in `src/lib/language.ts`). Arabic + translation shown side-by-side by default; a toggle in the reader lets them switch to Arabic-only for that session.
 
-```ts
-Story {
-  id: 'yunus' | 'musa' | 'maryam' | 'adam' | 'ibrahim' | 'sulaiman'
-  moodId: string
-  title: Localized
-  scenes: Scene[]     // 6–8 stills with narration + captions
-  sources: string[]   // Qur'an refs + Ibn Kathir citation
-  durationSec: number
-}
-Scene {
-  image: string           // /src/assets/stories/yunus/01.jpg
-  narration: Localized    // caption text; also fed to TTS
-  durationMs: number      // 8–15s per scene
-  kenBurns: 'in' | 'out' | 'panLeft' | 'panRight'
-}
+---
+
+### 2. Database (one migration)
+
+```
+reading_progress
+  user_id uuid PK → auth.users
+  start_surah int, start_verse int   -- user's chosen starting point
+  current_surah int, current_verse int  -- cursor — next unread ayah
+  updated_at timestamptz
+
+reading_sessions
+  id uuid PK
+  user_id uuid → auth.users
+  session_date date          -- local date; one row per calendar day
+  pages_read int default 0
+  completed_at timestamptz   -- set when pages_read >= 2
+  unique (user_id, session_date)
+
+reading_streak
+  user_id uuid PK
+  current_streak int default 0
+  longest_streak int default 0
+  last_completed_date date
 ```
 
-### New route (`/story/$id`)
-
-- Full-bleed cinematic player: image with Ken Burns pan/zoom, captions bottom-safe, ambient particle overlay, progress bar of scene dots
-- Controls: Play/Pause, Prev/Next scene, Mute, Language menu, Close
-- Narration: ElevenLabs "Brian" via existing kalima TTS server function, extended with a `story-narration` mode; cache audio by `${storyId}:${sceneIdx}:${lang}` in IndexedDB
-- Auto-advance scenes on narration end; falls back to `durationMs` when muted
-- Fully symbolic art — light, silhouettes, boat, cave, staff — no faces or bodies (as agreed)
-
-### Yunus (AS) pilot content
-
-6 scenes, symbolic art via nano-banana (imagegen premium.gemini):
-1. City of Nineveh at dusk — turning away
-2. Boat on the sea, storm gathering
-3. Boat tossed; lots drawn (rope + wooden lots on deck)
-4. Silhouette falling into moonlit water; whale shape below as light
-5. Inside the darkness — three concentric arcs of light, the du'a in Arabic calligraphy
-6. Shore at dawn, gourd vine and soft light
-
-Narration script (English) drafted from Qur'an 21:87, 37:139–148, and Ibn Kathir's *Qisas al-Anbiya*, translated to all 10 languages.
-
-### Wire-up
-
-- Today's Story card → `/story/${today.story.storyId}` (currently points to `/mood/$id`)
-- Mood detail v3 Story card → `/story/${storyForMood(id)}` when a story exists for the mood
-- Feelings tile: small "▶ story" badge on moods that have a pilot story
-
-### Acceptance
-
-- `/story/yunus` plays 6 scenes end-to-end with narration, captions, and ambient
-- Switching language mid-story swaps captions immediately and re-narrates on next scene
-- Today's Story deep-link opens the player, not the kalimah page
-- Symbolic art passes the "no faces/bodies" rule on every frame
+RLS: owner-only (`auth.uid() = user_id`) on all three. GRANT to authenticated + service_role.
 
 ---
 
-## Order of execution
+### 3. Today tab — hero card
 
-1. Land Track A first (~1 turn). Verify with screenshots on Urdu + French.
-2. Build Track B infrastructure (route + player + TTS extension) with placeholder images.
-3. Generate Yunus art (6 stills).
-4. Wire Today + Mood entry points, ship pilot.
-5. Subsequent stories (Musa, Maryam, Adam, Ibrahim, Sulaiman) added incrementally in Phase 2.5 without further architecture changes.
+Replaces nothing; **inserted at the top** above the existing Verse card.
 
-## Out of scope for Phase 2
+```text
+┌──────────────────────────────────────────┐
+│ ✦ TODAY'S READING                        │
+│                                          │
+│ Al-Baqarah · pages 3–4                   │
+│ ~6 min                                   │
+│                                          │
+│ ◐──────  0 of 2 pages                    │
+│                                          │
+│ [ Begin reading  → ]                     │
+└──────────────────────────────────────────┘
+```
 
-- Scholarly review workflow (still "widely-accepted sources" + citations)
-- Human VO (ElevenLabs Brian remains)
-- `daily_content` DB migration (still deterministic in-code pool)
-- Legal doc localization
+- Larger than sibling cards, warm gold accent, subtle animated noor gradient.
+- Progress ring fills as pages complete.
+- If already complete today: card shows *"Alhamdulillah — today's reading is done"* + secondary "Read one more page" button, no primary CTA.
+- Anonymous user: same card, CTA reads "Sign in to begin".
+
+---
+
+### 4. Reader flow
+
+Reuses `src/routes/surah.$number.tsx`, launched with a `?micro=1&pages=2` param.
+
+- Reader jumps to the cursor position (`current_surah`, `current_verse`).
+- Small persistent header: *"Page 1 of 2"* + thin progress bar.
+- Page completion detected via IntersectionObserver on the last ayah of each mushaf page + 20s dwell timer.
+- On completion: subtle ✓ animation, `pages_read` increments, cursor advances.
+- **After page 2:** calm bottom-sheet:
+  - *"You've completed today's reading."*
+  - **Primary:** "End here" → celebration screen → back to Today.
+  - **Secondary:** "Read one more page" → continues; no further prompts this session.
+- Exit at any time saves the cursor at the last fully-read ayah.
+
+---
+
+### 5. Return-visit moments
+
+On Today mount, compare `last_completed_date` to today:
+
+- **Streak continues** (yesterday completed): one-time overlay per day — *"Alhamdulillah — 3 days in a row"* with soft noor particles, dismissible tap-anywhere. Then Today loads normally.
+- **Streak broken** (gap): no overlay, no red. Today's card just reads *"Welcome back. Let's begin again."* Streak silently resets to 0 on first completion of the new session.
+- **Same-day return after completion:** no overlay; hero card shows the completed state.
+
+Streak indicator: small crescent + number in the Today header, next to the date. Never a large badge.
+
+---
+
+### 6. Settings addition
+
+New section: **Reading**
+- Starting point (surah picker + verse, or juz picker)
+- Reset progress (with confirm)
+- Show streak (toggle — some users don't want gamification visible)
+
+---
+
+### 7. Files touched
+
+**New**
+- `supabase/migrations/<ts>_reading_progress.sql`
+- `src/lib/reading.functions.ts` — server fns: `getReadingState`, `markPageRead`, `resetProgress`, `setStartingPoint`
+- `src/lib/mushaf-pages.ts` — static map of ayah → mushaf page boundaries (for "2 pages" definition)
+- `src/components/MicroReadCard.tsx` — Today hero
+- `src/components/StreakOverlay.tsx` — return-visit celebration
+- `src/components/ContinueSheet.tsx` — after-page-2 bottom-sheet
+
+**Edited**
+- `src/routes/today.tsx` — insert `<MicroReadCard />` at top; mount `<StreakOverlay />` conditionally
+- `src/routes/surah.$number.tsx` — read `?micro=1&pages=2`, add per-page detection, mount `<ContinueSheet />`
+- `src/routes/settings.tsx` — new Reading section
+- `src/lib/i18n.ts` — copy strings for all 10 languages
+
+---
+
+### 8. Out of scope (future)
+
+- Push/local notifications ("your 2 pages are waiting")
+- Weekly/monthly reading stats
+- Sharing streaks socially
+- Adjustable daily goal (locked at 2 for now to keep the promise simple)
+
+---
+
+Ready to build when you approve. I'll ship the migration + hero card + reader integration first, then the celebration overlay and settings in a second pass so we can verify the core flow feels right before layering polish.
