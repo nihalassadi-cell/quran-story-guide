@@ -19,6 +19,8 @@ export const Route = createFileRoute("/today")({
 
 function TodayPage() {
   const [lang] = useLanguage();
+  const t = useT();
+
   const today = useMemo(() => getToday(), []);
   const dateLabel = useMemo(
     () => new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" }),
