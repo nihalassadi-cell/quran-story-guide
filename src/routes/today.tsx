@@ -176,9 +176,11 @@ function TodayPage() {
           </section>
         </div>
       </div>
+      <StreakOverlay />
     </AppShell>
   );
 }
+
 
 function CardChip({
   icon,
