@@ -9,8 +9,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Noor — All Surahs" },
-      { name: "description", content: "Browse all 114 Surahs of the Quran. Tap any to begin." },
+      { title: "Noor — Quran" },
+      { name: "description", content: "Read all 114 Surahs of the Quran with recitation and translation." },
     ],
   }),
   component: HomePage,
