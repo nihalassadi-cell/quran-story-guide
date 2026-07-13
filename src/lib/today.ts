@@ -777,9 +777,17 @@ function daysSinceEpoch(d = new Date()): number {
   return Math.floor(d.getTime() / 86400000);
 }
 
-function pick<T>(pool: T[], offset: number): T {
+// Pseudo-random daily index — same for everyone on a given date, but not
+// visibly sequential day-to-day. Uses a simple xmur3-style hash of
+// (day, salt) so each pool rotates independently.
+function pick<T>(pool: T[], salt: number): T {
   const day = daysSinceEpoch();
-  return pool[(day + offset) % pool.length];
+  let h = Math.imul(day ^ 0x9e3779b1, 0x85ebca6b);
+  h = Math.imul(h ^ (h >>> 13), 0xc2b2ae35);
+  h ^= Math.imul(salt + 0x27d4eb2f, 0x165667b1);
+  h ^= h >>> 16;
+  const idx = (h >>> 0) % pool.length;
+  return pool[idx];
 }
 
 export function todayKey(d = new Date()): string {
