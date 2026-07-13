@@ -19,7 +19,7 @@ function TodayPage() {
   const [lang] = useLanguage();
   const today = useMemo(() => getToday(), []);
   const dateLabel = useMemo(
-    () => new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" }),
+    () => new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" }),
     [],
   );
 
