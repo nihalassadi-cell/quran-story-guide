@@ -5,6 +5,8 @@ import { AppShell } from "@/components/AppShell";
 import { Input } from "@/components/ui/input";
 import { Search, Sparkles, BookMarked, Loader2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useT } from "@/lib/i18n";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -36,6 +38,8 @@ function HomePage() {
   const [verseHits, setVerseHits] = useState<VerseHit[]>([]);
   const [verseLoading, setVerseLoading] = useState(false);
   const [lastPage, setLastPage] = useState<LastPage | null>(null);
+  const t = useT();
+
 
   useEffect(() => {
     supabase
@@ -89,10 +93,11 @@ function HomePage() {
           <p className="text-xs uppercase tracking-[0.3em] text-primary/80 flex items-center gap-2">
             <Sparkles className="h-3.5 w-3.5" /> Noor
           </p>
-          <h1 className="text-[clamp(1.75rem,7vw,2.5rem)] font-bold mt-2 gold-text leading-tight">The Quran</h1>
+          <h1 className="text-[clamp(1.75rem,7vw,2.5rem)] font-bold mt-2 gold-text leading-tight">{t("quran.title")}</h1>
           <p className="text-sm text-muted-foreground mt-2">
-            114 chapters. Recitation and translation — verse by verse.
+            {t("quran.sub")}
           </p>
+
         </header>
 
         <div className="relative mb-5">
@@ -100,7 +105,7 @@ function HomePage() {
           <Input
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
-            placeholder="Search across the entire Quran"
+            placeholder={t("quran.search")}
             className="pl-9 bg-card/60 border-border"
           />
         </div>
@@ -116,11 +121,12 @@ function HomePage() {
               <BookMarked className="h-5 w-5" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-[10px] uppercase tracking-widest text-primary/90">Continue reading</p>
+              <p className="text-[10px] uppercase tracking-widest text-primary/90">{t("quran.continue")}</p>
               <p className="text-sm font-semibold truncate">
-                {lastPage.surahName ?? `Surah ${lastPage.surah}`} · Page {lastPage.page}
+                {lastPage.surahName ?? `${t("quran.surah")} ${lastPage.surah}`} · {t("quran.page")} {lastPage.page}
               </p>
-              <p className="text-[11px] text-muted-foreground truncate">Verse {lastPage.verse} · pick up where you left off</p>
+              <p className="text-[11px] text-muted-foreground truncate">{t("quran.verse")} {lastPage.verse} · {t("quran.pickup")}</p>
+
             </div>
             <span className="text-xs text-muted-foreground shrink-0">→</span>
           </Link>
@@ -129,7 +135,7 @@ function HomePage() {
         {filter && verseHits.length > 0 && (
           <section className="mb-5">
             <h2 className="text-xs uppercase tracking-widest text-primary/80 mb-2 flex items-center gap-2">
-              Verses {verseLoading && <Loader2 className="h-3 w-3 animate-spin" />}
+              {t("quran.verses")} {verseLoading && <Loader2 className="h-3 w-3 animate-spin" />}
             </h2>
             <ul className="space-y-2">
               {verseHits.map((v, i) => (
@@ -140,7 +146,7 @@ function HomePage() {
                     search={{ verse: v.verse_number }}
                     className="block rounded-lg bg-card/60 border border-border px-4 py-2.5 hover:border-primary/50"
                   >
-                    <p className="text-[11px] text-primary mb-0.5">Surah {v.surah_number}, verse {v.verse_number}</p>
+                    <p className="text-[11px] text-primary mb-0.5">{t("quran.surah")} {v.surah_number}, {t("quran.verse").toLowerCase()} {v.verse_number}</p>
                     <p className="text-sm line-clamp-2">{v.text}</p>
                   </Link>
                 </li>
@@ -150,7 +156,7 @@ function HomePage() {
         )}
 
         {filter && (filtered?.length ?? 0) > 0 && (
-          <h2 className="text-xs uppercase tracking-widest text-primary/80 mb-2">Surahs</h2>
+          <h2 className="text-xs uppercase tracking-widest text-primary/80 mb-2">{t("quran.surahs")}</h2>
         )}
 
         <ul className="space-y-2">
@@ -180,7 +186,7 @@ function HomePage() {
                   </div>
                   <div className="flex items-center justify-between mt-0.5 text-[11px] sm:text-xs text-muted-foreground gap-2">
                     <span className="truncate">{s.name_en}</span>
-                    <span className="shrink-0">{s.verse_count} verses · {s.revelation_place}</span>
+                    <span className="shrink-0">{s.verse_count} {t("quran.verseSuffix")} · {s.revelation_place}</span>
                   </div>
                 </div>
               </Link>
@@ -190,7 +196,7 @@ function HomePage() {
 
         {filter && (filtered?.length ?? 0) === 0 && verseHits.length === 0 && !verseLoading && (
           <p className="text-center text-sm text-muted-foreground mt-8">
-            No matches. Try a different word.
+            {t("quran.noMatches")}
           </p>
         )}
       </div>

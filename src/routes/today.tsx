@@ -2,6 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { getToday, pickTr } from "@/lib/today";
 import { useLanguage } from "@/lib/language";
+import { useT } from "@/lib/i18n";
+
 import { BookOpen, Feather, Repeat, Film, PenLine, ArrowRight } from "lucide-react";
 import { useMemo } from "react";
 
@@ -17,6 +19,8 @@ export const Route = createFileRoute("/today")({
 
 function TodayPage() {
   const [lang] = useLanguage();
+  const t = useT();
+
   const today = useMemo(() => getToday(), []);
   const dateLabel = useMemo(
     () => new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" }),
@@ -28,12 +32,13 @@ function TodayPage() {
       <div className="max-w-2xl mx-auto px-4 pt-6 pb-24">
         {/* Header */}
         <div className="mb-6">
-          <p className="text-[10px] uppercase tracking-[0.25em] text-primary/70 font-bold">Today's Guidance</p>
+          <p className="text-[10px] uppercase tracking-[0.25em] text-primary/70 font-bold">{t("today.eyebrow")}</p>
           <h1 className="mt-1 font-display-serif italic text-3xl sm:text-4xl text-foreground leading-tight">
             {dateLabel}
           </h1>
-          <p className="text-sm text-muted-foreground mt-2">Five small things. Take them slowly.</p>
+          <p className="text-sm text-muted-foreground mt-2">{t("today.sub")}</p>
         </div>
+
 
         <div className="space-y-4">
           {/* 1 · Verse */}

@@ -1,15 +1,18 @@
 import { Link, useLocation } from "@tanstack/react-router";
 import { Sun, BookOpen, Heart, Settings } from "lucide-react";
+import { useT } from "@/lib/i18n";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const loc = useLocation();
+  const t = useT();
 
   const tabs = [
-    { to: "/today", icon: Sun, label: "Today" },
-    { to: "/", icon: BookOpen, label: "Quran" },
-    { to: "/animate", icon: Heart, label: "Feelings" },
-    { to: "/settings", icon: Settings, label: "Settings" },
+    { to: "/today", icon: Sun, label: t("tab.today") },
+    { to: "/", icon: BookOpen, label: t("tab.quran") },
+    { to: "/animate", icon: Heart, label: t("tab.feelings") },
+    { to: "/settings", icon: Settings, label: t("tab.settings") },
   ] as const;
+
 
   return (
     <div className="min-h-screen flex flex-col pb-20">
