@@ -675,32 +675,43 @@ function MoodPlayer() {
             <ChevronLeft className="h-5 w-5" />
           </Link>
           <div className="text-center min-w-0 flex-1 px-2">
-            <p className="text-[10px] sm:text-[11px] uppercase tracking-widest text-primary/80 truncate">For when you feel</p>
-            <p className="text-base sm:text-lg font-semibold gold-text truncate">{mood.emoji} {mood.label}</p>
+            <p className="text-[10px] sm:text-[11px] uppercase tracking-widest text-primary/80 truncate">{t("mood.forWhen")}</p>
+            <p className="text-base sm:text-lg font-semibold gold-text truncate">{mood.emoji} {moodLabel(mood.id, mood.label, lang)}</p>
           </div>
           <div className="flex items-center gap-2 shrink-0">
+            {storyId && (
+              <Link
+                to="/story/$id"
+                params={{ id: storyId }}
+                title={t("today.chip.story")}
+                className="rounded-full bg-indigo-500/20 backdrop-blur p-2 border border-indigo-400/40 hover:border-indigo-300"
+              >
+                <Film className="h-5 w-5 text-indigo-200" />
+              </Link>
+            )}
             <button
               onClick={() => {
                 const shareUrl = typeof window !== "undefined" ? window.location.href : undefined;
                 shareContent({
-                  title: `Noor — ${mood.label}`,
-                  text: `${mood.emoji} ${mood.label}\n\n${kalima.arabic}\n${kalima.transliteration}\n"${tr(kalima.translation, lang)}"\n\nRepeat ${kalima.repeat}× — from Noor`,
+                  title: `Noor — ${moodLabel(mood.id, mood.label, lang)}`,
+                  text: `${mood.emoji} ${moodLabel(mood.id, mood.label, lang)}\n\n${kalima.arabic}\n${kalima.transliteration}\n"${tr(kalima.translation, lang)}"\n\n${kalima.repeat}× — Noor`,
                   url: shareUrl,
                 });
               }}
-              title="Share this kalima"
+              title={t("mood.share")}
               className="rounded-full bg-card/60 backdrop-blur p-2 border border-border hover:border-primary/60"
             >
               <Share2 className="h-5 w-5 text-primary" />
             </button>
             <button
               onClick={() => setAmbientOn((v) => !v)}
-              title={ambientOn ? "Mute ambient music" : "Play ambient music"}
+              title={ambientOn ? t("mood.muteAmbient") : t("mood.playAmbient")}
               className="rounded-full bg-card/60 backdrop-blur p-2 border border-border hover:border-primary/60"
             >
               {ambientOn ? <Music className="h-5 w-5 text-primary" /> : <VolumeX className="h-5 w-5 text-muted-foreground" />}
             </button>
           </div>
+
         </div>
 
         {/* Kalima picker */}
