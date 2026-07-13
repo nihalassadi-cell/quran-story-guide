@@ -3,6 +3,8 @@ import { AppShell } from "@/components/AppShell";
 import { Heart, Repeat } from "lucide-react";
 import { MOODS } from "@/lib/moods";
 import { useLanguage, tr } from "@/lib/language";
+import { useT } from "@/lib/i18n";
+
 
 export const Route = createFileRoute("/animate")({
   head: () => ({
