@@ -29,7 +29,7 @@ export const Route = createFileRoute("/story/$id")({
 // Shared in-memory translation cache
 const captionCache = new Map<string, string>();
 const VIDEO_CROSSFADE_MS = 1200;
-const SCENE_BREATH_MS = 850;
+const SCENE_BREATH_MS = 1800;
 const MUSIC_CROSSFADE_MS = 1800;
 const MUSIC_TARGET_VOLUME = 0.18;
 const NARRATION_FADE_IN_MS = 650;
