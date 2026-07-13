@@ -8,7 +8,7 @@ import { ChevronLeft, Play, Pause, ChevronRight, Bookmark, BookmarkCheck, Loader
 import { track } from "@/lib/analytics";
 import { toast } from "sonner";
 
-type SurahSearch = { verse?: number; page?: number };
+type SurahSearch = { verse?: number; page?: number; micro?: number };
 
 const EVERYAYAH_TRANSLATIONS: Record<string, string> = {
   en: "English/Sahih_Intnl_Ibrahim_Walk_192kbps",
@@ -45,9 +45,11 @@ export const Route = createFileRoute("/surah/$number")({
   validateSearch: (search: Record<string, unknown>): SurahSearch => {
     const v = Number(search.verse);
     const p = Number(search.page);
+    const m = Number(search.micro);
     return {
       verse: Number.isFinite(v) && v >= 1 ? Math.floor(v) : undefined,
       page: Number.isFinite(p) && p >= 1 ? Math.floor(p) : undefined,
+      micro: m === 1 ? 1 : undefined,
     };
   },
   head: ({ params }) => ({
