@@ -120,6 +120,15 @@ const UI: Dict = {
   "story.sources":   { en: "Sources", ur: "مآخذ", ru: "Источники", bn: "উৎসসমূহ", fa: "منابع", id: "Sumber", ms: "Sumber", tr: "Kaynaklar", fr: "Sources", de: "Quellen" },
   "story.tap":       { en: "Tap to play", ur: "چلانے کے لیے ٹیپ کریں", ru: "Коснитесь, чтобы начать", bn: "চালাতে ট্যাপ করুন", fa: "برای پخش لمس کنید", id: "Ketuk untuk memulai", ms: "Ketik untuk mula", tr: "Başlamak için dokun", fr: "Touchez pour lire", de: "Zum Abspielen tippen" },
   "story.replay":    { en: "Replay", ur: "دوبارہ چلائیں", ru: "Заново", bn: "আবার চালান", fa: "پخش دوباره", id: "Putar ulang", ms: "Main semula", tr: "Tekrar oynat", fr: "Rejouer", de: "Nochmal ansehen" },
+
+  // Feelings tabs
+  "feel.tab.kalima": { en: "Kalimah", ur: "کلمہ", ru: "Калима", bn: "কালিমা", fa: "کلمه", id: "Kalimah", ms: "Kalimah", tr: "Kelime", fr: "Kalima", de: "Kalima" },
+  "feel.tab.story":  { en: "Story", ur: "کہانی", ru: "История", bn: "গল্প", fa: "داستان", id: "Kisah", ms: "Kisah", tr: "Kıssa", fr: "Récit", de: "Geschichte" },
+  "feel.sub.kalima": { en: "Pick a mood. For each feeling, the Prophet ﷺ taught a short remembrance — repeat it like a heartbeat.", ur: "ایک احساس چنیں۔ ہر احساس کے لیے نبی ﷺ نے ایک مختصر ذکر سکھایا۔", ru: "Выберите состояние. Для каждого чувства — короткая пророческая калима.", bn: "একটি অনুভূতি বেছে নিন। প্রতিটি অনুভূতির জন্য একটি সংক্ষিপ্ত নবী-কালিমা।", fa: "یک احساس را انتخاب کنید. برای هر احساس ذکری کوتاه.", id: "Pilih perasaan. Untuk tiap perasaan, kalimah pendek dari Nabi ﷺ.", ms: "Pilih perasaan. Untuk setiap perasaan, kalimah pendek dari Nabi ﷺ.", tr: "Bir duygu seç. Her duygu için kısa bir nebevî kelime.", fr: "Choisissez une émotion. Pour chacune, une brève kalima prophétique.", de: "Wähle ein Gefühl. Für jedes eine kurze prophetische Kalima." },
+  "feel.sub.story":  { en: "Cinematic Prophet stories matched to your mood. Symbolic art, gentle narration.", ur: "آپ کے احساس سے مطابقت رکھنے والی نبیوں کی سنیمائی کہانیاں۔", ru: "Кинематографические истории пророков по вашему настроению.", bn: "আপনার অনুভূতির সাথে মেলানো নবীদের সিনেম্যাটিক কাহিনি।", fa: "داستان‌های سینمایی پیامبران، متناسب با حال شما.", id: "Kisah nabi sinematik sesuai suasana hatimu.", ms: "Kisah nabi sinematik sesuai perasaan kamu.", tr: "Duygunuza uygun sinematik peygamber kıssaları.", fr: "Récits prophétiques cinématographiques selon votre état.", de: "Kinoreife Prophetengeschichten passend zu deinem Gefühl." },
+  "feel.watch":      { en: "Watch", ur: "دیکھیں", ru: "Смотреть", bn: "দেখুন", fa: "تماشا", id: "Tonton", ms: "Tonton", tr: "İzle", fr: "Regarder", de: "Ansehen" },
+  "feel.scenes":     { en: "scenes", ur: "مناظر", ru: "сцен", bn: "দৃশ্য", fa: "صحنه", id: "adegan", ms: "babak", tr: "sahne", fr: "scènes", de: "Szenen" },
+  "feel.noStory":    { en: "Story coming soon", ur: "کہانی جلد آ رہی ہے", ru: "История скоро", bn: "গল্প শীঘ্রই", fa: "به‌زودی", id: "Segera hadir", ms: "Akan datang", tr: "Yakında", fr: "Bientôt disponible", de: "Bald verfügbar" },
 };
 
 export function t(key: keyof typeof UI, lang: LangCode): string {
