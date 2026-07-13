@@ -1,15 +1,14 @@
 // Client-side narration player.
-// Primary: Lovable AI TTS via POST /api/tts (openai/gpt-4o-mini-tts, warm "onyx" voice).
-// Cached in-memory by text hash to avoid re-hitting the endpoint on scene replays.
-// Fallback: Web Speech API if the fetch fails or audio can't play.
+// Uses /api/tts (ElevenLabs "Brian" multilingual). No device-voice fallback —
+// if the network TTS fails, we play nothing rather than switch to a robotic
+// system voice.
 
 const cache = new Map<string, string>(); // key -> object URL
 
-function hashKey(text: string, voice: string) {
-  // Small stable hash — text length usually < 4KB
+function hashKey(text: string, lang: string) {
   let h = 5381;
   for (let i = 0; i < text.length; i++) h = ((h << 5) + h) ^ text.charCodeAt(i);
-  return `${voice}:${h.toString(36)}:${text.length}`;
+  return `${lang}:${h.toString(36)}:${text.length}`;
 }
 
 export interface Narrator {
@@ -19,14 +18,14 @@ export interface Narrator {
   onEnd: (cb: () => void) => void;
 }
 
-async function fetchTTS(text: string, voice: string): Promise<string> {
-  const key = hashKey(text, voice);
+async function fetchTTS(text: string, lang: string): Promise<string> {
+  const key = hashKey(text, lang);
   const cached = cache.get(key);
   if (cached) return cached;
   const res = await fetch("/api/tts", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ text, voice }),
+    body: JSON.stringify({ text, lang, translate: lang !== "en" }),
   });
   if (!res.ok) throw new Error(`tts ${res.status}`);
   const blob = await res.blob();
@@ -35,24 +34,23 @@ async function fetchTTS(text: string, voice: string): Promise<string> {
   return url;
 }
 
-// Prefetch in the background — best-effort, ignore errors.
-export function prefetchTTS(text: string, voice = "onyx"): void {
-  fetchTTS(text, voice).catch(() => {});
+export function prefetchTTS(text: string, lang = "en"): void {
+  fetchTTS(text, lang).catch(() => {});
 }
 
 export async function speak(
   text: string,
-  opts: { lang?: string; voice?: string } = {},
+  opts: { lang?: string; volume?: number } = {},
 ): Promise<Narrator> {
-  const voice = opts.voice ?? "onyx";
+  const lang = opts.lang ?? "en";
   const endHandlers: Array<() => void> = [];
   const emitEnd = () => endHandlers.forEach((f) => { try { f(); } catch {} });
 
   try {
-    const url = await fetchTTS(text, voice);
+    const url = await fetchTTS(text, lang);
     const audio = new Audio(url);
+    if (typeof opts.volume === "number") audio.volume = Math.max(0, Math.min(1, opts.volume));
     audio.addEventListener("ended", emitEnd);
-    // Attempt playback — may be blocked by autoplay policy; caller triggers on user gesture
     await audio.play();
     return {
       audio,
@@ -61,25 +59,7 @@ export async function speak(
       onEnd: (cb) => { endHandlers.push(cb); },
     };
   } catch (e) {
-    console.warn("[tts] falling back to web speech", e);
-    // Web Speech fallback
-    if (typeof window !== "undefined" && "speechSynthesis" in window) {
-      try {
-        window.speechSynthesis.cancel();
-        const u = new SpeechSynthesisUtterance(text);
-        u.lang = opts.lang || "en";
-        u.rate = 0.92;
-        u.onend = emitEnd;
-        window.speechSynthesis.speak(u);
-        return {
-          audio: null,
-          usedFallback: true,
-          stop: () => window.speechSynthesis.cancel(),
-          onEnd: (cb) => { endHandlers.push(cb); },
-        };
-      } catch {}
-    }
-    // Silent no-op narrator
+    console.warn("[tts] narration unavailable", e);
     setTimeout(emitEnd, 0);
     return {
       audio: null,
