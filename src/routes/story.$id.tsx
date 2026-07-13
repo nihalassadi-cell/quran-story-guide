@@ -6,6 +6,7 @@ import { useLanguage, tr } from "@/lib/language";
 import { useT } from "@/lib/i18n";
 import { speak, prefetchTTS, type Narrator } from "@/lib/narrator";
 import { createAmbientPad, type AmbientPad } from "@/lib/ambient-pad";
+import { NarrationLangSelect } from "@/components/NarrationLangSelect";
 
 export const Route = createFileRoute("/story/$id")({
   loader: ({ params }) => {
