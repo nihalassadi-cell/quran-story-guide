@@ -17,6 +17,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AnimateRouteImport } from './routes/animate'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SurahNumberRouteImport } from './routes/surah.$number'
+import { Route as StoryIdRouteImport } from './routes/story.$id'
 import { Route as MoodIdRouteImport } from './routes/mood.$id'
 import { Route as ApiPublicKalimaTtsHashRouteImport } from './routes/api/public/kalima-tts.$hash'
 import { Route as ApiPublicQuranAudioReciterAyahRouteImport } from './routes/api/public/quran-audio.$reciter.$ayah'
@@ -61,6 +62,11 @@ const SurahNumberRoute = SurahNumberRouteImport.update({
   path: '/surah/$number',
   getParentRoute: () => rootRouteImport,
 } as any)
+const StoryIdRoute = StoryIdRouteImport.update({
+  id: '/story/$id',
+  path: '/story/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MoodIdRoute = MoodIdRouteImport.update({
   id: '/mood/$id',
   path: '/mood/$id',
@@ -87,6 +93,7 @@ export interface FileRoutesByFullPath {
   '/terms': typeof TermsRoute
   '/today': typeof TodayRoute
   '/mood/$id': typeof MoodIdRoute
+  '/story/$id': typeof StoryIdRoute
   '/surah/$number': typeof SurahNumberRoute
   '/api/public/kalima-tts/$hash': typeof ApiPublicKalimaTtsHashRoute
   '/api/public/quran-audio/$reciter/$ayah': typeof ApiPublicQuranAudioReciterAyahRoute
@@ -100,6 +107,7 @@ export interface FileRoutesByTo {
   '/terms': typeof TermsRoute
   '/today': typeof TodayRoute
   '/mood/$id': typeof MoodIdRoute
+  '/story/$id': typeof StoryIdRoute
   '/surah/$number': typeof SurahNumberRoute
   '/api/public/kalima-tts/$hash': typeof ApiPublicKalimaTtsHashRoute
   '/api/public/quran-audio/$reciter/$ayah': typeof ApiPublicQuranAudioReciterAyahRoute
@@ -114,6 +122,7 @@ export interface FileRoutesById {
   '/terms': typeof TermsRoute
   '/today': typeof TodayRoute
   '/mood/$id': typeof MoodIdRoute
+  '/story/$id': typeof StoryIdRoute
   '/surah/$number': typeof SurahNumberRoute
   '/api/public/kalima-tts/$hash': typeof ApiPublicKalimaTtsHashRoute
   '/api/public/quran-audio/$reciter/$ayah': typeof ApiPublicQuranAudioReciterAyahRoute
@@ -129,6 +138,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/today'
     | '/mood/$id'
+    | '/story/$id'
     | '/surah/$number'
     | '/api/public/kalima-tts/$hash'
     | '/api/public/quran-audio/$reciter/$ayah'
@@ -142,6 +152,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/today'
     | '/mood/$id'
+    | '/story/$id'
     | '/surah/$number'
     | '/api/public/kalima-tts/$hash'
     | '/api/public/quran-audio/$reciter/$ayah'
@@ -155,6 +166,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/today'
     | '/mood/$id'
+    | '/story/$id'
     | '/surah/$number'
     | '/api/public/kalima-tts/$hash'
     | '/api/public/quran-audio/$reciter/$ayah'
@@ -169,6 +181,7 @@ export interface RootRouteChildren {
   TermsRoute: typeof TermsRoute
   TodayRoute: typeof TodayRoute
   MoodIdRoute: typeof MoodIdRoute
+  StoryIdRoute: typeof StoryIdRoute
   SurahNumberRoute: typeof SurahNumberRoute
   ApiPublicKalimaTtsHashRoute: typeof ApiPublicKalimaTtsHashRoute
   ApiPublicQuranAudioReciterAyahRoute: typeof ApiPublicQuranAudioReciterAyahRoute
@@ -232,6 +245,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SurahNumberRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/story/$id': {
+      id: '/story/$id'
+      path: '/story/$id'
+      fullPath: '/story/$id'
+      preLoaderRoute: typeof StoryIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/mood/$id': {
       id: '/mood/$id'
       path: '/mood/$id'
@@ -265,6 +285,7 @@ const rootRouteChildren: RootRouteChildren = {
   TermsRoute: TermsRoute,
   TodayRoute: TodayRoute,
   MoodIdRoute: MoodIdRoute,
+  StoryIdRoute: StoryIdRoute,
   SurahNumberRoute: SurahNumberRoute,
   ApiPublicKalimaTtsHashRoute: ApiPublicKalimaTtsHashRoute,
   ApiPublicQuranAudioReciterAyahRoute: ApiPublicQuranAudioReciterAyahRoute,

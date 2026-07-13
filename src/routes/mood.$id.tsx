@@ -1,7 +1,7 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { ChevronLeft, Play, Pause, RotateCcw, BookOpen, Sparkles, ChevronDown, ChevronUp, Loader2, SkipBack, SkipForward, Music, VolumeX, Share2 } from "lucide-react";
+import { ChevronLeft, Play, Pause, RotateCcw, BookOpen, Sparkles, ChevronDown, ChevronUp, Loader2, SkipBack, SkipForward, Music, VolumeX, Share2, Film } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchSurahWithTranslation, ayahAudioUrl, ayahGlobalNumber, RECITERS, type LanguageCode } from "@/lib/quran-api";
 import { getMood } from "@/lib/moods";
@@ -10,7 +10,10 @@ import { createAmbientPad } from "@/lib/ambient-pad";
 import { track } from "@/lib/analytics";
 import { shareContent } from "@/lib/share";
 import { useLanguage, tr, isRtl } from "@/lib/language";
+import { useT, moodLabel } from "@/lib/i18n";
+import { storyForMood } from "@/lib/stories";
 import { toast } from "sonner";
+
 
 export const Route = createFileRoute("/mood/$id")({
   head: ({ params }) => {
@@ -32,6 +35,8 @@ function MoodPlayer() {
   const mood = getMood(id);
   if (!mood) throw notFound();
   const [lang] = useLanguage();
+  const t = useT();
+  const storyId = storyForMood(mood.id);
   const rtl = isRtl(lang);
 
   // Track mood selection once per mount
@@ -670,38 +675,49 @@ function MoodPlayer() {
             <ChevronLeft className="h-5 w-5" />
           </Link>
           <div className="text-center min-w-0 flex-1 px-2">
-            <p className="text-[10px] sm:text-[11px] uppercase tracking-widest text-primary/80 truncate">For when you feel</p>
-            <p className="text-base sm:text-lg font-semibold gold-text truncate">{mood.emoji} {mood.label}</p>
+            <p className="text-[10px] sm:text-[11px] uppercase tracking-widest text-primary/80 truncate">{t("mood.forWhen")}</p>
+            <p className="text-base sm:text-lg font-semibold gold-text truncate">{mood.emoji} {moodLabel(mood.id, mood.label, lang)}</p>
           </div>
           <div className="flex items-center gap-2 shrink-0">
+            {storyId && (
+              <Link
+                to="/story/$id"
+                params={{ id: storyId }}
+                title={t("today.chip.story")}
+                className="rounded-full bg-indigo-500/20 backdrop-blur p-2 border border-indigo-400/40 hover:border-indigo-300"
+              >
+                <Film className="h-5 w-5 text-indigo-200" />
+              </Link>
+            )}
             <button
               onClick={() => {
                 const shareUrl = typeof window !== "undefined" ? window.location.href : undefined;
                 shareContent({
-                  title: `Noor — ${mood.label}`,
-                  text: `${mood.emoji} ${mood.label}\n\n${kalima.arabic}\n${kalima.transliteration}\n"${tr(kalima.translation, lang)}"\n\nRepeat ${kalima.repeat}× — from Noor`,
+                  title: `Noor — ${moodLabel(mood.id, mood.label, lang)}`,
+                  text: `${mood.emoji} ${moodLabel(mood.id, mood.label, lang)}\n\n${kalima.arabic}\n${kalima.transliteration}\n"${tr(kalima.translation, lang)}"\n\n${kalima.repeat}× — Noor`,
                   url: shareUrl,
                 });
               }}
-              title="Share this kalima"
+              title={t("mood.share")}
               className="rounded-full bg-card/60 backdrop-blur p-2 border border-border hover:border-primary/60"
             >
               <Share2 className="h-5 w-5 text-primary" />
             </button>
             <button
               onClick={() => setAmbientOn((v) => !v)}
-              title={ambientOn ? "Mute ambient music" : "Play ambient music"}
+              title={ambientOn ? t("mood.muteAmbient") : t("mood.playAmbient")}
               className="rounded-full bg-card/60 backdrop-blur p-2 border border-border hover:border-primary/60"
             >
               {ambientOn ? <Music className="h-5 w-5 text-primary" /> : <VolumeX className="h-5 w-5 text-muted-foreground" />}
             </button>
           </div>
+
         </div>
 
         {/* Kalima picker */}
         {mood.kalimas.length > 1 && (
           <div className="mb-4">
-            <p className="text-[10px] uppercase tracking-widest text-primary/70 text-center mb-2">Choose a kalima</p>
+            <p className="text-[10px] uppercase tracking-widest text-primary/70 text-center mb-2">{t("mood.chooseKalima")}</p>
             <div className="flex flex-wrap items-center justify-center gap-2">
               {mood.kalimas.map((k, i) => (
                 <button
@@ -724,7 +740,7 @@ function MoodPlayer() {
                   }`}
                   title={tr(k.translation, lang)}
                 >
-                  Kalima {i + 1} · {k.repeat}×
+                  {`${i + 1}`} · {k.repeat}×
                 </button>
               ))}
             </div>
@@ -746,7 +762,7 @@ function MoodPlayer() {
           <p className="mt-3 text-[10px] uppercase tracking-widest text-primary/70">{kalima.source}</p>
           {kalima.ayah ? (
             <div className="mt-3 flex items-center justify-center gap-2 text-[11px]">
-              <span className="text-muted-foreground">Reciter:</span>
+              <span className="text-muted-foreground">{t("mood.reciter")}</span>
               <select
                 value={reciter}
                 onChange={(e) => setReciter(e.target.value)}
@@ -757,7 +773,7 @@ function MoodPlayer() {
             </div>
           ) : (
             <p className="mt-2 text-[10px] text-muted-foreground italic">
-              (Hadith dhikr — recited via device voice)
+              {t("mood.hadithNote")}
             </p>
           )}
         </div>
@@ -844,7 +860,7 @@ function MoodPlayer() {
           >
             <span className="flex items-center gap-2 text-sm">
               <BookOpen className="h-4 w-4 text-primary" />
-              Verses for this feeling · {mood.verses.length}
+              {t("mood.versesFor")} · {mood.verses.length}
             </span>
             {versesOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
           </button>

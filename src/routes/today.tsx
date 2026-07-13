@@ -2,10 +2,12 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { getToday, pickTr } from "@/lib/today";
 import { useLanguage } from "@/lib/language";
-import { useT } from "@/lib/i18n";
+import { useT, localeFor } from "@/lib/i18n";
+import { hasStory } from "@/lib/stories";
 
 import { BookOpen, Feather, Repeat, Film, PenLine, ArrowRight } from "lucide-react";
 import { useMemo } from "react";
+
 
 export const Route = createFileRoute("/today")({
   head: () => ({
@@ -23,9 +25,10 @@ function TodayPage() {
 
   const today = useMemo(() => getToday(), []);
   const dateLabel = useMemo(
-    () => new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" }),
-    [],
+    () => new Date().toLocaleDateString(localeFor(lang), { weekday: "long", month: "long", day: "numeric" }),
+    [lang],
   );
+
 
   return (
     <AppShell>
@@ -43,7 +46,7 @@ function TodayPage() {
         <div className="space-y-4">
           {/* 1 · Verse */}
           <section className="relative rounded-3xl overflow-hidden border border-white/10 bg-gradient-to-br from-[#141432]/60 to-[#08090C] p-5">
-            <CardChip icon={<BookOpen className="h-3 w-3" />} label="Verse" tone="indigo" />
+            <CardChip icon={<BookOpen className="h-3 w-3" />} label={t("today.chip.verse")} tone="indigo" />
             <p className="arabic text-right text-2xl leading-loose mt-3 text-foreground" dir="rtl">
               {today.verse.arabic}
             </p>
@@ -59,21 +62,23 @@ function TodayPage() {
                 params={{ number: String(today.verse.surah) }}
                 className="text-xs font-semibold text-primary hover:text-primary-glow inline-flex items-center gap-1"
               >
-                Open surah <ArrowRight className="h-3 w-3" />
+                {t("quran.openSurah")} <ArrowRight className="h-3 w-3" />
               </Link>
             </div>
           </section>
 
+
           {/* 2 · Hadith */}
           <section className="relative rounded-3xl overflow-hidden border border-white/10 bg-card/40 p-5">
-            <CardChip icon={<Feather className="h-3 w-3" />} label="Hadith" tone="gold" />
+            <CardChip icon={<Feather className="h-3 w-3" />} label={t("today.chip.hadith")} tone="gold" />
             <p className="font-display-serif italic text-lg leading-relaxed mt-3 text-foreground">
               "{pickTr(today.hadith.text, lang)}"
             </p>
             <div className="mt-3 text-[11px] text-muted-foreground">
-              {today.hadith.narrator ? <span>Narrated by {today.hadith.narrator} · </span> : null}
+              {today.hadith.narrator ? <span>{t("today.narratedBy")} {today.hadith.narrator} · </span> : null}
               <span className="text-primary/60">{today.hadith.source}</span>
             </div>
+
           </section>
 
           {/* 3 · Dhikr */}
@@ -84,7 +89,7 @@ function TodayPage() {
               <div className="absolute inset-12 border border-emerald-300/30 rounded-full" />
             </div>
             <div className="relative">
-              <CardChip icon={<Repeat className="h-3 w-3" />} label="Dhikr" tone="emerald" />
+              <CardChip icon={<Repeat className="h-3 w-3" />} label={t("today.chip.dhikr")} tone="emerald" />
               <p className="arabic text-right text-2xl leading-loose mt-3 text-emerald-100" dir="rtl">
                 {today.dhikr.arabic}
               </p>
@@ -102,47 +107,61 @@ function TodayPage() {
                   to="/animate"
                   className="text-xs font-semibold text-emerald-300 hover:text-emerald-200 inline-flex items-center gap-1"
                 >
-                  Practice <ArrowRight className="h-3 w-3" />
+                  {t("today.practice")} <ArrowRight className="h-3 w-3" />
                 </Link>
               </div>
+
             </div>
           </section>
 
           {/* 4 · Story of the day */}
-          <Link
-            to="/mood/$id"
-            params={{ id: today.story.moodId }}
-            className="group relative block rounded-3xl overflow-hidden border border-white/10 bg-gradient-to-br from-indigo-950 via-slate-900 to-black p-5 min-h-[180px]"
-          >
-            <div className="absolute inset-0 opacity-30 bg-[radial-gradient(ellipse_at_top_right,theme(colors.indigo.500/40),transparent_60%)]" />
-            <div className="relative">
-              <CardChip icon={<Film className="h-3 w-3" />} label="Story" tone="indigo" />
-              <h3 className="font-display-serif italic text-2xl text-white mt-3">
-                {pickTr(today.story.title, lang)}
-              </h3>
-              <p className="text-sm text-white/60 mt-2 leading-relaxed line-clamp-2">
-                {pickTr(today.story.blurb, lang)}
-              </p>
-              <div className="flex items-center justify-between mt-4">
-                <span className="text-[10px] uppercase tracking-widest text-indigo-300/80">
-                  {today.story.durationMin} min · Prophet story
-                </span>
-                <span className="text-xs font-bold text-white uppercase tracking-wider inline-flex items-center gap-1 group-hover:text-primary transition-colors">
-                  Watch <ArrowRight className="h-3 w-3" />
-                </span>
-              </div>
-            </div>
-          </Link>
+          {(() => {
+            const storyReady = hasStory(today.story.storyId);
+            const inner = (
+              <>
+                <div className="absolute inset-0 opacity-30 bg-[radial-gradient(ellipse_at_top_right,theme(colors.indigo.500/40),transparent_60%)]" />
+                <div className="relative">
+                  <CardChip icon={<Film className="h-3 w-3" />} label={t("today.chip.story")} tone="indigo" />
+                  <h3 className="font-display-serif italic text-2xl text-white mt-3">
+                    {pickTr(today.story.title, lang)}
+                  </h3>
+                  <p className="text-sm text-white/60 mt-2 leading-relaxed line-clamp-2">
+                    {pickTr(today.story.blurb, lang)}
+                  </p>
+                  <div className="flex items-center justify-between mt-4">
+                    <span className="text-[10px] uppercase tracking-widest text-indigo-300/80">
+                      {today.story.durationMin} {t("today.prophetStory")}
+                    </span>
+                    <span className="text-xs font-bold text-white uppercase tracking-wider inline-flex items-center gap-1 group-hover:text-primary transition-colors">
+                      {t("today.watch")} <ArrowRight className="h-3 w-3" />
+                    </span>
+                  </div>
+                </div>
+              </>
+            );
+            const cls = "group relative block rounded-3xl overflow-hidden border border-white/10 bg-gradient-to-br from-indigo-950 via-slate-900 to-black p-5 min-h-[180px]";
+            return storyReady ? (
+              <Link to="/story/$id" params={{ id: today.story.storyId }} className={cls}>
+                {inner}
+              </Link>
+            ) : (
+              <Link to="/mood/$id" params={{ id: today.story.moodId }} className={cls}>
+                {inner}
+              </Link>
+            );
+          })()}
 
           {/* 5 · Reflection */}
           <section className="relative rounded-3xl overflow-hidden border border-white/10 bg-card/30 p-5">
-            <CardChip icon={<PenLine className="h-3 w-3" />} label="Reflect" tone="gold" />
+            <CardChip icon={<PenLine className="h-3 w-3" />} label={t("today.chip.reflect")} tone="gold" />
             <p className="font-display-serif italic text-xl leading-snug mt-3 text-foreground">
               {pickTr(today.reflection.prompt, lang)}
             </p>
+
             <p className="text-[11px] text-muted-foreground mt-3">
-              Sit with it for a moment. Journaling coming soon.
+              {t("today.sitWithIt")}
             </p>
+
           </section>
         </div>
       </div>

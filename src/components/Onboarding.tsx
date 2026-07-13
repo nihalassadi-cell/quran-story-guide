@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { BookOpen, Heart, Languages } from "lucide-react";
 import { SUPPORTED_LANGUAGES, setLanguage, getLanguage, type LangCode } from "@/lib/language";
+import { t as tt } from "@/lib/i18n";
+
 
 const KEY = "noor:onboarded:v1";
 
@@ -39,21 +41,22 @@ export function Onboarding() {
   const slides = [
     {
       icon: BookOpen,
-      title: "The Quran, verse by verse",
-      body: "Browse all 114 Surahs with recitation and translation — read at your own pace.",
+      title: tt("onb.1.title", lang),
+      body: tt("onb.1.body", lang),
     },
     {
       icon: Heart,
-      title: "How do you feel?",
-      body: "Pick a mood and recite a short prophetic kalima — gentle, repetitive, calming.",
+      title: tt("onb.2.title", lang),
+      body: tt("onb.2.body", lang),
     },
     {
       icon: Languages,
-      title: "Choose your language",
-      body: "Translations of verses and kalimas will appear in this language. The Quran recitation is always in Arabic.",
+      title: tt("onb.3.title", lang),
+      body: tt("onb.3.body", lang),
       isLang: true as const,
     },
   ];
+
 
   const total = slides.length;
   const next = () => (i < total - 1 ? setI(i + 1) : finish());
@@ -66,8 +69,9 @@ export function Onboarding() {
         onClick={finish}
         className="absolute top-5 right-5 text-xs uppercase tracking-widest text-muted-foreground hover:text-foreground"
       >
-        Skip
+        {tt("onb.skip", lang)}
       </button>
+
 
       <div className="flex-1 flex flex-col items-center justify-center px-8 text-center fade-in overflow-y-auto py-10" key={i}>
         <div className="h-24 w-24 rounded-3xl bg-gradient-to-br from-primary/30 to-accent/20 grid place-items-center glow-shadow mb-8 border border-primary/30 shrink-0">
@@ -109,8 +113,9 @@ export function Onboarding() {
           onClick={next}
           className="w-full max-w-xs rounded-full bg-gradient-to-r from-primary to-primary-glow text-primary-foreground font-semibold py-3.5 glow-shadow"
         >
-          {i < total - 1 ? "Next" : "Begin"}
+          {i < total - 1 ? tt("onb.next", lang) : tt("onb.begin", lang)}
         </button>
+
       </div>
     </div>
   );

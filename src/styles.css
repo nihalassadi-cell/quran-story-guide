@@ -351,3 +351,26 @@
   user-select: none;
   will-change: transform, opacity;
 }
+
+/* ---------- Story player ---------- */
+@keyframes story-kb-in   { from { transform: scale(1);    } to { transform: scale(1.12); } }
+@keyframes story-kb-out  { from { transform: scale(1.12); } to { transform: scale(1);    } }
+@keyframes story-kb-panL { from { transform: scale(1.10) translateX(3%);  } to { transform: scale(1.10) translateX(-3%); } }
+@keyframes story-kb-panR { from { transform: scale(1.10) translateX(-3%); } to { transform: scale(1.10) translateX(3%);  } }
+.story-kb-in   { animation: story-kb-in   linear forwards; }
+.story-kb-out  { animation: story-kb-out  linear forwards; }
+.story-kb-panL { animation: story-kb-panL linear forwards; }
+.story-kb-panR { animation: story-kb-panR linear forwards; }
+
+@keyframes story-particle-drift {
+  0%   { transform: translateY(10px) translateX(0);   opacity: 0; }
+  20%  { opacity: 0.6; }
+  50%  { transform: translateY(-20px) translateX(6px); opacity: 0.8; }
+  100% { transform: translateY(-40px) translateX(-4px); opacity: 0; }
+}
+.story-particle {
+  animation-name: story-particle-drift;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  will-change: transform, opacity;
+}
