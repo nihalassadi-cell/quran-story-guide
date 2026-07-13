@@ -6,6 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Search, Sparkles, BookMarked, Loader2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useT } from "@/lib/i18n";
+import { useLanguage } from "@/lib/language";
+import { localizedSurahMeaning } from "@/lib/surah-names.i18n";
 
 
 export const Route = createFileRoute("/")({
@@ -39,6 +41,7 @@ function HomePage() {
   const [verseLoading, setVerseLoading] = useState(false);
   const [lastPage, setLastPage] = useState<LastPage | null>(null);
   const t = useT();
+  const [lang] = useLanguage();
 
 
   useEffect(() => {
@@ -78,13 +81,15 @@ function HomePage() {
   const filtered = useMemo(() => surahs?.filter((s) => {
     if (!filter) return true;
     const q = filter.toLowerCase();
+    const localized = localizedSurahMeaning(s.number, lang, s.name_en).toLowerCase();
     return (
       String(s.number).includes(q) ||
       s.name_en.toLowerCase().includes(q) ||
+      localized.includes(q) ||
       s.name_translit.toLowerCase().includes(q) ||
       s.name_ar.includes(filter)
     );
-  }), [surahs, filter]);
+  }), [surahs, filter, lang]);
 
   return (
     <AppShell>
@@ -185,7 +190,7 @@ function HomePage() {
                     <span className="arabic text-base sm:text-lg text-primary/90 truncate shrink-0 max-w-[45%]">{s.name_ar}</span>
                   </div>
                   <div className="flex items-center justify-between mt-0.5 text-[11px] sm:text-xs text-muted-foreground gap-2">
-                    <span className="truncate">{s.name_en}</span>
+                    <span className="truncate">{localizedSurahMeaning(s.number, lang, s.name_en)}</span>
                     <span className="shrink-0">{s.verse_count} {t("quran.verseSuffix")} · {s.revelation_place}</span>
                   </div>
                 </div>
