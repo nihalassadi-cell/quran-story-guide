@@ -1,9 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
-import { Heart, Repeat } from "lucide-react";
+import { Heart, Repeat, Film } from "lucide-react";
 import { MOODS } from "@/lib/moods";
 import { useLanguage, tr } from "@/lib/language";
-import { useT } from "@/lib/i18n";
+import { useT, moodLabel } from "@/lib/i18n";
+import { storyForMood } from "@/lib/stories";
+
 
 
 export const Route = createFileRoute("/animate")({
