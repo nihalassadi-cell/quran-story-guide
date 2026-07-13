@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { fetchSurahWithTranslation, ayahAudioUrl, RECITERS, TRANSLATION_LANGUAGES, hasTranslationAudio, type LanguageCode } from "@/lib/quran-api";
 import { useLanguage, type LangCode } from "@/lib/language";
+import { localizedSurahMeaning } from "@/lib/surah-names.i18n";
 import { ChevronLeft, Play, Pause, ChevronRight, Bookmark, BookmarkCheck, Loader2, Volume2, VolumeX, Youtube } from "lucide-react";
 import { track } from "@/lib/analytics";
 import { toast } from "sonner";
@@ -299,7 +300,7 @@ function SurahPlayer() {
             <p className="text-[10px] uppercase tracking-[0.3em] opacity-60">Surah {surahNum}</p>
             <p className="arabic text-3xl sm:text-4xl gold-text leading-tight mt-0.5">{data?.name_ar ?? ""}</p>
             <p className="text-sm sm:text-base font-semibold mt-0.5" style={{ color: "oklch(0.35 0.10 60)" }}>
-              {data?.name_en ?? ""}
+              {data ? localizedSurahMeaning(surahNum, globalLang, data.name_en ?? "") : ""}
             </p>
             <p className="text-[10px] opacity-60 mt-0.5">{data?.ayahs.length ?? 0} verses</p>
           </div>
@@ -370,7 +371,7 @@ function SurahPlayer() {
           <ChevronLeft className="h-5 w-5" />
         </Link>
         <div className="text-center min-w-0 flex-1 px-2 hidden sm:block">
-          <p className="text-[10px] uppercase tracking-widest text-primary/80 truncate">Surah {surahNum} · {data?.name_en ?? "..."}</p>
+          <p className="text-[10px] uppercase tracking-widest text-primary/80 truncate">Surah {surahNum} · {data ? localizedSurahMeaning(surahNum, globalLang, data.name_en ?? "...") : "..."}</p>
           <p className="arabic text-base sm:text-lg gold-text truncate">{data?.name_ar ?? "..."}</p>
         </div>
         <button onClick={toggleBookmark} className="rounded-full bg-card/70 backdrop-blur p-2 border border-border shrink-0" aria-label="Save page">
@@ -485,7 +486,7 @@ function SurahPlayer() {
       {ytOpen && (
         <div className="fixed inset-0 z-[60] bg-black/95 backdrop-blur-md flex flex-col">
           <div className="flex items-center justify-between p-3 border-b border-border bg-background">
-            <p className="text-sm font-medium truncate">Surah {data?.name_en ?? surahNum} — Mishary Alafasy</p>
+            <p className="text-sm font-medium truncate">Surah {data ? localizedSurahMeaning(surahNum, globalLang, data.name_en ?? String(surahNum)) : surahNum} — Mishary Alafasy</p>
             <button onClick={() => setYtOpen(false)} className="rounded-full bg-card border border-border px-3 py-1 text-xs shrink-0">Close</button>
           </div>
           <div className="flex-1 w-full">
