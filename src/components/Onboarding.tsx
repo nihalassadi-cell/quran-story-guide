@@ -41,21 +41,22 @@ export function Onboarding() {
   const slides = [
     {
       icon: BookOpen,
-      title: "The Quran, verse by verse",
-      body: "Browse all 114 Surahs with recitation and translation — read at your own pace.",
+      title: tt("onb.1.title", lang),
+      body: tt("onb.1.body", lang),
     },
     {
       icon: Heart,
-      title: "How do you feel?",
-      body: "Pick a mood and recite a short prophetic kalima — gentle, repetitive, calming.",
+      title: tt("onb.2.title", lang),
+      body: tt("onb.2.body", lang),
     },
     {
       icon: Languages,
-      title: "Choose your language",
-      body: "Translations of verses and kalimas will appear in this language. The Quran recitation is always in Arabic.",
+      title: tt("onb.3.title", lang),
+      body: tt("onb.3.body", lang),
       isLang: true as const,
     },
   ];
+
 
   const total = slides.length;
   const next = () => (i < total - 1 ? setI(i + 1) : finish());
