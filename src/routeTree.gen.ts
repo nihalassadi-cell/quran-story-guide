@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TodayRouteImport } from './routes/today'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as PrivacyRouteImport } from './routes/privacy'
@@ -20,6 +21,11 @@ import { Route as MoodIdRouteImport } from './routes/mood.$id'
 import { Route as ApiPublicKalimaTtsHashRouteImport } from './routes/api/public/kalima-tts.$hash'
 import { Route as ApiPublicQuranAudioReciterAyahRouteImport } from './routes/api/public/quran-audio.$reciter.$ayah'
 
+const TodayRoute = TodayRouteImport.update({
+  id: '/today',
+  path: '/today',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
   path: '/terms',
@@ -79,6 +85,7 @@ export interface FileRoutesByFullPath {
   '/privacy': typeof PrivacyRoute
   '/settings': typeof SettingsRoute
   '/terms': typeof TermsRoute
+  '/today': typeof TodayRoute
   '/mood/$id': typeof MoodIdRoute
   '/surah/$number': typeof SurahNumberRoute
   '/api/public/kalima-tts/$hash': typeof ApiPublicKalimaTtsHashRoute
@@ -91,6 +98,7 @@ export interface FileRoutesByTo {
   '/privacy': typeof PrivacyRoute
   '/settings': typeof SettingsRoute
   '/terms': typeof TermsRoute
+  '/today': typeof TodayRoute
   '/mood/$id': typeof MoodIdRoute
   '/surah/$number': typeof SurahNumberRoute
   '/api/public/kalima-tts/$hash': typeof ApiPublicKalimaTtsHashRoute
@@ -104,6 +112,7 @@ export interface FileRoutesById {
   '/privacy': typeof PrivacyRoute
   '/settings': typeof SettingsRoute
   '/terms': typeof TermsRoute
+  '/today': typeof TodayRoute
   '/mood/$id': typeof MoodIdRoute
   '/surah/$number': typeof SurahNumberRoute
   '/api/public/kalima-tts/$hash': typeof ApiPublicKalimaTtsHashRoute
@@ -118,6 +127,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/settings'
     | '/terms'
+    | '/today'
     | '/mood/$id'
     | '/surah/$number'
     | '/api/public/kalima-tts/$hash'
@@ -130,6 +140,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/settings'
     | '/terms'
+    | '/today'
     | '/mood/$id'
     | '/surah/$number'
     | '/api/public/kalima-tts/$hash'
@@ -142,6 +153,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/settings'
     | '/terms'
+    | '/today'
     | '/mood/$id'
     | '/surah/$number'
     | '/api/public/kalima-tts/$hash'
@@ -155,6 +167,7 @@ export interface RootRouteChildren {
   PrivacyRoute: typeof PrivacyRoute
   SettingsRoute: typeof SettingsRoute
   TermsRoute: typeof TermsRoute
+  TodayRoute: typeof TodayRoute
   MoodIdRoute: typeof MoodIdRoute
   SurahNumberRoute: typeof SurahNumberRoute
   ApiPublicKalimaTtsHashRoute: typeof ApiPublicKalimaTtsHashRoute
@@ -163,6 +176,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/today': {
+      id: '/today'
+      path: '/today'
+      fullPath: '/today'
+      preLoaderRoute: typeof TodayRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/terms': {
       id: '/terms'
       path: '/terms'
@@ -243,6 +263,7 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacyRoute: PrivacyRoute,
   SettingsRoute: SettingsRoute,
   TermsRoute: TermsRoute,
+  TodayRoute: TodayRoute,
   MoodIdRoute: MoodIdRoute,
   SurahNumberRoute: SurahNumberRoute,
   ApiPublicKalimaTtsHashRoute: ApiPublicKalimaTtsHashRoute,

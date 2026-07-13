@@ -1,14 +1,15 @@
 import { Link, useLocation } from "@tanstack/react-router";
-import { Home, Settings, Sparkles } from "lucide-react";
+import { Sun, BookOpen, Heart, Settings } from "lucide-react";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const loc = useLocation();
 
   const tabs = [
-    { to: "/", icon: Home, label: "Surahs" },
-    { to: "/animate", icon: Sparkles, label: "How do you feel?" },
+    { to: "/today", icon: Sun, label: "Today" },
+    { to: "/", icon: BookOpen, label: "Quran" },
+    { to: "/animate", icon: Heart, label: "Feelings" },
     { to: "/settings", icon: Settings, label: "Settings" },
-  ];
+  ] as const;
 
   return (
     <div className="min-h-screen flex flex-col pb-20">
@@ -16,7 +17,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <nav className="fixed bottom-0 inset-x-0 z-40 bg-card/90 backdrop-blur-xl border-t border-border">
         <ul className="flex items-stretch justify-around max-w-md mx-auto">
           {tabs.map((t) => {
-            const active = loc.pathname === t.to || (t.to !== "/" && loc.pathname.startsWith(t.to));
+            const active =
+              t.to === "/"
+                ? loc.pathname === "/"
+                : loc.pathname === t.to || loc.pathname.startsWith(t.to + "/");
             const Icon = t.icon;
             return (
               <li key={t.to} className="flex-1">
