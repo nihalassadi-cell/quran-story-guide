@@ -546,6 +546,38 @@ function SurahPlayer() {
           </div>
         </div>
       )}
+
+      {microMode && (
+        <div className="absolute top-14 inset-x-0 z-30 flex justify-center pointer-events-none">
+          <div className="pointer-events-auto rounded-full bg-primary/15 border border-primary/30 backdrop-blur px-3 py-1 text-[11px] text-primary font-semibold shadow">
+            Page {Math.min(microPagesRead + 1, DAILY_TARGET_PAGES)} of {DAILY_TARGET_PAGES}
+            <span className="ml-2 inline-block w-16 align-middle h-1 rounded-full bg-primary/20 overflow-hidden">
+              <span
+                className="block h-full bg-primary transition-all duration-500"
+                style={{ width: `${(microPagesRead / DAILY_TARGET_PAGES) * 100}%` }}
+              />
+            </span>
+          </div>
+        </div>
+      )}
+
+      <ContinueSheet
+        open={showSheet}
+        onEnd={() => {
+          setShowSheet(false);
+          void saveCursor(surahNum, activeVerse);
+          navigate({ to: "/today" });
+        }}
+        onContinue={() => {
+          setShowSheet(false);
+          pageStartRef.current = Date.now();
+          // Allow further page turns without re-gating; reset microPagesRead so target isn't retriggered.
+          setMicroPagesRead(0);
+          const next = Math.min(totalPages - 1, pageIdx + 1);
+          if (next !== pageIdx) turnToPage(next, "next");
+        }}
+      />
     </div>
   );
 }
+
