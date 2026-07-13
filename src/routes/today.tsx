@@ -25,9 +25,10 @@ function TodayPage() {
 
   const today = useMemo(() => getToday(), []);
   const dateLabel = useMemo(
-    () => new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" }),
-    [],
+    () => new Date().toLocaleDateString(localeFor(lang), { weekday: "long", month: "long", day: "numeric" }),
+    [lang],
   );
+
 
   return (
     <AppShell>
