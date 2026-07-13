@@ -4,6 +4,7 @@ import { X, Play, Pause, ChevronLeft, ChevronRight, Volume2, VolumeX, RotateCcw 
 import { getStory } from "@/lib/stories";
 import { useLanguage, tr, isRtl } from "@/lib/language";
 import { useT } from "@/lib/i18n";
+import { speak, prefetchTTS, type Narrator } from "@/lib/narrator";
 
 export const Route = createFileRoute("/story/$id")({
   loader: ({ params }) => {
@@ -33,50 +34,40 @@ function StoryPlayer() {
   const [muted, setMuted] = useState(false);
   const [progress, setProgress] = useState(0); // 0..1 within current scene
   const [ended, setEnded] = useState(false);
-  const [ttsSupported, setTtsSupported] = useState(false);
 
   const scene = story.scenes[idx];
   const total = story.scenes.length;
 
   const rafRef = useRef<number | null>(null);
   const startedAtRef = useRef<number>(0);
-  const utterRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const narratorRef = useRef<Narrator | null>(null);
 
-  // Detect browser TTS availability once
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    setTtsSupported("speechSynthesis" in window);
-  }, []);
-
-  // Cancel any speech on unmount / scene change
+  // Cleanup on unmount
   useEffect(() => {
     return () => {
-      if (typeof window !== "undefined" && "speechSynthesis" in window) {
-        window.speechSynthesis.cancel();
-      }
+      narratorRef.current?.stop();
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
   }, []);
 
-  // Scene ticker + optional TTS
+  // Prefetch next scene's audio while current plays
+  useEffect(() => {
+    const next = story.scenes[idx + 1];
+    if (next) prefetchTTS(tr(next.narration, lang));
+  }, [idx, lang, story.scenes]);
+
+  // Scene ticker + narration
   useEffect(() => {
     if (!playing) return;
     setEnded(false);
     startedAtRef.current = performance.now();
+    let cancelled = false;
 
     // Start narration
-    if (!muted && ttsSupported && typeof window !== "undefined") {
-      try {
-        window.speechSynthesis.cancel();
-        const u = new SpeechSynthesisUtterance(tr(scene.narration, lang));
-        u.lang = lang;
-        u.rate = 0.92;
-        u.pitch = 1;
-        utterRef.current = u;
-        window.speechSynthesis.speak(u);
-      } catch (e) {
-        console.warn("[story] tts failed", e);
-      }
+    if (!muted) {
+      speak(tr(scene.narration, lang), { lang })
+        .then((n) => { if (cancelled) { n.stop(); return; } narratorRef.current = n; })
+        .catch((e) => console.warn("[story] narration failed", e));
     }
 
     const tick = () => {
@@ -97,10 +88,10 @@ function StoryPlayer() {
     rafRef.current = requestAnimationFrame(tick);
 
     return () => {
+      cancelled = true;
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
-      if (typeof window !== "undefined" && "speechSynthesis" in window) {
-        window.speechSynthesis.cancel();
-      }
+      narratorRef.current?.stop();
+      narratorRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [playing, idx, muted, lang]);
