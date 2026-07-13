@@ -121,11 +121,12 @@ function HomePage() {
               <BookMarked className="h-5 w-5" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-[10px] uppercase tracking-widest text-primary/90">Continue reading</p>
+              <p className="text-[10px] uppercase tracking-widest text-primary/90">{t("quran.continue")}</p>
               <p className="text-sm font-semibold truncate">
-                {lastPage.surahName ?? `Surah ${lastPage.surah}`} · Page {lastPage.page}
+                {lastPage.surahName ?? `${t("quran.surah")} ${lastPage.surah}`} · {t("quran.page")} {lastPage.page}
               </p>
-              <p className="text-[11px] text-muted-foreground truncate">Verse {lastPage.verse} · pick up where you left off</p>
+              <p className="text-[11px] text-muted-foreground truncate">{t("quran.verse")} {lastPage.verse} · {t("quran.pickup")}</p>
+
             </div>
             <span className="text-xs text-muted-foreground shrink-0">→</span>
           </Link>
