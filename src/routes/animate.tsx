@@ -31,7 +31,7 @@ function AnimatePage() {
   const t = useT();
   const search = Route.useSearch();
   const navigate = useNavigate({ from: Route.fullPath });
-  const [tab, setTabState] = useState<Tab>(search.tab ?? "kalima");
+  const [tab, setTabState] = useState<Tab>(search.tab ?? "story");
   useEffect(() => {
     if (search.tab && search.tab !== tab) setTabState(search.tab);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -54,7 +54,7 @@ function AnimatePage() {
           {tab === "kalima" ? t("feel.sub.kalima") : t("feel.sub.story")}
         </p>
 
-        {/* Tabs */}
+        {/* Tabs — Story of the Day first */}
         <div
           role="tablist"
           className="relative grid grid-cols-2 mb-6 rounded-full border border-border/70 bg-card/60 backdrop-blur p-1"
@@ -62,20 +62,9 @@ function AnimatePage() {
           <span
             aria-hidden
             className={`absolute top-1 bottom-1 w-1/2 rounded-full bg-primary/15 border border-primary/30 shadow-[0_0_20px_-6px_var(--primary)] transition-transform duration-300 ease-out ${
-              tab === "story" ? "translate-x-full" : "translate-x-0"
+              tab === "kalima" ? "translate-x-full" : "translate-x-0"
             }`}
           />
-          <button
-            role="tab"
-            aria-selected={tab === "kalima"}
-            onClick={() => setTab("kalima")}
-            className={`relative z-10 py-2 text-sm font-semibold rounded-full inline-flex items-center justify-center gap-2 transition-colors ${
-              tab === "kalima" ? "text-primary" : "text-muted-foreground"
-            }`}
-          >
-            <Sparkles className="h-3.5 w-3.5" />
-            {t("feel.tab.kalima")}
-          </button>
           <button
             role="tab"
             aria-selected={tab === "story"}
@@ -86,6 +75,17 @@ function AnimatePage() {
           >
             <Film className="h-3.5 w-3.5" />
             {t("feel.tab.story")}
+          </button>
+          <button
+            role="tab"
+            aria-selected={tab === "kalima"}
+            onClick={() => setTab("kalima")}
+            className={`relative z-10 py-2 text-sm font-semibold rounded-full inline-flex items-center justify-center gap-2 transition-colors ${
+              tab === "kalima" ? "text-primary" : "text-muted-foreground"
+            }`}
+          >
+            <Sparkles className="h-3.5 w-3.5" />
+            {t("feel.tab.kalima")}
           </button>
         </div>
 
