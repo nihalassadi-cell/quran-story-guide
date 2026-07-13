@@ -257,15 +257,30 @@ function StoryPlayer() {
 
   return (
     <div className="fixed inset-0 z-[80] bg-black text-white overflow-hidden">
-      {/* Image */}
+      {/* Media */}
       <div className="absolute inset-0">
-        <img
-          key={idx}
-          src={scene.image}
-          alt=""
-          className={`w-full h-full object-cover ${kenBurnsClass}`}
-          style={{ animationDuration: `${scene.durationMs}ms`, animationPlayState: playing ? "running" : "paused" }}
-        />
+        {mode === "video" && videoManifest ? (
+          <>
+            <video
+              ref={videoRef}
+              key={`v-${idx}`}
+              src={videoManifest.videos[idx]}
+              poster={scene.image}
+              className="w-full h-full object-cover"
+              playsInline
+              preload="auto"
+            />
+            <audio ref={audioRef} preload="auto" />
+          </>
+        ) : (
+          <img
+            key={idx}
+            src={scene.image}
+            alt=""
+            className={`w-full h-full object-cover ${kenBurnsClass}`}
+            style={{ animationDuration: `${scene.durationMs}ms`, animationPlayState: playing ? "running" : "paused" }}
+          />
+        )}
         <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black/85" />
       </div>
 
