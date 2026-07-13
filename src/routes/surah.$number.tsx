@@ -257,7 +257,7 @@ function SurahPlayer() {
 
   // Sync URL with current page + verse (preserve micro flag)
   useEffect(() => {
-    navigate({ search: (prev) => ({ ...prev, verse: activeVerse, page: pageIdx + 1 }), replace: true });
+    navigate({ search: (prev: SurahSearch) => ({ ...prev, verse: activeVerse, page: pageIdx + 1 }), replace: true });
   }, [activeVerse, pageIdx, navigate]);
 
   // Reset dwell timer whenever the page changes in micro mode
