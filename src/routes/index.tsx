@@ -196,7 +196,7 @@ function HomePage() {
 
         {filter && (filtered?.length ?? 0) === 0 && verseHits.length === 0 && !verseLoading && (
           <p className="text-center text-sm text-muted-foreground mt-8">
-            No matches. Try a different word.
+            {t("quran.noMatches")}
           </p>
         )}
       </div>
