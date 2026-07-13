@@ -108,6 +108,7 @@ function StoryPlayer() {
     return () => {
       narratorRef.current?.stop();
       padRef.current?.stop();
+      try { musicRef.current?.pause(); } catch { /* noop */ }
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
   }, []);
