@@ -186,7 +186,7 @@ function HomePage() {
                   </div>
                   <div className="flex items-center justify-between mt-0.5 text-[11px] sm:text-xs text-muted-foreground gap-2">
                     <span className="truncate">{s.name_en}</span>
-                    <span className="shrink-0">{s.verse_count} verses · {s.revelation_place}</span>
+                    <span className="shrink-0">{s.verse_count} {t("quran.verseSuffix")} · {s.revelation_place}</span>
                   </div>
                 </div>
               </Link>
