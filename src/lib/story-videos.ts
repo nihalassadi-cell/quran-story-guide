@@ -11,6 +11,8 @@ type StoryVideoManifest = {
   videos: string[];
   /** narrations[langCode][sceneIndex] = audioUrl */
   narrations: Record<string, string[]>;
+  /** Per-scene background music URLs (calm instrumental), indexed to scenes. Optional. */
+  music?: string[];
 };
 
 const MUSA_LANGS = ["en", "ur", "ru", "bn", "fa", "id", "ms", "tr", "fr", "de"];
@@ -29,9 +31,14 @@ function musaNarrationsFor(lang: string) {
   );
 }
 
+const MUSA_MUSIC = Array.from({ length: 10 }, (_, i) =>
+  `${SUPA}/narrations/musa/music/scene-${String(i + 1).padStart(2, "0")}.mp3`
+);
+
 const MUSA: StoryVideoManifest = {
   videos: MUSA_VIDEO_FILES.map((f) => `${SUPA}/scene-images/musa/videos/${f}.mp4`),
   narrations: Object.fromEntries(MUSA_LANGS.map((l) => [l, musaNarrationsFor(l)])),
+  music: MUSA_MUSIC,
 };
 
 export const STORY_VIDEO_MANIFESTS: Record<string, StoryVideoManifest | undefined> = {
