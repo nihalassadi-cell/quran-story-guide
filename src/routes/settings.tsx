@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { RECITERS } from "@/lib/quran-api";
 import { SUPPORTED_LANGUAGES, useLanguage, type LangCode } from "@/lib/language";
+import { useT } from "@/lib/i18n";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/settings")({
