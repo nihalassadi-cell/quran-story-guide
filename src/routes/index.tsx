@@ -38,6 +38,8 @@ function HomePage() {
   const [verseHits, setVerseHits] = useState<VerseHit[]>([]);
   const [verseLoading, setVerseLoading] = useState(false);
   const [lastPage, setLastPage] = useState<LastPage | null>(null);
+  const t = useT();
+
 
   useEffect(() => {
     supabase
