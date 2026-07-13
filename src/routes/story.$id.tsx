@@ -240,7 +240,8 @@ function StoryPlayer() {
       {/* Top bar */}
       <div className="absolute top-0 inset-x-0 pt-[calc(env(safe-area-inset-top)+0.75rem)] px-4 flex items-center gap-2 z-10">
         <Link
-          to="/today"
+          to="/animate"
+          search={{ tab: "story" }}
           className="rounded-full bg-black/40 backdrop-blur border border-white/15 p-2 hover:border-white/40"
           title={t("story.close")}
         >
@@ -259,6 +260,7 @@ function StoryPlayer() {
             </span>
           ))}
         </div>
+        <NarrationLangSelect value={lang} onChange={setLang} tone="dark" />
       </div>
 
       {/* Title */}
