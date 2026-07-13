@@ -70,14 +70,15 @@ function TodayPage() {
 
           {/* 2 · Hadith */}
           <section className="relative rounded-3xl overflow-hidden border border-white/10 bg-card/40 p-5">
-            <CardChip icon={<Feather className="h-3 w-3" />} label="Hadith" tone="gold" />
+            <CardChip icon={<Feather className="h-3 w-3" />} label={t("today.chip.hadith")} tone="gold" />
             <p className="font-display-serif italic text-lg leading-relaxed mt-3 text-foreground">
               "{pickTr(today.hadith.text, lang)}"
             </p>
             <div className="mt-3 text-[11px] text-muted-foreground">
-              {today.hadith.narrator ? <span>Narrated by {today.hadith.narrator} · </span> : null}
+              {today.hadith.narrator ? <span>{t("today.narratedBy")} {today.hadith.narrator} · </span> : null}
               <span className="text-primary/60">{today.hadith.source}</span>
             </div>
+
           </section>
 
           {/* 3 · Dhikr */}
