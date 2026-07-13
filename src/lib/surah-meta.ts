@@ -5,7 +5,8 @@ export type SurahMeta = {
   number: number;
   name_ar: string;
   name_translit: string;
-  verses_count: number;
+  name_en: string;
+  verse_count: number;
 };
 
 let cache: SurahMeta[] | null = null;
