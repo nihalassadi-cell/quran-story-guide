@@ -24,7 +24,6 @@ export const Route = createFileRoute("/animate")({
 type Tab = "kalima" | "story";
 
 function AnimatePage() {
-  const [lang] = useLanguage();
   const t = useT();
   const [tab, setTab] = useState<Tab>("kalima");
 
