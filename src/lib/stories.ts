@@ -102,6 +102,7 @@ const YUNUS: Story = {
     fa: "دعای درون ماهی", id: "Doa di Perut Ikan", ms: "Doa di Perut Ikan",
     tr: "Balığın Karnındaki Dua", fr: "La prière dans la baleine", de: "Das Gebet im Wal",
   },
+  subtitle: { en: "The story of Prophet Yunus" },
   sources: [
     "Qur'an 21:87 · Al-Anbiya",
     "Qur'an 37:139–148 · As-Saffat",
