@@ -83,6 +83,7 @@ export interface Story {
   id: string;
   moodId: string;
   title: Localized;
+  subtitle?: Localized;
   scenes: StoryScene[];
   sources: string[];
   durationSec: number;
