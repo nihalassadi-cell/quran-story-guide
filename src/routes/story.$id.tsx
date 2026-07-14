@@ -339,20 +339,58 @@ function StoryPlayer() {
       const nextLayer: 0 | 1 = targetLayer === 0 ? 1 : 0;
       const nextEl = videoRefs.current[nextLayer];
       const nextSrc = videoManifest.videos[idx + 1];
-      if (nextEl && nextSrc) {
-        if (nextEl.src !== nextSrc) {
-          nextEl.src = nextSrc;
-          nextEl.load();
-        }
-        try { nextEl.currentTime = 0; } catch { /* noop */ }
-        nextEl.muted = true;
-        nextEl.play().catch(() => {});
+      if (!nextEl || !nextSrc) return;
+      if (nextEl.src !== nextSrc) {
+        nextEl.src = nextSrc;
+        nextEl.load();
       }
-      queueTransition(() => {
+      try { nextEl.currentTime = 0; } catch { /* noop */ }
+      nextEl.muted = true;
+
+      const doSwap = () => {
         setActiveLayer(nextLayer);
         setIdx((n) => n + 1);
-      }, 120);
+      };
+      // Kick playback first, then only swap opacity once the browser has
+      // decoded a real frame — this eliminates the "black/frozen" flash at
+      // the start of the next scene.
+      const startAndSwap = () => {
+        const swapWhenPainted = () => {
+          // rAF ensures at least one composited frame of the new video
+          requestAnimationFrame(() => queueTransition(doSwap, 40));
+        };
+        const p = nextEl.play();
+        if (p && typeof p.then === "function") {
+          p.then(swapWhenPainted).catch(swapWhenPainted);
+        } else {
+          swapWhenPainted();
+        }
+      };
+
+      if (nextEl.readyState >= 3) {
+        startAndSwap();
+      } else {
+        let done = false;
+        const onReady = () => {
+          if (done) return;
+          done = true;
+          nextEl.removeEventListener("canplay", onReady);
+          nextEl.removeEventListener("loadeddata", onReady);
+          startAndSwap();
+        };
+        nextEl.addEventListener("canplay", onReady);
+        nextEl.addEventListener("loadeddata", onReady);
+        // Safety: don't hang if the network is slow
+        queueTransition(() => {
+          if (done) return;
+          done = true;
+          nextEl.removeEventListener("canplay", onReady);
+          nextEl.removeEventListener("loadeddata", onReady);
+          startAndSwap();
+        }, 3000);
+      }
     };
+
 
     const advance = () => {
       if (advancedRef.current) return;
