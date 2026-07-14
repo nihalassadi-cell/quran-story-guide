@@ -172,7 +172,7 @@ function StoryPlayer() {
     return () => { cancelled = true; };
   }, [idx, lang, scene.narration]);
 
-  // Prefetch next narration (image mode) or next audio (video mode)
+  // Prefetch next narration (image mode) or next audio+video+music (video mode)
   useEffect(() => {
     const next = story.scenes[idx + 1];
     if (!next) return;
@@ -184,6 +184,15 @@ function StoryPlayer() {
         nextAudioRef.current.src = url;
         nextAudioRef.current.load();
       }
+      // Preload NEXT video into the inactive layer so the crossfade has a
+      // fully-buffered source to swap to (prevents the "lag at scene start").
+      const nextVideoUrl = videoManifest.videos[idx + 1];
+      const inactiveVideo = videoRefs.current[activeLayer === 0 ? 1 : 0];
+      if (nextVideoUrl && inactiveVideo && inactiveVideo.src !== nextVideoUrl) {
+        inactiveVideo.src = nextVideoUrl;
+        inactiveVideo.preload = "auto";
+        inactiveVideo.load();
+      }
       const nextMusicUrl = videoManifest.music?.[idx + 1];
       const inactiveMusic = musicRefs.current[activeMusicLayerRef.current === 0 ? 1 : 0];
       if (nextMusicUrl && inactiveMusic && inactiveMusic.src !== nextMusicUrl) {
@@ -191,7 +200,8 @@ function StoryPlayer() {
         inactiveMusic.load();
       }
     }
-  }, [idx, lang, story.scenes, hasVideo, videoManifest]);
+  }, [idx, lang, story.scenes, hasVideo, videoManifest, activeLayer]);
+
 
   // ================= IMAGE MODE =================
   useEffect(() => {
@@ -329,20 +339,58 @@ function StoryPlayer() {
       const nextLayer: 0 | 1 = targetLayer === 0 ? 1 : 0;
       const nextEl = videoRefs.current[nextLayer];
       const nextSrc = videoManifest.videos[idx + 1];
-      if (nextEl && nextSrc) {
-        if (nextEl.src !== nextSrc) {
-          nextEl.src = nextSrc;
-          nextEl.load();
-        }
-        try { nextEl.currentTime = 0; } catch { /* noop */ }
-        nextEl.muted = true;
-        nextEl.play().catch(() => {});
+      if (!nextEl || !nextSrc) return;
+      if (nextEl.src !== nextSrc) {
+        nextEl.src = nextSrc;
+        nextEl.load();
       }
-      queueTransition(() => {
+      try { nextEl.currentTime = 0; } catch { /* noop */ }
+      nextEl.muted = true;
+
+      const doSwap = () => {
         setActiveLayer(nextLayer);
         setIdx((n) => n + 1);
-      }, 120);
+      };
+      // Kick playback first, then only swap opacity once the browser has
+      // decoded a real frame — this eliminates the "black/frozen" flash at
+      // the start of the next scene.
+      const startAndSwap = () => {
+        const swapWhenPainted = () => {
+          // rAF ensures at least one composited frame of the new video
+          requestAnimationFrame(() => queueTransition(doSwap, 40));
+        };
+        const p = nextEl.play();
+        if (p && typeof p.then === "function") {
+          p.then(swapWhenPainted).catch(swapWhenPainted);
+        } else {
+          swapWhenPainted();
+        }
+      };
+
+      if (nextEl.readyState >= 3) {
+        startAndSwap();
+      } else {
+        let done = false;
+        const onReady = () => {
+          if (done) return;
+          done = true;
+          nextEl.removeEventListener("canplay", onReady);
+          nextEl.removeEventListener("loadeddata", onReady);
+          startAndSwap();
+        };
+        nextEl.addEventListener("canplay", onReady);
+        nextEl.addEventListener("loadeddata", onReady);
+        // Safety: don't hang if the network is slow
+        queueTransition(() => {
+          if (done) return;
+          done = true;
+          nextEl.removeEventListener("canplay", onReady);
+          nextEl.removeEventListener("loadeddata", onReady);
+          startAndSwap();
+        }, 3000);
+      }
     };
+
 
     const advance = () => {
       if (advancedRef.current) return;
