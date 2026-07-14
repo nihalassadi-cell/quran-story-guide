@@ -184,6 +184,7 @@ const MARYAM: Story = {
     ur: "کھجور اور چشمہ", tr: "Hurma ve Pınar", fr: "Le palmier et la source",
     de: "Die Palme und die Quelle",
   },
+  subtitle: { en: "The story of Maryam" },
   sources: [
     "Qur'an 19:16–34 · Maryam",
     "Qur'an 3:35–47 · Aal-'Imran",
