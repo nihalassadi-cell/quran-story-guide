@@ -303,6 +303,7 @@ const AYYUB: Story = {
     ur: "پلٹنے والا چشمہ", tr: "Geri Dönen Pınar", fr: "La source qui revint",
     de: "Der Brunnen, der zurückkehrte",
   },
+  subtitle: { en: "The story of Prophet Ayyub" },
   sources: [
     "Qur'an 21:83–84 · Al-Anbiya",
     "Qur'an 38:41–44 · Sad",
