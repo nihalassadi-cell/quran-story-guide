@@ -201,6 +201,11 @@ function StoryGrid() {
                 <h3 className="font-display-serif italic text-white text-lg leading-tight drop-shadow">
                   {tr(s.title, lang)}
                 </h3>
+                {s.subtitle && (
+                  <p className="text-[10px] text-white/85 mt-0.5 leading-tight">
+                    {tr(s.subtitle, lang)}
+                  </p>
+                )}
               </div>
             </div>
 

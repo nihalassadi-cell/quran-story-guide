@@ -83,6 +83,7 @@ export interface Story {
   id: string;
   moodId: string;
   title: Localized;
+  subtitle?: Localized;
   scenes: StoryScene[];
   sources: string[];
   durationSec: number;
@@ -101,6 +102,7 @@ const YUNUS: Story = {
     fa: "دعای درون ماهی", id: "Doa di Perut Ikan", ms: "Doa di Perut Ikan",
     tr: "Balığın Karnındaki Dua", fr: "La prière dans la baleine", de: "Das Gebet im Wal",
   },
+  subtitle: { en: "The story of Prophet Yunus" },
   sources: [
     "Qur'an 21:87 · Al-Anbiya",
     "Qur'an 37:139–148 · As-Saffat",
@@ -141,6 +143,7 @@ const MUSA: Story = {
     ur: "کھلنے والا سمندر", tr: "Yarılan Deniz", fr: "La mer qui s'ouvrit",
     de: "Das Meer, das sich öffnete", id: "Laut yang Terbelah", ms: "Laut yang Terbelah",
   },
+  subtitle: { en: "The story of Prophet Moses" },
   sources: [
     "Qur'an 20:9–98 · Ta-Ha",
     "Qur'an 28:7–35 · Al-Qasas",
@@ -181,6 +184,7 @@ const MARYAM: Story = {
     ur: "کھجور اور چشمہ", tr: "Hurma ve Pınar", fr: "Le palmier et la source",
     de: "Die Palme und die Quelle",
   },
+  subtitle: { en: "The story of Maryam" },
   sources: [
     "Qur'an 19:16–34 · Maryam",
     "Qur'an 3:35–47 · Aal-'Imran",
@@ -219,6 +223,7 @@ const ADAM: Story = {
     en: "The First Return",
     ur: "پہلی توبہ", tr: "İlk Dönüş", fr: "Le premier retour", de: "Die erste Umkehr",
   },
+  subtitle: { en: "The story of Prophet Adam" },
   sources: [
     "Qur'an 2:30–37 · Al-Baqarah",
     "Qur'an 7:19–25 · Al-A'raf",
@@ -257,6 +262,7 @@ const IBRAHIM: Story = {
     en: "The Cool Fire",
     ur: "ٹھنڈی آگ", tr: "Serin Ateş", fr: "Le feu apaisé", de: "Das kühle Feuer",
   },
+  subtitle: { en: "The story of Prophet Ibrahim" },
   sources: [
     "Qur'an 6:74–79 · Al-An'am",
     "Qur'an 21:51–70 · Al-Anbiya",
@@ -297,6 +303,7 @@ const AYYUB: Story = {
     ur: "پلٹنے والا چشمہ", tr: "Geri Dönen Pınar", fr: "La source qui revint",
     de: "Der Brunnen, der zurückkehrte",
   },
+  subtitle: { en: "The story of Prophet Ayyub" },
   sources: [
     "Qur'an 21:83–84 · Al-Anbiya",
     "Qur'an 38:41–44 · Sad",

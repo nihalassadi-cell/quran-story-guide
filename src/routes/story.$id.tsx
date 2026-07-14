@@ -557,6 +557,11 @@ function StoryPlayer() {
         <h1 className="font-display-serif italic text-xl mt-1 text-white/95 drop-shadow-lg">
           {tr(story.title, lang)}
         </h1>
+        {story.subtitle && (
+          <p className="text-[10px] text-white/75 mt-0.5">
+            {tr(story.subtitle, lang)}
+          </p>
+        )}
       </div>
 
       {/* Caption — persistent but discreet, translucent panel */}
