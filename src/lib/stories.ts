@@ -262,6 +262,7 @@ const IBRAHIM: Story = {
     en: "The Cool Fire",
     ur: "ٹھنڈی آگ", tr: "Serin Ateş", fr: "Le feu apaisé", de: "Das kühle Feuer",
   },
+  subtitle: { en: "The story of Prophet Ibrahim" },
   sources: [
     "Qur'an 6:74–79 · Al-An'am",
     "Qur'an 21:51–70 · Al-Anbiya",
