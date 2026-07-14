@@ -223,6 +223,7 @@ const ADAM: Story = {
     en: "The First Return",
     ur: "پہلی توبہ", tr: "İlk Dönüş", fr: "Le premier retour", de: "Die erste Umkehr",
   },
+  subtitle: { en: "The story of Prophet Adam" },
   sources: [
     "Qur'an 2:30–37 · Al-Baqarah",
     "Qur'an 7:19–25 · Al-A'raf",
