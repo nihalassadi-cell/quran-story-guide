@@ -172,7 +172,7 @@ function StoryPlayer() {
     return () => { cancelled = true; };
   }, [idx, lang, scene.narration]);
 
-  // Prefetch next narration (image mode) or next audio (video mode)
+  // Prefetch next narration (image mode) or next audio+video+music (video mode)
   useEffect(() => {
     const next = story.scenes[idx + 1];
     if (!next) return;
@@ -184,6 +184,15 @@ function StoryPlayer() {
         nextAudioRef.current.src = url;
         nextAudioRef.current.load();
       }
+      // Preload NEXT video into the inactive layer so the crossfade has a
+      // fully-buffered source to swap to (prevents the "lag at scene start").
+      const nextVideoUrl = videoManifest.videos[idx + 1];
+      const inactiveVideo = videoRefs.current[activeLayer === 0 ? 1 : 0];
+      if (nextVideoUrl && inactiveVideo && inactiveVideo.src !== nextVideoUrl) {
+        inactiveVideo.src = nextVideoUrl;
+        inactiveVideo.preload = "auto";
+        inactiveVideo.load();
+      }
       const nextMusicUrl = videoManifest.music?.[idx + 1];
       const inactiveMusic = musicRefs.current[activeMusicLayerRef.current === 0 ? 1 : 0];
       if (nextMusicUrl && inactiveMusic && inactiveMusic.src !== nextMusicUrl) {
@@ -191,7 +200,8 @@ function StoryPlayer() {
         inactiveMusic.load();
       }
     }
-  }, [idx, lang, story.scenes, hasVideo, videoManifest]);
+  }, [idx, lang, story.scenes, hasVideo, videoManifest, activeLayer]);
+
 
   // ================= IMAGE MODE =================
   useEffect(() => {
