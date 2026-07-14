@@ -143,6 +143,7 @@ const MUSA: Story = {
     ur: "کھلنے والا سمندر", tr: "Yarılan Deniz", fr: "La mer qui s'ouvrit",
     de: "Das Meer, das sich öffnete", id: "Laut yang Terbelah", ms: "Laut yang Terbelah",
   },
+  subtitle: { en: "The story of Prophet Moses" },
   sources: [
     "Qur'an 20:9–98 · Ta-Ha",
     "Qur'an 28:7–35 · Al-Qasas",
