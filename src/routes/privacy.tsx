@@ -92,9 +92,9 @@ function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-foreground mb-2">7. Third-Party Services</h2>
+            <h2 className="text-xl font-semibold text-foreground mb-2">7. Third-Party Services and AI</h2>
             <p>
-              The App may rely on third-party services (such as hosting, authentication, and analytics providers) to function. These services process data in accordance with their own privacy policies.
+              The App may rely on third-party services (such as hosting, authentication, and analytics providers) to function. These services process data in accordance with their own privacy policies. The App also uses third-party AI providers to pre-generate narrations, translations, and story media; this generation happens server-side and does not involve sending your personal information or prompts to AI providers during normal use of the App.
             </p>
           </section>
 
