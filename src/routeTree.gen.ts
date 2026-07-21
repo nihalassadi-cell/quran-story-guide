@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as TodayRouteImport } from './routes/today'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as QuranRouteImport } from './routes/quran'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AnimateRouteImport } from './routes/animate'
@@ -37,6 +38,11 @@ const TermsRoute = TermsRouteImport.update({
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const QuranRoute = QuranRouteImport.update({
+  id: '/quran',
+  path: '/quran',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrivacyRoute = PrivacyRouteImport.update({
@@ -101,6 +107,7 @@ export interface FileRoutesByFullPath {
   '/animate': typeof AnimateRoute
   '/auth': typeof AuthRoute
   '/privacy': typeof PrivacyRoute
+  '/quran': typeof QuranRoute
   '/settings': typeof SettingsRoute
   '/terms': typeof TermsRoute
   '/today': typeof TodayRoute
@@ -117,6 +124,7 @@ export interface FileRoutesByTo {
   '/animate': typeof AnimateRoute
   '/auth': typeof AuthRoute
   '/privacy': typeof PrivacyRoute
+  '/quran': typeof QuranRoute
   '/settings': typeof SettingsRoute
   '/terms': typeof TermsRoute
   '/today': typeof TodayRoute
@@ -134,6 +142,7 @@ export interface FileRoutesById {
   '/animate': typeof AnimateRoute
   '/auth': typeof AuthRoute
   '/privacy': typeof PrivacyRoute
+  '/quran': typeof QuranRoute
   '/settings': typeof SettingsRoute
   '/terms': typeof TermsRoute
   '/today': typeof TodayRoute
@@ -152,6 +161,7 @@ export interface FileRouteTypes {
     | '/animate'
     | '/auth'
     | '/privacy'
+    | '/quran'
     | '/settings'
     | '/terms'
     | '/today'
@@ -168,6 +178,7 @@ export interface FileRouteTypes {
     | '/animate'
     | '/auth'
     | '/privacy'
+    | '/quran'
     | '/settings'
     | '/terms'
     | '/today'
@@ -184,6 +195,7 @@ export interface FileRouteTypes {
     | '/animate'
     | '/auth'
     | '/privacy'
+    | '/quran'
     | '/settings'
     | '/terms'
     | '/today'
@@ -201,6 +213,7 @@ export interface RootRouteChildren {
   AnimateRoute: typeof AnimateRoute
   AuthRoute: typeof AuthRoute
   PrivacyRoute: typeof PrivacyRoute
+  QuranRoute: typeof QuranRoute
   SettingsRoute: typeof SettingsRoute
   TermsRoute: typeof TermsRoute
   TodayRoute: typeof TodayRoute
@@ -234,6 +247,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/quran': {
+      id: '/quran'
+      path: '/quran'
+      fullPath: '/quran'
+      preLoaderRoute: typeof QuranRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacy': {
@@ -321,6 +341,7 @@ const rootRouteChildren: RootRouteChildren = {
   AnimateRoute: AnimateRoute,
   AuthRoute: AuthRoute,
   PrivacyRoute: PrivacyRoute,
+  QuranRoute: QuranRoute,
   SettingsRoute: SettingsRoute,
   TermsRoute: TermsRoute,
   TodayRoute: TodayRoute,
