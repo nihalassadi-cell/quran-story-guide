@@ -413,7 +413,7 @@ function SurahPlayer() {
     <div className="fixed inset-0 overflow-hidden flex flex-col bg-gradient-to-br from-background via-background to-accent/10">
       {/* Header */}
       <header className="relative z-20 flex items-center justify-between p-3 border-b border-border/50 bg-background/80 backdrop-blur">
-        <Link to="/" className="rounded-full bg-card/70 backdrop-blur p-2 border border-border shrink-0">
+        <Link to="/quran" className="rounded-full bg-card/70 backdrop-blur p-2 border border-border shrink-0">
           <ChevronLeft className="h-5 w-5" />
         </Link>
         <div className="text-center min-w-0 flex-1 px-2 hidden sm:block">
