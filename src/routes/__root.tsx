@@ -87,7 +87,19 @@ function RootShell({ children }: { children: React.ReactNode }) {
 function RootComponent() {
   const router = useRouter();
   useEffect(() => {
-    // Track initial screen
+    // Fresh app session (cold load / refresh / PWA open): always land on Today,
+    // except when deep-linking into a reader/story/auth flow.
+    try {
+      const fresh = !sessionStorage.getItem("noor:session");
+      sessionStorage.setItem("noor:session", "1");
+      if (fresh) {
+        const p = router.state.location.pathname;
+        const keep = p.startsWith("/surah/") || p.startsWith("/story/") || p.startsWith("/mood/") || p.startsWith("/auth") || p.startsWith("/privacy") || p.startsWith("/terms");
+        if (!keep && p !== "/today") {
+          router.navigate({ to: "/today", replace: true });
+        }
+      }
+    } catch {}
     setScreen(router.state.location.pathname);
     const unsub = router.subscribe("onResolved", ({ toLocation }) => {
       setScreen(toLocation.pathname);
