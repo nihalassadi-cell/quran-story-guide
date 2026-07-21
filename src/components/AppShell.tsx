@@ -8,7 +8,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   const tabs = [
     { to: "/today", icon: Sun, label: t("tab.today") },
-    { to: "/", icon: BookOpen, label: t("tab.quran") },
+    { to: "/quran", icon: BookOpen, label: t("tab.quran") },
     { to: "/animate", icon: Heart, label: t("tab.feelings") },
     { to: "/settings", icon: Settings, label: t("tab.settings") },
   ] as const;
@@ -28,8 +28,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <ul className="relative flex items-stretch justify-around max-w-md mx-auto px-1">
           {tabs.map((t) => {
             const active =
-              t.to === "/"
-                ? loc.pathname === "/"
+              t.to === "/quran"
+                ? loc.pathname === "/quran" ||
+                  loc.pathname.startsWith("/quran/") ||
+                  loc.pathname.startsWith("/surah/")
                 : loc.pathname === t.to || loc.pathname.startsWith(t.to + "/");
             const Icon = t.icon;
             return (
