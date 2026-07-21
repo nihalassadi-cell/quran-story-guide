@@ -16,6 +16,7 @@ import { Route as QuranRouteImport } from './routes/quran'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AnimateRouteImport } from './routes/animate'
+import { Route as IndexRouteImport } from './routes/index'
 import { Route as SurahNumberRouteImport } from './routes/surah.$number'
 import { Route as StoryIdRouteImport } from './routes/story.$id'
 import { Route as MoodIdRouteImport } from './routes/mood.$id'
@@ -59,6 +60,11 @@ const AnimateRoute = AnimateRouteImport.update({
   path: '/animate',
   getParentRoute: () => rootRouteImport,
 } as any)
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SurahNumberRoute = SurahNumberRouteImport.update({
   id: '/surah/$number',
   path: '/surah/$number',
@@ -97,6 +103,7 @@ const ApiPublicQuranAudioReciterAyahRoute =
   } as any)
 
 export interface FileRoutesByFullPath {
+  '/': typeof IndexRoute
   '/animate': typeof AnimateRoute
   '/auth': typeof AuthRoute
   '/privacy': typeof PrivacyRoute
@@ -113,6 +120,7 @@ export interface FileRoutesByFullPath {
   '/api/public/quran-audio/$reciter/$ayah': typeof ApiPublicQuranAudioReciterAyahRoute
 }
 export interface FileRoutesByTo {
+  '/': typeof IndexRoute
   '/animate': typeof AnimateRoute
   '/auth': typeof AuthRoute
   '/privacy': typeof PrivacyRoute
@@ -130,6 +138,7 @@ export interface FileRoutesByTo {
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
+  '/': typeof IndexRoute
   '/animate': typeof AnimateRoute
   '/auth': typeof AuthRoute
   '/privacy': typeof PrivacyRoute
@@ -148,6 +157,7 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
+    | '/'
     | '/animate'
     | '/auth'
     | '/privacy'
@@ -164,6 +174,7 @@ export interface FileRouteTypes {
     | '/api/public/quran-audio/$reciter/$ayah'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/'
     | '/animate'
     | '/auth'
     | '/privacy'
@@ -180,6 +191,7 @@ export interface FileRouteTypes {
     | '/api/public/quran-audio/$reciter/$ayah'
   id:
     | '__root__'
+    | '/'
     | '/animate'
     | '/auth'
     | '/privacy'
@@ -197,6 +209,7 @@ export interface FileRouteTypes {
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
+  IndexRoute: typeof IndexRoute
   AnimateRoute: typeof AnimateRoute
   AuthRoute: typeof AuthRoute
   PrivacyRoute: typeof PrivacyRoute
@@ -264,6 +277,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AnimateRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/surah/$number': {
       id: '/surah/$number'
       path: '/surah/$number'
@@ -317,6 +337,7 @@ declare module '@tanstack/react-router' {
 }
 
 const rootRouteChildren: RootRouteChildren = {
+  IndexRoute: IndexRoute,
   AnimateRoute: AnimateRoute,
   AuthRoute: AuthRoute,
   PrivacyRoute: PrivacyRoute,
