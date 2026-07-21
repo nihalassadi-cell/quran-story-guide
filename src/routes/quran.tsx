@@ -10,7 +10,7 @@ import { useLanguage } from "@/lib/language";
 import { localizedSurahMeaning } from "@/lib/surah-names.i18n";
 
 
-export const Route = createFileRoute("/")({
+export const Route = createFileRoute("/quran")({
   head: () => ({
     meta: [
       { title: "Noor — Quran" },

@@ -12,10 +12,10 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as TodayRouteImport } from './routes/today'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as QuranRouteImport } from './routes/quran'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AnimateRouteImport } from './routes/animate'
-import { Route as IndexRouteImport } from './routes/index'
 import { Route as SurahNumberRouteImport } from './routes/surah.$number'
 import { Route as StoryIdRouteImport } from './routes/story.$id'
 import { Route as MoodIdRouteImport } from './routes/mood.$id'
@@ -39,6 +39,11 @@ const SettingsRoute = SettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
+const QuranRoute = QuranRouteImport.update({
+  id: '/quran',
+  path: '/quran',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PrivacyRoute = PrivacyRouteImport.update({
   id: '/privacy',
   path: '/privacy',
@@ -52,11 +57,6 @@ const AuthRoute = AuthRouteImport.update({
 const AnimateRoute = AnimateRouteImport.update({
   id: '/animate',
   path: '/animate',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SurahNumberRoute = SurahNumberRouteImport.update({
@@ -97,10 +97,10 @@ const ApiPublicQuranAudioReciterAyahRoute =
   } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
   '/animate': typeof AnimateRoute
   '/auth': typeof AuthRoute
   '/privacy': typeof PrivacyRoute
+  '/quran': typeof QuranRoute
   '/settings': typeof SettingsRoute
   '/terms': typeof TermsRoute
   '/today': typeof TodayRoute
@@ -113,10 +113,10 @@ export interface FileRoutesByFullPath {
   '/api/public/quran-audio/$reciter/$ayah': typeof ApiPublicQuranAudioReciterAyahRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
   '/animate': typeof AnimateRoute
   '/auth': typeof AuthRoute
   '/privacy': typeof PrivacyRoute
+  '/quran': typeof QuranRoute
   '/settings': typeof SettingsRoute
   '/terms': typeof TermsRoute
   '/today': typeof TodayRoute
@@ -130,10 +130,10 @@ export interface FileRoutesByTo {
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
   '/animate': typeof AnimateRoute
   '/auth': typeof AuthRoute
   '/privacy': typeof PrivacyRoute
+  '/quran': typeof QuranRoute
   '/settings': typeof SettingsRoute
   '/terms': typeof TermsRoute
   '/today': typeof TodayRoute
@@ -148,10 +148,10 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    | '/'
     | '/animate'
     | '/auth'
     | '/privacy'
+    | '/quran'
     | '/settings'
     | '/terms'
     | '/today'
@@ -164,10 +164,10 @@ export interface FileRouteTypes {
     | '/api/public/quran-audio/$reciter/$ayah'
   fileRoutesByTo: FileRoutesByTo
   to:
-    | '/'
     | '/animate'
     | '/auth'
     | '/privacy'
+    | '/quran'
     | '/settings'
     | '/terms'
     | '/today'
@@ -180,10 +180,10 @@ export interface FileRouteTypes {
     | '/api/public/quran-audio/$reciter/$ayah'
   id:
     | '__root__'
-    | '/'
     | '/animate'
     | '/auth'
     | '/privacy'
+    | '/quran'
     | '/settings'
     | '/terms'
     | '/today'
@@ -197,10 +197,10 @@ export interface FileRouteTypes {
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
   AnimateRoute: typeof AnimateRoute
   AuthRoute: typeof AuthRoute
   PrivacyRoute: typeof PrivacyRoute
+  QuranRoute: typeof QuranRoute
   SettingsRoute: typeof SettingsRoute
   TermsRoute: typeof TermsRoute
   TodayRoute: typeof TodayRoute
@@ -236,6 +236,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/quran': {
+      id: '/quran'
+      path: '/quran'
+      fullPath: '/quran'
+      preLoaderRoute: typeof QuranRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/privacy': {
       id: '/privacy'
       path: '/privacy'
@@ -255,13 +262,6 @@ declare module '@tanstack/react-router' {
       path: '/animate'
       fullPath: '/animate'
       preLoaderRoute: typeof AnimateRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/surah/$number': {
@@ -317,10 +317,10 @@ declare module '@tanstack/react-router' {
 }
 
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
   AnimateRoute: AnimateRoute,
   AuthRoute: AuthRoute,
   PrivacyRoute: PrivacyRoute,
+  QuranRoute: QuranRoute,
   SettingsRoute: SettingsRoute,
   TermsRoute: TermsRoute,
   TodayRoute: TodayRoute,
