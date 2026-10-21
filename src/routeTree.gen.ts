@@ -10,30 +10,12 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as AnimateRouteImport } from './routes/animate'
-import { Route as AuthRouteImport } from './routes/auth'
 import { Route as PrivacyRouteImport } from './routes/privacy'
-import { Route as QuranRouteImport } from './routes/quran'
-import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as TermsRouteImport } from './routes/terms'
-import { Route as TodayRouteImport } from './routes/today'
-import { Route as MoodIdRouteImport } from './routes/mood.$id'
-import { Route as StoryIdRouteImport } from './routes/story.$id'
-import { Route as SurahNumberRouteImport } from './routes/surah.$number'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AnimateRoute = AnimateRouteImport.update({
-  id: '/animate',
-  path: '/animate',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthRoute = AuthRouteImport.update({
-  id: '/auth',
-  path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrivacyRoute = PrivacyRouteImport.update({
@@ -41,136 +23,40 @@ const PrivacyRoute = PrivacyRouteImport.update({
   path: '/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
-const QuranRoute = QuranRouteImport.update({
-  id: '/quran',
-  path: '/quran',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SettingsRoute = SettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
   path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
-const TodayRoute = TodayRouteImport.update({
-  id: '/today',
-  path: '/today',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MoodIdRoute = MoodIdRouteImport.update({
-  id: '/mood/$id',
-  path: '/mood/$id',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const StoryIdRoute = StoryIdRouteImport.update({
-  id: '/story/$id',
-  path: '/story/$id',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SurahNumberRoute = SurahNumberRouteImport.update({
-  id: '/surah/$number',
-  path: '/surah/$number',
-  getParentRoute: () => rootRouteImport,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/animate': typeof AnimateRoute
-  '/auth': typeof AuthRoute
   '/privacy': typeof PrivacyRoute
-  '/quran': typeof QuranRoute
-  '/settings': typeof SettingsRoute
   '/terms': typeof TermsRoute
-  '/today': typeof TodayRoute
-  '/mood/$id': typeof MoodIdRoute
-  '/story/$id': typeof StoryIdRoute
-  '/surah/$number': typeof SurahNumberRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/animate': typeof AnimateRoute
-  '/auth': typeof AuthRoute
   '/privacy': typeof PrivacyRoute
-  '/quran': typeof QuranRoute
-  '/settings': typeof SettingsRoute
   '/terms': typeof TermsRoute
-  '/today': typeof TodayRoute
-  '/mood/$id': typeof MoodIdRoute
-  '/story/$id': typeof StoryIdRoute
-  '/surah/$number': typeof SurahNumberRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/animate': typeof AnimateRoute
-  '/auth': typeof AuthRoute
   '/privacy': typeof PrivacyRoute
-  '/quran': typeof QuranRoute
-  '/settings': typeof SettingsRoute
   '/terms': typeof TermsRoute
-  '/today': typeof TodayRoute
-  '/mood/$id': typeof MoodIdRoute
-  '/story/$id': typeof StoryIdRoute
-  '/surah/$number': typeof SurahNumberRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths:
-    | '/'
-    | '/animate'
-    | '/auth'
-    | '/privacy'
-    | '/quran'
-    | '/settings'
-    | '/terms'
-    | '/today'
-    | '/mood/$id'
-    | '/story/$id'
-    | '/surah/$number'
+  fullPaths: '/' | '/privacy' | '/terms'
   fileRoutesByTo: FileRoutesByTo
-  to:
-    | '/'
-    | '/animate'
-    | '/auth'
-    | '/privacy'
-    | '/quran'
-    | '/settings'
-    | '/terms'
-    | '/today'
-    | '/mood/$id'
-    | '/story/$id'
-    | '/surah/$number'
-  id:
-    | '__root__'
-    | '/'
-    | '/animate'
-    | '/auth'
-    | '/privacy'
-    | '/quran'
-    | '/settings'
-    | '/terms'
-    | '/today'
-    | '/mood/$id'
-    | '/story/$id'
-    | '/surah/$number'
+  to: '/' | '/privacy' | '/terms'
+  id: '__root__' | '/' | '/privacy' | '/terms'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AnimateRoute: typeof AnimateRoute
-  AuthRoute: typeof AuthRoute
   PrivacyRoute: typeof PrivacyRoute
-  QuranRoute: typeof QuranRoute
-  SettingsRoute: typeof SettingsRoute
   TermsRoute: typeof TermsRoute
-  TodayRoute: typeof TodayRoute
-  MoodIdRoute: typeof MoodIdRoute
-  StoryIdRoute: typeof StoryIdRoute
-  SurahNumberRoute: typeof SurahNumberRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -182,39 +68,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/animate': {
-      id: '/animate'
-      path: '/animate'
-      fullPath: '/animate'
-      preLoaderRoute: typeof AnimateRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth': {
-      id: '/auth'
-      path: '/auth'
-      fullPath: '/auth'
-      preLoaderRoute: typeof AuthRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/privacy': {
       id: '/privacy'
       path: '/privacy'
       fullPath: '/privacy'
       preLoaderRoute: typeof PrivacyRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/quran': {
-      id: '/quran'
-      path: '/quran'
-      fullPath: '/quran'
-      preLoaderRoute: typeof QuranRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/settings': {
-      id: '/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/terms': {
@@ -224,49 +82,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/today': {
-      id: '/today'
-      path: '/today'
-      fullPath: '/today'
-      preLoaderRoute: typeof TodayRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/mood/$id': {
-      id: '/mood/$id'
-      path: '/mood/$id'
-      fullPath: '/mood/$id'
-      preLoaderRoute: typeof MoodIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/story/$id': {
-      id: '/story/$id'
-      path: '/story/$id'
-      fullPath: '/story/$id'
-      preLoaderRoute: typeof StoryIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/surah/$number': {
-      id: '/surah/$number'
-      path: '/surah/$number'
-      fullPath: '/surah/$number'
-      preLoaderRoute: typeof SurahNumberRouteImport
-      parentRoute: typeof rootRouteImport
-    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AnimateRoute: AnimateRoute,
-  AuthRoute: AuthRoute,
   PrivacyRoute: PrivacyRoute,
-  QuranRoute: QuranRoute,
-  SettingsRoute: SettingsRoute,
   TermsRoute: TermsRoute,
-  TodayRoute: TodayRoute,
-  MoodIdRoute: MoodIdRoute,
-  StoryIdRoute: StoryIdRoute,
-  SurahNumberRoute: SurahNumberRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
