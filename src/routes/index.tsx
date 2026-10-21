@@ -1,6 +1,4 @@
-import { useEffect } from "react";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Capacitor } from "@capacitor/core";
+import { createFileRoute } from "@tanstack/react-router";
 import noorLogo from "@/assets/noor-logo.png.asset.json";
 
 export const Route = createFileRoute("/")({
@@ -188,16 +186,6 @@ const LANDING_CSS = `
 `;
 
 function LandingPage() {
-  const navigate = useNavigate();
-
-  // Inside the native (Capacitor) Android/iOS shell, skip the marketing page
-  // and go straight to the app's Today screen.
-  useEffect(() => {
-    if (Capacitor.isNativePlatform()) {
-      navigate({ to: "/today", replace: true });
-    }
-  }, [navigate]);
-
   return (
     <div className="nlr-root" style={{ minHeight: "100vh", overflowX: "hidden" }}>
       <style>{LANDING_CSS}</style>
