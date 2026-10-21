@@ -1,6 +1,4 @@
-import { useEffect } from "react";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Capacitor } from "@capacitor/core";
+import { createFileRoute } from "@tanstack/react-router";
 import noorLogo from "@/assets/noor-logo.png.asset.json";
 
 export const Route = createFileRoute("/")({
