@@ -1,4 +1,4 @@
-import { Outlet, Link, createRootRoute, HeadContent, Scripts, useRouter } from "@tanstack/react-router";
+import { Outlet, Link, createRootRoute, HeadContent, Scripts, useRouter, useLocation } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { Onboarding } from "@/components/Onboarding";
 import { ThemeSwitch } from "@/components/ThemeSwitch";
@@ -88,13 +88,14 @@ function RootComponent() {
   const router = useRouter();
   useEffect(() => {
     // Fresh app session (cold load / refresh / PWA open): always land on Today,
-    // except when deep-linking into a reader/story/auth flow.
+    // except when deep-linking into a reader/story/auth flow — or the public
+    // marketing landing at "/", which web visitors should see as-is.
     try {
       const fresh = !sessionStorage.getItem("noor:session");
       sessionStorage.setItem("noor:session", "1");
       if (fresh) {
         const p = router.state.location.pathname;
-        const keep = p.startsWith("/surah/") || p.startsWith("/story/") || p.startsWith("/mood/") || p.startsWith("/auth") || p.startsWith("/privacy") || p.startsWith("/terms");
+        const keep = p === "/" || p.startsWith("/surah/") || p.startsWith("/story/") || p.startsWith("/mood/") || p.startsWith("/auth") || p.startsWith("/privacy") || p.startsWith("/terms");
         if (!keep && p !== "/today") {
           router.navigate({ to: "/today", replace: true });
         }
@@ -107,11 +108,14 @@ function RootComponent() {
     return () => unsub();
   }, [router]);
 
+  const pathname = useLocation().pathname;
+  const onLanding = pathname === "/";
+
   return (
     <>
-      <ThemeSwitch />
+      {!onLanding && <ThemeSwitch />}
       <Outlet />
-      <Onboarding />
+      {!onLanding && <Onboarding />}
       <Toaster position="top-center" richColors theme="dark" />
     </>
   );
