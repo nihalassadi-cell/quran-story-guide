@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { AppShell } from "@/components/AppShell";
+
 
 export const Route = createFileRoute("/privacy")({
   head: () => ({
@@ -20,13 +20,8 @@ export const Route = createFileRoute("/privacy")({
 
 function PrivacyPage() {
   return (
-    <AppShell>
+    <div className="min-h-screen bg-background">
       <div className="max-w-2xl mx-auto px-4 pt-8 pb-16">
-        <div className="mb-6">
-          <Link to="/settings" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-            ← Back to Settings
-          </Link>
-        </div>
 
         <h1 className="text-3xl font-bold gold-text mb-2">Privacy Policy</h1>
         <p className="text-sm text-muted-foreground mb-8">
@@ -116,6 +111,6 @@ function PrivacyPage() {
           </section>
         </div>
       </div>
-    </AppShell>
+    </div>
   );
 }
